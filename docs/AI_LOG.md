@@ -28,6 +28,30 @@ API y worker. Un reporte sintético completó los tres agentes con `is_simulated
 WAITING_APPROVAL. No se aprobó en nombre del usuario ni se atribuye una revisión humana completada.
 Evidencia y límites: NVIDIA_SMOKE. No se verificó la facturación de las llamadas.
 
+## 2026-10-16 — Auditoría técnica, GAP Analysis y planificación
+
+- Herramienta: Claude Code, modelo Claude Opus 5.5 (`claude-opus-5-5`), a solicitud de Sebastián Feng.
+- Objetivo: auditar la fundación, contrastarla con D1–D7 y los requisitos, y planificar las fases
+  siguientes. Tarea de **auditoría y planificación**; no se modificó código de aplicación.
+- Archivos:
+  - creados: `docs/GAP_ANALYSIS.md`, `docs/NEXT_STEPS.md`;
+  - reescritos preservando el contenido previo en apéndices: `docs/ROADMAP.md`, `docs/BACKLOG.md`;
+  - esta entrada.
+- Comandos ejecutados y resultados:
+  - `uv sync --locked --check` sin cambios; Ruff y mypy aprobados;
+  - pytest: **53 passed**, cobertura 86 %; con `concurrency=greenlet,thread`, **93 %**;
+  - npm: lint, typecheck, **6 tests**, build y `audit` (0 vulnerabilidades);
+  - `alembic upgrade` + `check` en DB temporal.
+- Sondeos de funciones puras (`critical_evidence`, `stated_hours`, `ReportInput`, mock) confirmaron
+  los defectos D-01 a D-03.
+- Lectura **solo-lectura** de `data/runtime/*.db` para evidencia de inferencia real ya existente.
+  No se imprimieron secretos (`.env` se mostró con claves enmascaradas).
+- Sin llamadas a NVIDIA ni a GitHub; sin commits, ramas, pushes, Issues ni tableros.
+  `scripts/evaluate.py` no se ejecutó porque reescribe resultados versionados.
+- La skill Ponytail no estaba disponible en esta sesión y no se utilizó.
+- Revisión humana: pendiente. Las prioridades, la asignación de roles y las ADR propuestas
+  requieren aprobación del equipo.
+
 ## Plantilla para nuevas entradas
 
 Fecha / autor humano / herramienta y modelo conocido / objetivo / archivos / sugerencias aceptadas
