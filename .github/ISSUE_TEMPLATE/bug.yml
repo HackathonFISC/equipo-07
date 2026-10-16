@@ -1,0 +1,25 @@
+name: Error
+description: Reportar un comportamiento reproducible sin datos sensibles
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir y datos sintéticos
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado esperado y observado
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Sistema, versiones, modo mock/NIM y trazas sin secretos
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impacto y prueba de regresión propuesta

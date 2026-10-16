@@ -1,0 +1,5 @@
+[
+  {"id":"arraijan-demo","name":"Sector demostrativo de Arraiján","district":"Arraiján","population":1800,"vulnerability":0.7,"is_synthetic":true},
+  {"id":"chorrera-demo","name":"Sector demostrativo de La Chorrera","district":"La Chorrera","population":2500,"vulnerability":0.5,"is_synthetic":true},
+  {"id":"sector-sin-censo","name":"Sector demostrativo sin censo","district":"Arraiján","population":null,"vulnerability":null,"is_synthetic":true}
+]

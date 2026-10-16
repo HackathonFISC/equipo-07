@@ -1,0 +1,24 @@
+name: Funcionalidad
+description: Un cambio con criterios verificables
+title: "[Feature] "
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Problema, usuario y requisito RF/RNF
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterios de aceptación y casos negativos
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Módulos, contratos afectados, dependencias y fuera de alcance
+  - type: input
+    id: owner
+    attributes:
+      label: Rol responsable, prioridad P0/P1/P2 y tamaño S/M/L

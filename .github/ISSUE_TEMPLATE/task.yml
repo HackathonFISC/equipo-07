@@ -1,0 +1,16 @@
+name: Tarea técnica
+description: Infraestructura, documentación, seguridad o evaluación
+title: "[Task] "
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: Objetivo, rol, prioridad, dependencias y archivos
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Evidencia concreta para darla por terminada
+    validations:
+      required: true
