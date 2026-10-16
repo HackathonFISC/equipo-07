@@ -7,9 +7,9 @@ Reto: 0
 
 ## Equipo
 
-- Integrante 1
-- Integrante 2
-- Integrante 3
+- Sebastián Feng (@MrFengH)
+- Cristian Muir (@iCrxisz)
+- Mahmoud ElSayed (@Matimod55)
 
 ## Problema
 
