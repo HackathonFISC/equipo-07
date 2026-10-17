@@ -6,13 +6,19 @@ from app.config import Settings
 from app.db import Database
 from app.models import Community
 
+COMMUNITIES = Path(__file__).parents[2] / "data/communities.json"
 
-async def seed(db):
-    values = json.loads((Path(__file__).parents[2] / "data/communities.json").read_text("utf-8"))
+
+def load(path: Path) -> list[dict]:
+    return json.loads(path.read_text("utf-8"))
+
+
+async def seed(db, path: Path = COMMUNITIES):
+    """Upsert: the JSON is the source of truth, so edits reach databases that already exist."""
+    values = load(path)
     async with db.sessions.begin() as session:
         for item in values:
-            if not await session.get(Community, item["id"]):
-                session.add(Community(**item))
+            await session.merge(Community(**item))
 
 
 async def main():

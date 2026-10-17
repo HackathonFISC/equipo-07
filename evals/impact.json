@@ -1,0 +1,111 @@
+{
+  "scenario": {
+    "file": "demo_scenario.json",
+    "sha256": "a54bfb62d16cb4d4f64b82384b617897a880d13fd951374acc512b25530a9d70",
+    "reports": 12,
+    "unavailable_trucks": [
+      "cisterna-hospital-01"
+    ],
+    "excluded": {
+      "ref-parque-feuillet": "FUGA_REQUIERE_REPARACION",
+      "sector-sin-censo": "SIN_UBICACION"
+    }
+  },
+  "assumptions": [
+    "El tipo de incidencia se clasifica con el proveedor determinístico (mock); no es inferencia de un LLM.",
+    "El coordinador aprueba el punto medio del rango propuesto (valor por defecto de la UI).",
+    "Los baselines usan el mismo planificador, flota y demandas; solo cambia el orden.",
+    "Tiempos medidos desde el inicio del primer turno; distancias en línea recta × tortuosidad a velocidad fija (supuesto de planificación, no tráfico real).",
+    "Las comunidades sin coordenadas, sin demanda estimada o con solo fugas quedan fuera de las tres estrategias por igual."
+  ],
+  "strategies": {
+    "aguaia": {
+      "description": "Puntaje aprobado por el coordinador (punto medio del rango propuesto)",
+      "order": [
+        "crit-esc-guillermo-andreve",
+        "crit-hosp-nicolas-solano",
+        "crit-cs-nuevo-chorrillo",
+        "ref-loma-burunga",
+        "ref-rey-vista-alegre",
+        "ref-feria-chorrera"
+      ],
+      "critical_coverage_pct": 100.0,
+      "critical_planned_gallons": 21000,
+      "critical_demand_gallons": 21000,
+      "critical_first_arrival_minutes": {
+        "median": 143,
+        "max": 180
+      },
+      "critical_without_delivery": [],
+      "communities_served": 6,
+      "communities_total": 6,
+      "planned_gallons": 38000,
+      "demand_gallons": 38000,
+      "without_delivery": []
+    },
+    "volumen": {
+      "description": "Más reportes primero; a igual número, el que reportó antes",
+      "order": [
+        "ref-rey-vista-alegre",
+        "crit-hosp-nicolas-solano",
+        "ref-loma-burunga",
+        "crit-esc-guillermo-andreve",
+        "crit-cs-nuevo-chorrillo",
+        "ref-feria-chorrera"
+      ],
+      "critical_coverage_pct": 100.0,
+      "critical_planned_gallons": 21000,
+      "critical_demand_gallons": 21000,
+      "critical_first_arrival_minutes": {
+        "median": 292,
+        "max": 293
+      },
+      "critical_without_delivery": [],
+      "communities_served": 6,
+      "communities_total": 6,
+      "planned_gallons": 38000,
+      "demand_gallons": 38000,
+      "without_delivery": []
+    },
+    "llegada": {
+      "description": "Orden de llegada del primer reporte de cada comunidad",
+      "order": [
+        "ref-rey-vista-alegre",
+        "crit-hosp-nicolas-solano",
+        "ref-loma-burunga",
+        "crit-esc-guillermo-andreve",
+        "crit-cs-nuevo-chorrillo",
+        "ref-feria-chorrera"
+      ],
+      "critical_coverage_pct": 100.0,
+      "critical_planned_gallons": 21000,
+      "critical_demand_gallons": 21000,
+      "critical_first_arrival_minutes": {
+        "median": 292,
+        "max": 293
+      },
+      "critical_without_delivery": [],
+      "communities_served": 6,
+      "communities_total": 6,
+      "planned_gallons": 38000,
+      "demand_gallons": 38000,
+      "without_delivery": []
+    }
+  },
+  "aguaia_vs": {
+    "volumen": {
+      "critical_coverage_pp": 0.0,
+      "not_better": [
+        "critical_coverage_pct",
+        "communities_served"
+      ]
+    },
+    "llegada": {
+      "critical_coverage_pp": 0.0,
+      "not_better": [
+        "critical_coverage_pct",
+        "communities_served"
+      ]
+    }
+  }
+}

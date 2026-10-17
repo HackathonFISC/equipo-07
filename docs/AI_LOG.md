@@ -202,6 +202,32 @@ Evidencia y límites: NVIDIA_SMOKE. No se verificó la facturación de las llama
 - Límite conocido: «El hospital no tiene problemas…» sigue contando como evidencia crítica (falso positivo);
   medirlo con el corpus de F4.
 
+## F3-02 y F3-03: upsert del seed y métrica de impacto — 2026-10-17
+
+- Herramienta: Claude Code (Opus 5.5), a pedido del usuario, en la rama `feat-f3-impacto` (worktree
+  aparte para no chocar con F2), sin commits.
+- F3-02: `seed.py` usa `session.merge` (upsert). `test_seed.py` comprueba que un cambio de población y
+  vulnerabilidad llega a una base existente, que una comunidad nueva se inserta, que repetir no duplica y
+  que los reportes se conservan.
+- F3-03: `app/impact.py` (puro) reutiliza `calculate_priority`, `resolve_criticality`, `stated_hours` y
+  `plan_distribution` sin modificarlos. Baselines con rangos únicos y `critical=False`, para que el
+  desempate del planificador no los favorezca ni perjudique. `not_better` lista las métricas donde
+  AguaIA no gana; se publican.
+- Supuestos (también en `evals/impact.json`): tipo de incidencia por el proveedor mock; el coordinador
+  aprueba el punto medio del rango; tiempos desde el primer turno.
+- Duplicación aceptada: `trucks_from_catalog` y la agrupación de `build_demands` repiten la lógica de
+  `PlannerAgent.plan` porque `agents.py` está en edición por F2; unificar tras integrar F2.
+- Rama actualizada con `main` (F2, 9785057); conflicto en `REQUIREMENTS.md` resuelto conservando
+  RF17–RF19, RNF08, RF30 y RF31.
+- `evals/impact.json` generado con `data/demo_scenario.json` de F2-01 (sha256 a54bfb62…); dos
+  corridas dan el mismo archivo. Resultado: cobertura crítica 100 % en las tres estrategias (sin
+  ganancia, publicado en `not_better`); mediana hasta la primera entrega crítica **143 min** (AguaIA)
+  frente a **292 min** (volumen y llegada), máximo 180 frente a 293 min; 6/6 comunidades atendidas en
+  todas. Excluidas por igual: la fuga de `ref-parque-feuillet` y `sector-sin-censo` (sin coordenadas).
+- R0 tras integrar F2: ruff, formato y mypy limpios; `alembic upgrade head` + `check` limpios; pytest
+  **127 passed**, cobertura 86 %; `evaluate.py` 40/40; `validate_datasets.py` rc=0 sin diff en
+  `data/`; frontend `npm ci`, lint, typecheck, Vitest 9/9 y build OK.
+
 ## Plantilla para nuevas entradas
 
 Fecha / autor humano / herramienta y modelo conocido / objetivo / archivos / sugerencias aceptadas
