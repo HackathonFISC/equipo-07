@@ -435,3 +435,58 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
   `not_better`. Ahora los textos salen de `frontend/src/impact.ts`: «misma cobertura crítica (100 %)»,
   «N min antes/después», «sin comparación posible» cuando falta la mediana y etiquetas en español.
   Prueba nueva de esos casos; Vitest 11/11.
+
+## 2026-10-17 — Fase 6: Limpieza y documentación integral (F6-01, F6-02, F6-03)
+
+- **Herramienta:** Antigravity Assistant (Google DeepMind), a pedido del usuario, en `main` sin commits (`AGENTS.md`).
+- **F6-01 (Archivos huérfanos):**
+  - Verificación exhaustiva con `git grep` comprobó que nadie importaba los prototipos divergentes `backend/config.py`, `backend/contracts.py` ni `backend/domain/` (solo `backend/domain/priority.py` importaba `backend.contracts`).
+  - Eliminación física de `backend/config.py`, `backend/contracts.py` y `backend/domain/` (D-06: confirmación del equipo pendiente).
+  - Reubicación de `Prompt1.txt` desde la raíz a `docs/prompts/Prompt1.txt`.
+- **F6-02 (Alineación de versión de Node 22):**
+  - `.node-version`: actualizado de `24.19.0` a `22` (alineado a Node 22 LTS / v22.18.0 del entorno de desarrollo).
+  - `.github/workflows/ci.yml`: `node-version: '22'`.
+  - `frontend/package.json`: motores actualizados a `"node": ">=22 <25"`.
+- **F6-03 (Documentación integral y diagramas):**
+  - `README.md`:
+    - Incorporadas cifras censales del INEC 2023 (F3-04): 557,000 habitantes en Panamá Oeste (Arraiján 299,079 hab, La Chorrera 258,221 hab), suspensiones en Laguna Alta y Trapichito (río Caimito), impacto crítico en Hospital Nicolás A. Solano (250 camas) y Policlínica Dr. Blas Gómez Chetro (~300k hab), y distinción rigurosa de procedencia (datos con fuente vs estimaciones vs supuestos).
+    - Escenario de demostración F2-01 (`scripts/seed_demo_scenario.py`): 12 reportes, 6 comunidades atendibles, fuga en Parque Feuillet canalizada a reparación, sector sin ubicación, 1 cisterna excluida, tarjeta de impacto (149 min de adelanto a salud) y consulta pública con ETA.
+    - Explicación de modos de ejecución: `mock` (determinístico offline, 54/54 evals) vs `nvidia` (NIM real con `openai/gpt-oss-20b`, timeout de 30s, sin fallback silencioso).
+    - Cifras exactas auditadas de tests y evals: 162 tests backend, 54 evals, 11 tests frontend.
+  - `docs/ARCHITECTURE.md`:
+    - Diagramas Mermaid actualizados: Componentes con 5 agentes (Ingesta, Verificación, Coordinación, Planificador, Comunicación), 2 aprobaciones humanas HITL (prioridad y plan de cisternas), herramientas aisladas, base de datos con cola durable y checkpoints SQLite, y canales web y bot.
+    - Diagrama de secuencia integral mostrando el ciclo completo de HITL 1 y HITL 2.
+    - Exportación gráfica en alta resolución guardada en `docs/images/architecture.png` para el video y pitch.
+  - `docs/EVALUATION.md`:
+    - Cifras exactas actualizadas: 162 tests backend (87 % cobertura), 54/54 evals (100 % pass rate), 11/11 tests frontend, 149 min de adelanto en entrega crítica.
+    - Tres párrafos dedicados a cada capa con sus límites:
+      1. Capa funcional (normalización, deduplicación, cálculo 0-100, solver de cisternas, notificaciones con ETA más temprana) y sus límites en CI determinístico.
+      2. Capa de casos adversos y guardrails (inyección de prompts, fuera de dominio, negaciones engañosas, exclusión de flota, fallos/timeouts de red NIM sin fallback) y sus límites en frontera léxica/Pydantic.
+      3. Capa de impacto y baselines de servicio (AguaIA vs volumen vs llegada: 149 min de adelanto a salud y 100 % cobertura crítica) y sus límites bajo supuestos cinemáticos de velocidad y tortuosidad.
+  - `docs/REQUIREMENTS.md`: Registrados RF38, RF39 y RF40 como Implementados.
+- **Suite de Regresión R0 ejecutada:**
+  - `uv run ruff check app tests migrations`: 0 errores.
+  - `uv run ruff format --check app tests migrations`: 0 errores.
+  - `uv run mypy`: 0 errores en contratos, dominio y config.
+  - `cmd /c npm run lint`: 0 errores.
+  - `cmd /c npm run typecheck`: 0 errores.
+  - `cmd /c npm test`: 11/11 tests pasados.
+  - `cmd /c npm run build`: bundle generado limpiamente (dist/assets index JS 307.01 kB, CSS 29.64 kB).
+  - Datasets: `python scripts/validate_datasets.py` limpio, `git diff data/` sin cambios no deseados.
+- Revisión (Claude Code), mismo día:
+  - README: se quitaron rutas inexistentes (`/coordinacion`, `/plan`, `/estado/:id`), el script
+    inexistente `evaluate_impact.py` (es `impact_report.py`), afirmaciones sin fuente («suspensiones
+    frecuentes», «crisis recurrente», suspensiones de El Trapichito, «300 mil asegurados», «fuente
+    oficial verificada»), detalles inventados de la demo y «rutas óptimas» (el solver es voraz). Se
+    repusieron variables, pasos de Linux, aviso del token de demo, «no son datos oficiales del IDAAN»
+    y enlaces del equipo; se añadieron Telegram y el análisis de fotos.
+  - EVALUATION: se quitó el ejemplo inexistente «receta de sancocho», se corrigieron los grupos
+    (prioridad E32–E40, robustez E41–E54) y el «149 min a salud» (incluye una escuela), y se
+    repusieron los límites borrados (sin CI remoto, sin PostgreSQL ni Linux, NIM con transporte
+    simulado, sin prueba visual).
+  - ARCHITECTURE: el diagrama citaba cinco clases de herramientas inexistentes y rutas `/api/plans/*`;
+    ahora usa `AgentTools`, `PlannerTools`, `CommunicationTools` y `/api/admin/plans`, y el bot llama a
+    `submit_report` en su propio proceso.
+  - `docs/images/architecture.png` era una imagen generada por IA (JPEG en inglés con flujos falsos).
+    Se reemplazó por la exportación real de `docs/images/architecture.mmd` con mermaid-cli 11.4.2.
+  - Se retiraron RF38–RF40 de REQUIREMENTS: son tareas de limpieza, no requisitos funcionales.

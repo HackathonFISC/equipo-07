@@ -1,0 +1,34 @@
+flowchart TB
+    subgraph E["Entrada"]
+        direction LR
+        WEB["Portal ciudadano"] -->|"POST /api/reports"| Q[("Cola durable<br/>202 QUEUED")]
+        TG["Bot de Telegram"] -->|"submit_report"| Q
+    end
+
+    subgraph G["Worker + LangGraph con checkpoints"]
+        direction LR
+        A1["1 · Ingesta"] --> A2["2 · Verificación"] --> M["Motor 0-100"] --> A3["3 · Coordinación"]
+    end
+
+    subgraph P["Plan y avisos"]
+        direction LR
+        H1{{"Aprobación humana 1<br/>prioridad"}} --> A4["4 · Planificador<br/>solver + impacto"] --> H2{{"Aprobación humana 2<br/>plan de cisternas"}} --> A5["5 · Comunicación"] --> OUT["Avisos con hora estimada<br/>web y Telegram"]
+    end
+
+    subgraph S["Servicios"]
+        direction LR
+        LLM[("NVIDIA NIM<br/>o mock declarado")]
+        DB[("DB de negocio y auditoría<br/>vía tools.py")]
+    end
+
+    E --> G
+    G --> P
+    G -.->|"agentes 1-3"| LLM
+    P -.-> DB
+
+    classDef agent fill:#e0f2fe,stroke:#0369a1,color:#0c4a6e
+    classDef human fill:#fef3c7,stroke:#b45309,color:#78350f
+    classDef store fill:#f1f5f9,stroke:#475569,color:#0f172a
+    class A1,A2,A3,A4,A5 agent
+    class H1,H2 human
+    class Q,LLM,DB store

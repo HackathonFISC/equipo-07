@@ -120,107 +120,118 @@ A continuación se detallan las siete decisiones fundamentales aprobadas durante
 
 ## 3. DIAGRAMAS DE ARQUITECTURA
 
-### Diagrama de Componentes del Sistema
+> **Exportación gráfica:** [`docs/images/architecture.png`](images/architecture.png) es una versión
+> simplificada del diagrama de componentes, pensada para el video. Su fuente es
+> [`docs/images/architecture.mmd`](images/architecture.mmd); si cambia, se vuelve a exportar desde la
+> raíz con `npx @mermaid-js/mermaid-cli@11.4.2 -i docs/images/architecture.mmd -o docs/images/architecture.png -w 1920 -s 2 -b white`.
+
+### Diagrama de componentes (5 agentes, 2 aprobaciones humanas)
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Frontend (React + TypeScript + Vite)"]
-        UI_Citizen["Formulario Ciudadano"]
-        UI_Coord["Centro de Coordinación (HITL)"]
-        UI_Trace["Vista de Trazabilidad"]
-        TQ_Client["TanStack Query (Polling Adaptativo)"]
-        UI_Citizen --> TQ_Client
-        UI_Coord --> TQ_Client
-        UI_Trace --> TQ_Client
+    subgraph Canales["Canales"]
+        UI_Citizen["Portal ciudadano (React)"]
+        UI_Coord["Centro de coordinación (React)"]
+        Bot["Bot de Telegram (proceso aparte, long polling)"]
     end
 
-    subgraph Backend["Backend (FastAPI + Python 3.13)"]
-        API_Gateway["FastAPI Router (/api/reports, /api/executions)"]
-        Auth_Guard["Guardrail de Autorización (X-Coordinator-Token)"]
-        
-        subgraph MultiAgent["Orquestador LangGraph (HITL)"]
-            Node_Ingest["Agente 1: Ingesta y Normalización"]
-            Node_Verify["Agente 2: Verificación y Consolidación"]
-            Node_Engine["Motor Determinístico (v1.0.0-demo)"]
-            Node_Coord["Agente 3: Coordinación y Explicabilidad"]
-            Node_Interrupt{"interrupt() - Espera Aprobación"}
-            Node_Resume["Nodo Reanudación y Decisión Final"]
-            
-            Node_Ingest --> Node_Verify
-            Node_Verify --> Node_Engine
-            Node_Engine --> Node_Coord
-            Node_Coord --> Node_Interrupt
-            Node_Interrupt -.->|Command resume| Node_Resume
-        end
-
-        subgraph LLM_Layer["Capa de Modelos (LLMProvider)"]
-            Mock_LLM["MockLLMProvider (Offline CI / Demo)"]
-            Nvidia_LLM["NvidiaLLMProvider (NVIDIA NIM: DeepSeek / Kimi)"]
-        end
-
-        subgraph DomainServices["Servicios Transaccionales de Dominio"]
-            Svc_Report["ReportService"]
-            Svc_Incident["IncidentConsolidationService"]
-            Svc_Audit["AuditTraceService"]
-        end
-
-        subgraph Persistence["Capa de Persistencia"]
-            DB_Relational[(SQLite aiosqlite / PostgreSQL)]
-            DB_Checkpoints[(AsyncSqliteSaver LangGraph)]
-        end
+    subgraph Gateway["FastAPI"]
+        API_Public["API pública: POST /api/reports, GET /api/reports/{id}/public-status"]
+        API_Protected["API protegida: /api/admin/*, /api/executions/{id}/resume"]
+        Auth_Guard["X-Coordinator-Token"]
+        API_Protected --- Auth_Guard
     end
 
-    TQ_Client -->|POST /api/reports| API_Gateway
-    TQ_Client -->|POST /api/executions/.../resume| Auth_Guard
-    Auth_Guard --> API_Gateway
-    API_Gateway --> MultiAgent
-    MultiAgent <--> LLM_Layer
-    MultiAgent --> DomainServices
-    DomainServices --> DB_Relational
-    MultiAgent <--> DB_Checkpoints
+    subgraph Almacenamiento["Persistencia"]
+        DB[("DB de negocio (SQLAlchemy async): reportes, incidentes, planes, avisos, auditoría")]
+        Queue[("Cola durable en la misma DB")]
+        Checkpoints[("Checkpoints LangGraph (AsyncSqliteSaver)")]
+    end
+
+    subgraph Worker_Runtime["Worker local exclusivo"]
+        subgraph Grafo["LangGraph: priorización"]
+            A1["Agente 1: Ingesta"]
+            A2["Agente 2: Verificación"]
+            Engine["Motor determinístico 0-100"]
+            A3["Agente 3: Coordinación"]
+            HITL1{{"Aprobación humana 1: prioridad (interrupt)"}}
+            A1 --> A2 --> Engine --> A3 --> HITL1
+        end
+        subgraph Plan["Planificación y avisos"]
+            A4["Agente 4: Planificador (solver sin LLM + impacto)"]
+            HITL2{{"Aprobación humana 2: plan de cisternas"}}
+            A5["Agente 5: Comunicación (plantillas, sin LLM)"]
+            A4 --> HITL2 --> A5
+        end
+        Vision["Análisis orientativo de fotos"]
+    end
+
+    subgraph Herramientas["tools.py: operaciones finitas, no expuestas al LLM"]
+        T_Agent["AgentTools"]
+        T_Plan["PlannerTools"]
+        T_Comm["CommunicationTools"]
+    end
+
+    subgraph Modelos["providers.py"]
+        Mock_LLM["MockLLMProvider (simulación declarada)"]
+        Nvidia_LLM["NvidiaLLMProvider: gpt-oss-20b y nemotron-3-nano-omni"]
+    end
+
+    UI_Citizen --> API_Public
+    UI_Coord --> API_Protected
+    Bot -->|submit_report y avisos| DB
+    API_Public -->|reporte + trabajo en una transacción, 202| Queue
+    API_Protected -->|decisiones y solicitudes de plan| Queue
+    Queue --> Worker_Runtime
+    Grafo <--> Checkpoints
+    A1 & A2 & A3 <--> Modelos
+    Vision <--> Modelos
+    A1 & A2 & A3 --> T_Agent
+    A4 --> T_Plan
+    A5 --> T_Comm
+    T_Agent & T_Plan & T_Comm --> DB
 ```
 
-### Diagrama de Secuencia del Vertical Slice (HITL)
+### Diagrama de secuencia del flujo completo
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Ciudadano
-    participant FE as Frontend (React)
-    participant API as FastAPI Gateway
-    participant LG as LangGraph Workflow
-    participant LLM as LLMProvider (Mock/NVIDIA)
-    participant Engine as Motor Determinístico
-    participant DB as Base de Datos (SQLAlchemy)
-    actor Coordinador as Coordinador Humano
+    participant API as FastAPI
+    participant DB as DB y cola
+    participant Worker as Worker
+    participant LG as LangGraph (agentes 1-3)
+    participant LLM as LLMProvider (mock o NIM)
+    actor Coordinador
 
-    Ciudadano->>FE: Completa reporte (sector, horas, descripción)
-    FE->>API: POST /api/reports
-    API->>DB: Guarda reporte ciudadano (PENDING)
-    API->>LG: Inicia grafo con thread_id
-    LG->>LLM: Agente 1: Normaliza y extrae entidades
-    LG->>DB: Agente 2: Filtra incidentes candidatos en sector
-    LG->>LLM: Agente 2: Evalúa duplicados (HIGH/MEDIUM/LOW)
-    LG->>Engine: Calcula puntuación (0-100, score_min, score_max)
-    LG->>LLM: Agente 3: Genera propuesta explicable
-    LG->>LG: Ejecuta interrupt() [Estado: WAITING_APPROVAL]
-    API-->>FE: 202 Accepted {thread_id, status: WAITING_APPROVAL}
-    
-    loop Polling cada 5s
-        FE->>API: GET /api/executions/{thread_id}
-        API-->>FE: Estado actual: WAITING_APPROVAL, propuesta disponible
-    end
+    Ciudadano->>API: POST /api/reports (o el bot llama a submit_report)
+    API->>DB: Guarda reporte y trabajo QUEUED en una transacción
+    API-->>Ciudadano: 202 QUEUED {report_id, thread_id}
 
-    Coordinador->>FE: Revisa propuesta en Centro de Coordinación
-    Coordinador->>FE: Ingresa token y hace clic en Aprobar/Corregir
-    FE->>API: POST /api/executions/{thread_id}/resume (Header: X-Coordinator-Token)
-    API->>API: Valida token con secrets.compare_digest
-    API->>LG: Reanuda grafo con Command(resume={decision, reason})
-    LG->>DB: Persiste decisión humana y estado final
-    LG->>DB: Registra evento en bitácora de auditoría
-    LG-->>API: Grafo completado
-    API-->>FE: 200 OK {status: COMPLETED, decision: APPROVED}
-    FE-->>Coordinador: Actualiza vista a estado terminal
+    Worker->>DB: Toma el trabajo (RUNNING)
+    Worker->>LG: Ejecuta el grafo
+    LG->>LLM: Agente 1: tipo y horas, validados contra el texto
+    LG->>DB: Agente 2: candidatos del mismo sector en 72 h
+    LG->>LLM: Agente 2: ¿mismo problema? (HIGH, MEDIUM, LOW)
+    LG->>LG: Motor 0-100 con intervalo
+    LG->>LLM: Agente 3: redacta la explicación
+    LG->>LG: interrupt() → WAITING_APPROVAL
+
+    Note over Coordinador,API: Aprobación humana 1
+    Coordinador->>API: POST /api/executions/{thread_id}/resume (token)
+    API->>DB: Guarda la decisión y encola la reanudación
+    Worker->>LG: Command(resume) → APPROVED, CORRECTED o REJECTED
+
+    Note over Coordinador,API: Aprobación humana 2
+    Coordinador->>API: POST /api/admin/plans (cisternas excluidas)
+    API->>DB: Plan QUEUED
+    Worker->>DB: Agente 4: solver, rutas, demanda no atendida e impacto → PROPOSED
+    Coordinador->>API: POST /api/admin/plans/{id}/review (APPROVE o REJECT)
+    Worker->>DB: Agente 5: avisos SCHEDULED o UNSERVED por comunidad
+
+    Ciudadano->>API: GET /api/reports/{id}/public-status
+    API-->>Ciudadano: estado y aviso {kind, text, arrival}, sin trazas internas
 ```
 
 ---
