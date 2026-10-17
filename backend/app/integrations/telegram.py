@@ -11,10 +11,26 @@ from app.db import Database
 from app.integrations.chatbot import Prompt
 from app.integrations.inbox import Attachment, DownloadError, Inbound, download, ingest
 from app.integrations.models import InboundDraft
-from app.models import Association, DistributionPlan, Notification, now
+from app.models import (
+    Association,
+    Community,
+    DistributionPlan,
+    Incident,
+    Notification,
+    Report,
+    now,
+)
 from app.services import log_event
 
 NOTICE_WINDOW = timedelta(days=7)
+# A citizen follows the zone of their latest report for this long.
+ALERT_WINDOW = timedelta(days=90)
+PROBLEMS = {
+    "OUTAGE": "falta de agua",
+    "LOW_PRESSURE": "baja presión",
+    "LEAK": "fuga de agua",
+    "UNKNOWN": "un problema con el suministro",
+}
 
 # Invalid token, or a webhook / another poller already owns this bot: retrying cannot help.
 FATAL = {401, 404, 409}
@@ -145,6 +161,84 @@ async def deliver_notices(db, telegram: Telegram) -> int:
     return sent
 
 
+async def deliver_zone_alerts(db, telegram: Telegram) -> int:
+    """Warns each Telegram citizen of new incidents in the zone of their latest report, once.
+
+    Only the latest submitted report of a chat counts, so reporting elsewhere moves the alerts
+    to that zone. The text names the problem and the zone, never another citizen's report.
+    """
+    since = now() - ALERT_WINDOW
+    async with db.sessions() as session:
+        rows = (
+            await session.execute(
+                select(InboundDraft, Report)
+                .join(Report, Report.id == InboundDraft.report_id)
+                .where(
+                    InboundDraft.channel == "telegram",
+                    InboundDraft.status == "SUBMITTED",
+                    Report.created_at >= since,
+                )
+                .order_by(Report.created_at, Report.id)
+            )
+        ).all()
+        latest = {draft.conversation_id: (draft, report) for draft, report in rows}
+        own: dict[str, set[str]] = {}
+        for chat, incident_id in await session.execute(
+            select(InboundDraft.conversation_id, Association.incident_id)
+            .join(Association, Association.report_id == InboundDraft.report_id)
+            .where(InboundDraft.channel == "telegram")
+        ):
+            own.setdefault(chat, set()).add(incident_id)
+        zones = {report.community_id for _, report in latest.values()}
+        incidents = (
+            await session.scalars(
+                select(Incident)
+                .where(
+                    Incident.community_id.in_(zones),
+                    Incident.created_at >= since,
+                    Incident.status != "CLOSED",
+                )
+                .order_by(Incident.created_at, Incident.id)
+            )
+        ).all()
+        names = {
+            c.id: c.name
+            for c in await session.scalars(select(Community).where(Community.id.in_(zones)))
+        }
+    sent = 0
+    for chat, (draft, report) in latest.items():
+        done = set(draft.fields.get("zone_alerts", []))
+        for incident in incidents:
+            if (
+                incident.id in done
+                or incident.id in own.get(chat, ())
+                or incident.community_id != report.community_id
+                or incident.created_at <= report.created_at
+            ):
+                continue
+            text = (
+                f"AguaIA informa: otro vecino reportó {PROBLEMS[incident.kind]} en "
+                f"{names[incident.community_id]}, la zona de tu último reporte. "
+                f"Ya está registrado para su atención; no necesitas reportarlo de nuevo."
+            )
+            try:
+                await telegram.send(chat, Prompt(text))
+            except Exception as exc:
+                # Not marked: the next loop retries. Never log the chat id.
+                log_event(event="telegram_zone_alert_error", error=type(exc).__name__)
+                continue
+            async with db.sessions.begin() as session:
+                row = await session.get(InboundDraft, draft.id)
+                row.fields = {
+                    **row.fields,
+                    "zone_alerts": [*row.fields.get("zone_alerts", []), incident.id],
+                }
+            done.add(incident.id)
+            sent += 1
+            log_event(event="telegram_zone_alert_sent", kind=incident.kind)
+    return sent
+
+
 async def run():
     settings = Settings()
     token = settings.telegram_bot_token.get_secret_value()
@@ -160,6 +254,7 @@ async def run():
                 try:
                     offset = await poll(db, settings, telegram, offset)
                     await deliver_notices(db, telegram)
+                    await deliver_zone_alerts(db, telegram)
                 except TelegramError as exc:
                     if exc.code in FATAL:
                         raise SystemExit(

@@ -88,9 +88,9 @@ async def test_evaluation(system, case):
     }
     body.update(changes.get(scenario, {}))
     if scenario == "candidate_injection":
-        await submit(system)
+        # A real candidate must exist: without one the model is never consulted (AG-03).
+        await submit(system, {**body, "description": "No sale agua en la calle hace 24 horas"})
         await system.work()
-        body["description"] = "No llega el agua desde hace 24 horas"
     key, response = await submit(system, body)
     if scenario in ("unknown", "invalid_hours", "injection", "out_of_scope"):
         assert response.status_code == (404 if scenario == "unknown" else 422)
@@ -121,6 +121,15 @@ async def test_evaluation(system, case):
         await system.work(BadProvider())
         failed = await details(system, key)
         assert failed["status"] == "ERROR" and failed["proposal"] is None
+        # The coordinator sees which guardrail stopped it; free text never reaches the DB.
+        assert (
+            failed["error"]
+            == {
+                "provider_error": "ProviderError",
+                "ungrounded": "UNGROUNDED_HOURS",
+                "candidate_injection": "INVALID_DUPLICATE_CANDIDATE",
+            }[scenario]
+        )
         if scenario == "provider_error":
             retry = await system.client.post(f"/api/executions/{key}/retry", headers=AUTH)
             assert retry.status_code == 202

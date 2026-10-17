@@ -181,8 +181,30 @@ async def test_model_only_sees_candidates_of_the_same_kind(system):
     state.update(await agents.ingest(state))
     assert state["normalized"]["kind"] == "LOW_PRESSURE"
     association = await agents.verify(state)
+    # With no compatible candidate the model is not consulted at all.
     assert seen == []
     assert association["incident_id"] != outage
+    detail = await details(system, other)
+    consolidated = next(t for t in detail["traces"] if t["event"] == "CONSOLIDATED")
+    assert "Regla determinística" in consolidated["detail"]["reasoning"]
+
+
+@pytest.mark.parametrize(
+    ("description", "hours"),
+    [("Hace 1 hora y media que no sale agua", 1.5), ("Llevamos 24h sin agua", 24)],
+)
+async def test_model_hours_from_short_forms_are_grounded(system, description, hours):
+    # A real model reads «1 hora y media» as 1.5 and «24h» as 24; both used to end in ERROR.
+    class Literal(MockLLMProvider):
+        async def extract_report(self, text):
+            result = await super().extract_report(text)
+            result.hours_without_water = hours
+            return result
+
+    key, _ = await submit(system, {**BASE, "description": description, "hours_without_water": None})
+    await system.work(Literal())
+    detail = await details(system, key)
+    assert detail["status"] == "WAITING_APPROVAL" and detail["error"] is None
 
 
 async def test_recover_after_decision_commit_before_final_checkpoint(system):

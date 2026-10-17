@@ -5,6 +5,7 @@ from langgraph.types import interrupt
 
 from app.agents import Agents
 from app.contracts import ReviewInput
+from app.providers import error_code
 from app.services import apply_decision, trace
 
 
@@ -41,7 +42,7 @@ def build_graph(db, provider, settings, saver):
                 result = await function(state)
             except Exception as exc:
                 async with db.sessions.begin() as session:
-                    trace(session, state["execution_id"], name, "ERROR", error=type(exc).__name__)
+                    trace(session, state["execution_id"], name, "ERROR", error=error_code(exc))
                 raise
             async with db.sessions.begin() as session:
                 trace(session, state["execution_id"], name, "END")

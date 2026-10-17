@@ -1,5 +1,34 @@
 # Bitácora de uso de IA
 
+## Resumen para la evaluación
+
+**Herramientas de IA usadas** (detalle por fecha en las entradas de abajo):
+
+| Herramienta | Modelo | Para qué se usó |
+|---|---|---|
+| Codex | Basado en GPT-6 según el entorno; variante no verificada | Fundación: backend, worker, LangGraph, frontend inicial, pruebas, CI |
+| Antigravity Assistant | Gemini 3.8 Flash | Ejecución de fases F0–F6: priorización, ciclo funcional, datos, impacto, limpieza |
+| Claude Code | Claude Opus 5.5 | Auditoría y planificación, revisión y corrección de cada fase, planificador, Telegram, fotos, corrida real |
+| NVIDIA NIM (dentro del producto) | `openai/gpt-oss-20b` y un modelo de visión | Inferencia de los agentes en modo real; no escribió código |
+
+**Cómo se usó.** Una IA ejecutaba cada fase con un plan y criterios de aceptación; otra la
+revisaba contra el código y corregía. El equipo decidía qué se integraba y autorizaba cada commit,
+push y merge. Las aprobaciones de prioridad y plan que hicieron scripts en corridas de prueba
+(por ejemplo F7) están descritas como tales en su entrada; no cuentan como revisión humana.
+
+**Decisiones humanas observadas en las sesiones con IA:** elegir el reto y el alcance; aprobar o
+descartar cada plan de fase; autorizar cada push a `main`; revocar y reemplazar claves expuestas;
+dejar el tag `final-24h` para el final.
+
+**Qué se hizo a mano** (verificable en el historial de Git o en las sesiones):
+
+- Integrantes del equipo y número de reto en el README, editados desde GitHub (`52229e0`, `2f562c3`).
+- Resolución del primer merge conservando el README local (`bcd1e00`).
+- Revisión e integración del PR #2 de rediseño de la interfaz (`8c62406`).
+- Creación del bot de Telegram en BotFather y configuración de `.env` con las claves de NVIDIA y
+  Telegram; revocación y reemplazo de las claves que quedaron expuestas en un chat.
+- Elección del alcance de cada fase, de qué sugerencias de la IA se aceptaban y de cuándo subir.
+
 ## 2026-10-17 — Integración frontend y Coordinación (AG-52)
 
 - Herramienta: Codex en Windows local. Skill Ponytail full leída y aplicada. Trabajo autónomo
@@ -619,3 +648,33 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
   oscuro, sin errores de consola ni desbordamiento horizontal. Las aprobaciones de esa base son datos
   de prueba, no revisiones humanas reales.
 - Acciones remotas/Git: ninguna.
+
+## 2026-10-17 — Revisión del backend: tres fallos confirmados
+
+- Herramienta: Claude Code, a pedido del usuario.
+- Duraciones: `stated_hours` no leía «24h» ni «y media/y medio». Un modelo real que respondía 24 o
+  1.5 chocaba con `UNGROUNDED_HOURS` y el reporte quedaba en ERROR. Ahora «24h» → 24,
+  «1 hora y media» → 1.5, «3 días y medio» → 84, «una semana y media» → 252. Pruebas en
+  `test_grounding.py` y `test_model_hours_from_short_forms_are_grounded`.
+- Código de error: el worker guardaba solo `ProviderError`, así que coordinación no sabía qué
+  guardrail detuvo el reporte. `error_code` persiste el código controlado (`UNGROUNDED_HOURS`,
+  `INVALID_DUPLICATE_CANDIDATE`, `APITimeoutError`…) y vuelve al nombre de clase ante texto libre.
+  E20/E21 lo comprueban.
+- Verificación sin candidatos: el modelo se consultaba aunque no hubiera incidentes compatibles
+  (una llamada NIM inútil por cada incidente nuevo). Ahora se crea el incidente por regla
+  determinística, visible en la traza (AG-03). E20 crea antes un candidato real para que el modelo
+  siga siendo consultado e invente un UUID.
+- Suite completa: **173 passed** (87 % cobertura), ruff limpio. README y EVALUATION actualizados.
+
+## 2026-10-17 — Revisión e integración del PR `integracion-aguaia`
+
+- Herramienta: Claude Code (Claude Opus 5.5), a pedido del usuario.
+- Revisión: endpoints nuevos de mapa y planes protegidos con el token de coordinación; explicación
+  de prioridad ahora determinista (sin llamada al modelo); filtro por tipo de incidente movido de
+  `tools.candidates` a la consulta SQL de `candidate_incidents`, sin perder el arreglo de F7.
+- Conflictos con `main`: misma regla «sin candidatos, sin modelo» en ambos lados (se conservó una);
+  `grounding.py` combina los intervalos del PR con «24h» y «y media» de `main`, y «más de 24h» cuenta
+  como límite; REQUIREMENTS tenía RF34, RF35 y RF38 duplicados, y los de `main` pasan a RF43, RF41 y
+  RF42. La traza ERROR del grafo usa el mismo código controlado que el worker.
+- Verificación sobre el merge: 206 pytest (88 %), Ruff, formato, mypy, una cabeza de Alembic,
+  evals 64/64, impacto sin cambios (143 frente a 292 min), Vitest 30/30, lint, typecheck y build.

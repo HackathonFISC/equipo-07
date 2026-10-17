@@ -215,14 +215,14 @@ Guion completo, recuperación y reinicio seguro de datos: [DEMO](docs/DEMO.md).
 
 Cifras de la última ejecución local (`evals/results.json`, `evals/impact.json`):
 
-- **Backend:** 196 pruebas pytest, cobertura de líneas 88 % (integración AG-52).
+- **Backend:** 206 pruebas pytest, cobertura de líneas 88 %.
 - **Evals:** 64/64 escenarios de [cases.json](evals/cases.json), en siete grupos que se solapan:
   consolidación, guardrails, prioridad, decisión humana, planificador, robustez e integridad. Miden cumplimiento
   de escenarios con el mock, no la calidad de un modelo real.
 - **Impacto:** `scripts/impact_report.py` corre el mismo solver con tres órdenes sobre F2-01. La
   mediana de la primera entrega a las instituciones críticas baja de 292 min (por volumen y por
   llegada) a 143 min con AguaIA; la cobertura crítica es 100 % en las tres.
-- **Frontend:** 30 pruebas Vitest (integración AG-52).
+- **Frontend:** 30 pruebas Vitest.
 
 AG-52 verificó backend, frontend y el ciclo real con HTTP, LangGraph y worker en modo mock,
 con almacenamiento aislado: [evidencia y capturas](docs/evidence/ag52/README.md). Las cifras de

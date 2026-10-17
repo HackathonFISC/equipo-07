@@ -1,32 +1,46 @@
 # Matriz de entrega del hackathon
 
-| Requisito/entregable | Estado real | Evidencia / pendiente |
+Estado al 2026-10-17, contra la sección 6 (entregables) y la sección 2 (requisitos mínimos) de
+[Retos_Hackathon_FISC_AI_Agents_2026.md](../Retos_Hackathon_FISC_AI_Agents_2026.md).
+Solo se marca como hecho lo que tiene evidencia en el repositorio.
+
+## Entregables (sección 6)
+
+| Entregable | Estado | Evidencia / pendiente |
 |---|---|---|
-| ≥3 agentes comunicados | Implementado/probado offline | agents.py + WorkflowState + evals |
-| Herramienta con acción real | Implementado/probado | Persistencia SQLAlchemy de reportes, asociaciones y decisiones |
-| Componente determinístico | Implementado/probado | domain.py, política v1.0.0-demo y tests |
-| Humano en el ciclo | Implementado/probado | interrupt, token, Review, Command resume; proceso separado |
-| Trazabilidad | Implementado/probado | Eventos technical/audit y vista UI |
-| ≥15 evaluaciones y métricas | Implementado/probado en mock | 22 escenarios, results.json y EVALUATION |
-| Guardrails | Implementado inicial/probado | GUARDRAILS y pruebas negativas; límites documentados |
-| Repo oficial existente | Verificado localmente | `.git` y README del equipo; no se creó otro repo |
-| Registro al inicio del periodo | No verificado | Confirmar con organizadores/equipo |
-| Historial de commits oficial | Pendiente de equipo | No se hicieron commits en esta sesión |
-| README y credencial demo no sensible | Completado localmente | README y .env.example; token público solo localhost |
-| Diagrama de arquitectura | Completado | README, ARCHITECTURE e IMPLEMENTATION |
-| Bitácora IA | Completada para esta sesión | AI_LOG; revisiones humanas pendientes |
-| Metodología/despliegue/funcionamiento | Documentado | METHODOLOGY, README, DEMO |
-| CI | Definido, comandos verificados localmente | Ejecución en GitHub aún pendiente |
-| Prueba NVIDIA real | Verificada hasta HITL con GPT-OSS-20B | NVIDIA_SMOKE; aprobación humana de esa prueba pendiente, DeepSeek/Kimi no operativos en los intentos realizados |
-| Video ≤3 minutos | Pendiente | Guion DEMO; no se grabó ni publicó |
-| Tag final-24h | Pendiente al congelamiento | No creado |
-| Revisión del equipo | Pendiente | No atribuir aprobación humana a revisión automática |
+| Repositorio con commits durante el periodo | Hecho | Historial del 16 y 17 de octubre de varios integrantes, PR #2 integrado. El registro ante la organización en la hora 1 lo confirma el equipo |
+| Tag `final-24h` | **Pendiente** | Se crea al final, con autorización explícita (ver abajo) |
+| README | Hecho | Problema con fuentes, arquitectura de agentes, tecnologías, fuentes de datos, instalación, ejecución y credencial demo de `.env.example` |
+| Diagrama de arquitectura | Hecho | [architecture.png](images/architecture.png) (fuente `architecture.mmd`) y diagramas de [ARCHITECTURE](ARCHITECTURE.md): agentes, herramientas, flujo y las dos aprobaciones humanas |
+| Evals (≥ 15 casos, métrica y resultados) | Hecho | 64/64 escenarios en [cases.json](../evals/cases.json) y [results.json](../evals/results.json); impacto en [impact.json](../evals/impact.json); método en [EVALUATION](EVALUATION.md) |
+| Bitácora de IA | Hecho | [AI_LOG](AI_LOG.md): herramientas, modelos, qué se hizo a mano y entradas por fase |
+| Documento de metodología | Hecho | [METHODOLOGY](METHODOLOGY.md): metodología, funcionamiento, despliegue y límites |
+| Video demo ≤ 3 min | No obligatorio según el equipo | La sección 6 del documento del reto lo lista; si se graba, enlazarlo arriba en el README |
 
-## Congelamiento cuando corresponda
+## Requisitos mínimos (sección 2)
 
-Solo al cumplirse el plazo oficial, después de revisar resultados, documentación y video, y con
-autorización explícita: confirmar rama/commit correcto, árbol limpio y CI verde. El responsable
-puede crear `git tag -a final-24h -m "Entrega final hackathon"` sobre el último commit válido y
-publicarlo con `git push origin final-24h`. Estos son pasos documentados, **no ejecutados**.
-No reemplazar un tag existente ni adelantar el congelamiento. Confirmar reglas/fechas oficiales
-con los organizadores: no se recibió documentación adicional que permita verificar el registro.
+| Requisito | Estado | Evidencia |
+|---|---|---|
+| ≥ 3 agentes que se comunican | Hecho | Cinco agentes: ingesta, verificación, coordinación, planificador y comunicación (`agents.py`, `graph.py`) |
+| Herramienta con acción real | Hecho | Escritura en base de datos, solver de cisternas y avisos por Telegram (`tools.py`, `planner.py`, `integrations/telegram.py`) |
+| Componente determinístico | Hecho | Puntaje en `domain.py`, solver en `planner.py`, compuertas en `grounding.py` |
+| Humano en el ciclo | Hecho | Aprobación de prioridad (interrupt/resume de LangGraph) y aprobación del plan, con razón |
+| Trazabilidad | Hecho | Trazas por agente y herramienta, auditoría de decisiones, expediente en la interfaz |
+| Evals propios | Hecho | 64 escenarios; 206 pruebas pytest y 30 Vitest |
+| Guardrails | Hecho | [GUARDRAILS](GUARDRAILS.md): inyección, fuera de tema, datos inventados, candidatos inválidos |
+
+## Verificación
+
+| Comprobación | Estado |
+|---|---|
+| Pruebas locales | Backend 206 passed (88 % cobertura), evals 64/64, frontend 30/30, build |
+| Instalación limpia desde el README | Hecha en F7 (ver AI_LOG) |
+| Corrida real con NVIDIA NIM | F2-01 completo: 12 reportes a revisión en 166 s, plan y aviso al hospital ([AI_LOG](AI_LOG.md), [NVIDIA_SMOKE](NVIDIA_SMOKE.md)) |
+| CI en GitHub Actions | **Por confirmar** en la pestaña Actions del último commit |
+
+## Congelamiento
+
+Solo al cumplirse el plazo oficial, después de revisar la documentación, y con autorización
+explícita: confirmar el commit correcto, árbol limpio y CI verde. Luego el responsable ejecuta
+`git tag -a final-24h -m "Entrega final hackathon"` y `git push origin final-24h`.
+Cualquier commit posterior al tag se ignora en la evaluación. No reemplazar un tag existente.

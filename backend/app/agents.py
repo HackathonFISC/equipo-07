@@ -88,8 +88,10 @@ class Agents:
             and c["kind"] == normalized["kind"]
         ]
         if not candidates:
+            # Nothing compatible to match: a model call could only cost time or invent a UUID.
             assessment = DuplicateEvaluationSchema(
-                match_confidence="LOW", reasoning="Sin candidatos compatibles en sector y ventana"
+                match_confidence="LOW",
+                reasoning="Regla determinística: sin incidentes del mismo tipo en sector y ventana",
             )
         elif len(exact) == 1:
             assessment = DuplicateEvaluationSchema(

@@ -56,7 +56,7 @@ TIME_RANGE_RE = re.compile(
     rf"\b(?:entre|de)\s+{TIME_NUMBER}\s+(?:y|a|hasta)\s+{TIME_NUMBER}\s+"
     r"(?:horas?|dias?|semanas?)\b|"
     r"\b(?:mas de|menos de|al menos|hasta|aproximadamente|alrededor de|unas?|casi)\s+"
-    rf"{TIME_NUMBER}\s*(?:horas?|hrs?|dias?|semanas?)\b|"
+    rf"{TIME_NUMBER}\s*(?:horas?|hrs?|h|dias?|semanas?)\b|"
     rf"\b{TIME_NUMBER}\s+(?:horas?|dias?|semanas?)\s+o\s+mas\b|"
     r"\b\d+\s*[-–]\s*\d+\s*(?:horas?|dias?)\b"
 )
@@ -68,6 +68,17 @@ class TemporalGrounding:
     is_imprecise: bool
 
 
+# «y media» / «y medio» right after the unit adds half of it: «1 hora y media» is 1.5 h,
+# «3 días y medio» is 84 h. Without it the model's correct answer failed the grounding gate.
+HALF = r"(\s+y\s+medi[ao])?"
+UNITS = (
+    # «24 oras» is a common misspelling a model does read as hours; «24h» is the short form.
+    (r"(?:h?oras?|hrs?|h)", 1.0),
+    (r"dias?", 24.0),
+    (r"semanas?", 168.0),
+)
+
+
 def stated_hours(text: str) -> list[float]:
     """Extrae las duraciones explícitas del texto convertidas a horas."""
     lowered = plain(text)
@@ -75,40 +86,19 @@ def stated_hours(text: str) -> list[float]:
     if TIME_RANGE_RE.search(lowered):
         return hours
 
-    # 1. Horas explícitas con dígitos: "24 horas", "1.5 hora", "12 hrs"; también la falta
-    #    de ortografía común "24 oras", que un LLM sí lee como horas.
-    for match in re.finditer(r"(?<![\d.-])(\d+(?:[.,]\d+)?)\s*(?:h?oras?|hrs?)\b", lowered):
-        val = float(match.group(1).replace(",", "."))
-        hours.append(val)
-
-    # 2. Horas en palabras: "dos horas", "tres horas"
-    for word, num in WORD_NUMBERS.items():
-        if re.search(rf"\b{word}\s+(?:horas?|hrs?)\b", lowered):
-            hours.append(float(num))
-
-    # 3. Días explícitos con dígitos: "3 días", "1.5 dias"
-    for match in re.finditer(r"(?<![\d.-])(\d+(?:[.,]\d+)?)\s*dias?\b", lowered):
-        val = float(match.group(1).replace(",", "."))
-        hours.append(val * 24.0)
-
-    # 4. Días en palabras: "un día", "dos días", "tres días"
-    for word, num in WORD_NUMBERS.items():
-        if re.search(rf"\b{word}\s+dias?\b", lowered):
-            hours.append(float(num * 24))
+    for unit, factor in UNITS:
+        # Con dígitos: "24 horas", "24h", "1.5 dias", "2 semanas".
+        for match in re.finditer(rf"(?<![\d.-])(\d+(?:[.,]\d+)?)\s*{unit}\b{HALF}", lowered):
+            value = float(match.group(1).replace(",", "."))
+            hours.append((value + (0.5 if match.group(2) else 0)) * factor)
+        # En palabras: "dos horas", "un día y medio", "una semana".
+        for word, num in WORD_NUMBERS.items():
+            for match in re.finditer(rf"\b{word}\s+{unit}\b{HALF}", lowered):
+                hours.append((num + (0.5 if match.group(1) else 0)) * factor)
 
     # "medio día" as a duration; "el/al/del medio día" is noon, a time of day.
     if re.search(r"(?<!\bel )(?<!\bal )(?<!\bdel )\bmedio\s+dia\b", lowered):
         hours.append(12.0)
-
-    # 5. Semanas explícitas con dígitos: "2 semanas"
-    for match in re.finditer(r"(?<![\d.-])(\d+(?:[.,]\d+)?)\s*semanas?\b", lowered):
-        val = float(match.group(1).replace(",", "."))
-        hours.append(val * 168.0)
-
-    # 6. Semanas en palabras: "una semana", "dos semanas"
-    for word, num in WORD_NUMBERS.items():
-        if re.search(rf"\b{word}\s+semanas?\b", lowered):
-            hours.append(float(num * 168))
 
     return hours
 
