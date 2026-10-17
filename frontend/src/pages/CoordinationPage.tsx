@@ -8,11 +8,12 @@ import { api, polling } from '../api'
 import { EmptyState, ErrorMessage, Pill, Skeleton } from '../components'
 import { eventLabels, incidentStatusLabels, kindLabels, label, scoreText, when } from '../labels'
 import type { Community, Detail, DistributionPlan, Execution, Incident, IncidentTimelineEvent } from '../types'
+import { MapPanel } from './MapPanel'
 import { PlanPanel } from './PlanPanel'
 import { placeName, type Lookups } from '../lookups'
 import { ReportsPanel, type ReportFilter } from './ReportsPanel'
 
-type Tab = 'overview' | 'reports' | 'incidents' | 'plan'
+type Tab = 'overview' | 'reports' | 'incidents' | 'plan' | 'map'
 
 const sourceLabels: Record<string, string> = {
   report: 'Reporte', trace: 'Sistema', review: 'Coordinación', plan: 'Plan de cisternas', notification: 'Aviso',
@@ -258,6 +259,7 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
   const [filter, setFilter] = useState<ReportFilter>('all')
   const [page, setPage] = useState(0)
   const [timelineIncidentId, setTimelineIncidentId] = useState<string | null>(null)
+  const [mapPlan, setMapPlan] = useState<string | null>(null)
   const closeTimeline = useCallback(() => setTimelineIncidentId(null), [])
 
   const executions = useQuery({
@@ -329,12 +331,14 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
     ['reports', 'Reportes', pending],
     ['incidents', 'Incidentes', 0],
     ['plan', 'Cisternas', plan.data?.status === 'PROPOSED' ? 1 : 0],
+    ['map', 'Mapa', 0],
   ]
   const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (!['ArrowRight', 'ArrowLeft'].includes(e.key)) return
     const index = tabs.findIndex(([value]) => value === tab)
     const next = tabs[(index + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length][0]
     setTab(next)
+    setMapPlan(null)
     document.getElementById(`tab-${next}`)?.focus()
   }
 
@@ -348,7 +352,7 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
       <div className="tabs" role="tablist" aria-label="Secciones de coordinación" onKeyDown={onTabKey}>
         {tabs.map(([value, text, badge]) => (
           <button key={value} id={`tab-${value}`} type="button" role="tab" aria-selected={tab === value}
-            aria-controls={`panel-${value}`} tabIndex={tab === value ? 0 : -1} onClick={() => setTab(value)}>
+            aria-controls={`panel-${value}`} tabIndex={tab === value ? 0 : -1} onClick={() => { setTab(value); setMapPlan(null) }}>
             {text}
             {badge > 0 && <span className="count-badge" aria-label={`${badge} pendientes`}>{badge}</span>}
           </button>
@@ -369,7 +373,8 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
             selected={selected} setSelected={setSelected} onViewTimeline={setTimelineIncidentId} />
         )}
         {tab === 'incidents' && <IncidentsPanel token={token} lookups={lookups} onViewTimeline={setTimelineIncidentId} />}
-        {tab === 'plan' && <PlanPanel token={token} lookups={lookups} />}
+        {tab === 'plan' && <PlanPanel token={token} lookups={lookups} onShowMap={id => { setMapPlan(id); setTab('map') }} />}
+        {tab === 'map' && <MapPanel token={token} initialPlan={mapPlan} />}
       </div>
 
       {timelineIncidentId && (

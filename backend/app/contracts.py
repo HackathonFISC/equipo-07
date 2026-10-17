@@ -281,3 +281,94 @@ class IncidentTimelineEvent(Contract):
     event: str
     summary: str
     detail: dict = Field(default_factory=dict)
+
+
+IncidentStatus = Literal["OPEN", "PRIORITIZED", "SCHEDULED", "CLOSED"]
+
+
+class CorregimientoActivity(Contract):
+    id: str
+    name: str
+    district: str
+    population: int | None
+    # COD_AB: polygon from OCHA/HDX; SIN_GEOMETRIA: the source has no polygon for it.
+    geometry: Literal["COD_AB", "SIN_GEOMETRIA"]
+    reports: int
+    incidents: int
+    # Reports filed at a catalog place (hospital, reference) that the dataset assigns here.
+    catalog_point_reports: int
+
+
+class UnassignedActivity(Contract):
+    reports: int
+    incidents: int
+    community_ids: list[str]
+
+
+class ReportActivity(Contract):
+    days: int | None
+    status: IncidentStatus | None
+    reports: int
+    incidents: int
+    corregimientos: list[CorregimientoActivity]
+    unassigned: UnassignedActivity
+
+
+class PlanSummary(Contract):
+    id: str
+    status: Literal["QUEUED", "RUNNING", "PROPOSED", "APPROVED", "REJECTED", "ERROR"]
+    created_at: datetime
+    demand_gallons: int | None
+    planned_gallons: int | None
+
+
+class MapPlace(Contract):
+    id: str
+    name: str
+    lat: float | None
+    lng: float | None
+    # ESTIMADA: team-estimated catalog coordinates; SIN_UBICACION: no coordinates at all.
+    location: Literal["ESTIMADA", "SIN_UBICACION"]
+    corregimiento_id: str | None
+
+
+class MapStop(Contract):
+    order: int
+    trip: int
+    arrival: str
+    gallons: int
+    incident_ids: list[str]
+    place: MapPlace
+
+
+class MapRoute(Contract):
+    truck_id: str
+    truck_name: str
+    capacity: int
+    gallons: int
+    trips: int
+    km: float
+    shift: str
+    ends_at: str | None
+    depot: MapPlace
+    stops: list[MapStop]
+
+
+class MapUnserved(Contract):
+    reason: str
+    gallons_missing: int | None
+    detail: str
+    incident_ids: list[str]
+    place: MapPlace
+
+
+class PlanMap(Contract):
+    plan_id: str
+    status: Literal["QUEUED", "RUNNING", "PROPOSED", "APPROVED", "REJECTED", "ERROR"]
+    created_at: datetime
+    excluded_trucks: list[str]
+    # The planner estimates distance as straight line x tortuosity; no road network is used.
+    road_routing: Literal["NO_CALCULADA"] = "NO_CALCULADA"
+    distance_model: str | None
+    routes: list[MapRoute]
+    unserved: list[MapUnserved]

@@ -112,3 +112,38 @@ export interface IncidentTimelineEvent {
   detail: Record<string, unknown>
 }
 
+
+export type IncidentStatus = 'OPEN' | 'PRIORITIZED' | 'SCHEDULED' | 'CLOSED'
+export interface CorregimientoActivity {
+  id: string; name: string; district: string; population: number | null
+  geometry: 'COD_AB' | 'SIN_GEOMETRIA'
+  reports: number; incidents: number; catalog_point_reports: number
+}
+export interface ReportActivity {
+  days: number | null; status: IncidentStatus | null; reports: number; incidents: number
+  corregimientos: CorregimientoActivity[]
+  unassigned: { reports: number; incidents: number; community_ids: string[] }
+}
+export interface Boundaries {
+  source: string; source_url: string; license: string; missing_in_source: string[]
+  features: { properties: { id: string; name: string; district: string; pcode: string }
+    geometry: { type: 'MultiPolygon'; coordinates: number[][][][] } }[]
+}
+export interface PlanSummary {
+  id: string; status: PlanStatus; created_at: string
+  demand_gallons: number | null; planned_gallons: number | null
+}
+export interface MapPlace {
+  id: string; name: string; lat: number | null; lng: number | null
+  location: 'ESTIMADA' | 'SIN_UBICACION'; corregimiento_id: string | null
+}
+export interface MapRoute {
+  truck_id: string; truck_name: string; capacity: number; gallons: number; trips: number
+  km: number; shift: string; ends_at: string | null; depot: MapPlace
+  stops: { order: number; trip: number; arrival: string; gallons: number; incident_ids: string[]; place: MapPlace }[]
+}
+export interface PlanMap {
+  plan_id: string; status: PlanStatus; created_at: string; excluded_trucks: string[]
+  road_routing: 'NO_CALCULADA'; distance_model: string | null; routes: MapRoute[]
+  unserved: { reason: string; gallons_missing: number | null; detail: string; incident_ids: string[]; place: MapPlace }[]
+}

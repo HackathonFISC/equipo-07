@@ -43,6 +43,17 @@ de llegada, la copia del código, la consulta por código y los ejemplos (solo e
   cubiertas y sin cubrir con su motivo (`SIN_UBICACION` explica que no se calcula ruta ni hora),
   comparación de impacto, rutas por cisterna y revisión del plan con confirmación.
 
+- **Mapa** (solo coordinación, mismo token): dos capas. *Reportes e incidentes* colorea los 57
+  corregimientos con polígono COD-AB en cuatro clases de igual intervalo (más «sin reportes»),
+  alterna reportes e incidentes distintos, filtra por periodo (24 h, 7 y 30 días, todo) y estado del
+  incidente, y lista todos los corregimientos con actividad, incluidos los que no tienen polígono.
+  *Cisternas* elige un plan: plantas (cuadrados), entregas por color de cisterna, números de visita
+  al elegir una cisterna, no atendidas con contorno rojo y el corregimiento resaltado cuando la
+  comunidad no tiene punto. Una propuesta se dibuja con trazo discontinuo. No se dibujan líneas: la
+  ruta vial figura como «No calculada» (`NO_CALCULADA`). La pestaña Cisternas enlaza al plan en el
+  mapa. SVG propio con proyección equirectangular; sin teselas ni servicios externos, por eso funciona
+  sin conexión. La lista acompaña al mapa como alternativa por teclado y lector de pantalla.
+
 ## Funcionalidad conservada
 
 Todas las llamadas de antes: `/health`, `/communities`, `POST /reports`, `/executions/{id}`,
@@ -65,7 +76,7 @@ comprueban.
 - Los recuentos del resumen cubren los 25 reportes más recientes; no hay endpoint de totales.
 - Los máximos por factor (35, 30, 20, 15) se toman de los valores por defecto de
   `PriorityPolicyConfig`; la API no los expone.
-- Los 60 corregimientos del catálogo INEC no tienen coordenadas: el planificador los marca
-  `SIN_UBICACION` y la interfaz no inventa rutas ni mapas.
+- Los 60 corregimientos del catálogo INEC no tienen coordenadas puntuales: el planificador los
+  marca `SIN_UBICACION`; el mapa resalta su polígono cuando existe y no inventa un punto ni rutas.
 
 Las capturas de `docs/evidence/` corresponden a la interfaz anterior.

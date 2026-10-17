@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CaretRightIcon, InfoIcon, MapPinIcon, TruckIcon, WarningIcon } from '@phosphor-icons/react'
+import { CaretRightIcon, InfoIcon, MapPinIcon, MapTrifoldIcon, TruckIcon, WarningIcon } from '@phosphor-icons/react'
 import { api } from '../api'
 import { EmptyState, ErrorMessage, Pill, Skeleton } from '../components'
 import { arrivalText, coverageText, impactMetricLabels } from '../impact'
@@ -138,7 +138,7 @@ function Impact({ plan }: { plan: NonNullable<DistributionPlan['result']> }) {
   )
 }
 
-export function PlanPanel({ token, lookups }: { token: string; lookups?: Lookups }) {
+export function PlanPanel({ token, lookups, onShowMap }: { token: string; lookups?: Lookups; onShowMap?: (planId: string) => void }) {
   const client = useQueryClient()
   const [unavailable, setUnavailable] = useState<string[]>([])
 
@@ -255,6 +255,11 @@ export function PlanPanel({ token, lookups }: { token: string; lookups?: Lookups
               <p className="note warn"><WarningIcon aria-hidden="true" />La necesidad no incluye {noDemand} {noDemand === 1 ? 'comunidad' : 'comunidades'} sin ubicación o sin demanda estimada: el porcentaje no las cuenta. Están en «Necesidades sin cubrir».</p>
             )}
             <p className="hint">Recorrido estimado: {result.routes.reduce((sum, r) => sum + r.km, 0).toFixed(0)} km. Las horas son estimaciones del planificador, no posiciones reales de las cisternas.</p>
+            {onShowMap && current && (
+              <button type="button" className="secondary small" style={{ justifySelf: 'start' }} onClick={() => onShowMap(current.id)}>
+                <MapTrifoldIcon aria-hidden="true" /> Ver asignación en el mapa
+              </button>
+            )}
           </section>
 
           <div className="two-col">

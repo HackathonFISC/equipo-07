@@ -4,9 +4,10 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import case, delete, distinct, func, select, update
 from sqlalchemy.exc import IntegrityError
 
+from app import geo
 from app.contracts import PlanRequest, PlanReviewInput, ReportInput, ReviewInput
 from app.models import (
     Association,
@@ -588,3 +589,75 @@ async def incident_timeline(db, incident_id: str):
 
         events.sort(key=lambda x: x["timestamp"])
         return events
+
+
+async def report_activity(db, days: int | None, status: str | None):
+    """Reports and distinct incidents per corregimiento, aggregated in SQL, never per report."""
+    linked = Association.status != "REJECTED"
+    query = (
+        select(
+            Report.community_id,
+            func.count(Report.id),
+            func.count(distinct(case((linked, Association.incident_id)))),
+        )
+        .outerjoin(Association, Association.report_id == Report.id)
+        .outerjoin(Incident, Incident.id == Association.incident_id)
+        .group_by(Report.community_id)
+    )
+    if days:
+        query = query.where(Report.created_at >= now() - timedelta(days=days))
+    if status:
+        query = query.where(linked, Incident.status == status)
+    async with db.sessions() as session:
+        rows = (await session.execute(query)).all()
+    locations = location_catalog()
+    areas = {
+        cid: {**c, "reports": 0, "incidents": 0, "catalog_point_reports": 0}
+        for cid, c in geo.corregimientos().items()
+    }
+    unassigned = {"reports": 0, "incidents": 0, "community_ids": []}
+    # An incident belongs to exactly one community, so per-community distinct counts add up.
+    for community_id, reports, incidents in rows:
+        target = geo.corregimiento_of(community_id, locations)
+        area = areas[target] if target else unassigned
+        area["reports"] += reports
+        area["incidents"] += incidents
+        if target is None:
+            unassigned["community_ids"].append(community_id)
+        elif target != community_id:
+            area["catalog_point_reports"] += reports
+    return {
+        "days": days,
+        "status": status,
+        "reports": sum(r for _, r, _ in rows),
+        "incidents": sum(i for _, _, i in rows),
+        "corregimientos": sorted(areas.values(), key=lambda a: (-a["reports"], a["id"])),
+        "unassigned": unassigned,
+    }
+
+
+async def plan_summaries(db, limit: int):
+    async with db.sessions() as session:
+        plans = await session.scalars(
+            select(DistributionPlan)
+            .order_by(DistributionPlan.created_at.desc(), DistributionPlan.id)
+            .limit(limit)
+        )
+        return [
+            {
+                "id": p.id,
+                "status": p.status,
+                "created_at": p.created_at,
+                "demand_gallons": (p.result or {}).get("demand_gallons"),
+                "planned_gallons": (p.result or {}).get("planned_gallons"),
+            }
+            for p in plans
+        ]
+
+
+async def plan_geography(db, plan_id: str):
+    async with db.sessions() as session:
+        plan = await session.get(DistributionPlan, plan_id)
+        if not plan:
+            raise Missing("Plan no encontrado")
+        return geo.plan_map(record_dict(plan), fleet_catalog(), location_catalog())

@@ -540,3 +540,22 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
 - Contraste calculado con la fórmula WCAG para cada par de tokens: texto ≥ 4,5:1, bordes de campos y
   rellenos gráficos ≥ 3:1. Verificado con `npm run lint`, `typecheck`, `test` (14/14) y `build`, y
   con capturas en claro y oscuro contra la API aislada en modo mock. Sin commits ni pushes.
+
+## 2026-10-17 — Mapa de incidentes y distribución de cisternas (RF38, RF39)
+
+- Herramienta: Claude Code (Claude Opus 5.5), rama `geo-mapa-cisternas`. Ponytail (full).
+- Hallazgos previos: sin biblioteca de mapas, sin OR-Tools ni motor de rutas; el planificador es una
+  heurística propia por rondas (asignación y orden, distancia en línea recta × 1.4). Se reutilizó
+  sin cambios.
+- Datos: límites COD-AB de OCHA/HDX (F08), filtrados y simplificados con
+  `scripts/build_corregimiento_geometry.py`; 3 corregimientos sin polígono y 8 puntos del catálogo
+  que no caen en su corregimiento declarado, ambos documentados en DATA_SOURCES §5.
+- Código: `app/geo.py`, consultas en `services.py`, 4 endpoints protegidos, contratos Pydantic,
+  `MapPanel.tsx` en SVG sin dependencias nuevas. Sin migraciones ni cambios en agentes, prioridad ni
+  formulario ciudadano.
+- Verificación: ruff, formato, mypy, `pytest` 168/168 (5 nuevas en test_map.py), `alembic check` sobre
+  una base en head, `npm run lint`, `typecheck`, `test` 15/15 y `build`. Revisión visual con Edge sin
+  interfaz (CDP) contra API y worker aislados en modo mock con base temporal: 1440 y 390 px, claro y
+  oscuro, sin errores de consola ni desbordamiento horizontal. Las aprobaciones de esa base son datos
+  de prueba, no revisiones humanas reales.
+- Acciones remotas/Git: ninguna.

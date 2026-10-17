@@ -26,6 +26,8 @@ Todas las fuentes de esta tabla corresponden a páginas consultadas en vivo dura
 | F06 | Ubicación y captación de agua cruda de la Planta Potabilizadora Jaime Díaz Quintero (El Trapichito) | Toma de agua cruda sobre la cuenca del río Caimito en el sector de El Trapichito, La Chorrera | https://www.panamaamerica.com.pa/provincias/rio-caimito-en-la-chorrera-sufre-desastre-ambiental-1260989 | Panamá América (prensa) | 2026-10-17 |
 | F07 | Población por corregimiento de Panamá Oeste (60 corregimientos, 5 distritos) | `data/panama_oeste_corregimientos.json` (`population_2023`) | https://www.inec.gob.pa/archivos/P0705547520240202082406Panam%C3%A1%20Oeste.pdf | INEC, Censos 2023, Cuadro 3 (declarado en el archivo; pendiente de abrir por el equipo) | 2026-10-16 |
 
+| F08 | Límites de corregimientos de Panamá Oeste (`data/panama_oeste_corregimientos.geojson`) | 57 de los 60 corregimientos del INEC 2023, con P-code (PA11xxxx). Faltan Burunga, Cerro Silvestre y Vacamonte: la capa conserva 6 corregimientos en Arraiján | https://data.humdata.org/dataset/cod-ab-pan (archivo `pan_admin_boundaries.geojson.zip`, capa admin3) | OCHA/HDX, COD-AB v01; HDX declara como origen www.gadm.org y licencia CC BY-IGO 3.0 | 2026-10-17 |
+
 Fuente primaria del censo, citada por F01 y pendiente de abrir para confirmar las cifras:
 INEC, «Superficie, población y densidad de población en la República según provincia, comarca,
 distrito y corregimiento. Censos de 2000 a 2023», Cuadro 10:
@@ -109,6 +111,21 @@ Procedencia detallada de cada campo utilizado por el motor de cálculo de priori
 
 ---
 
+4. **Puntos del catálogo frente a los límites COD-AB (F08):**
+   - Al cruzar las coordenadas estimadas de `panama_oeste_locations.geojson` con los polígonos, 8 de
+     20 puntos caen en un corregimiento distinto del que declaran. Ejemplos: el Hospital Nicolás A.
+     Solano (declara Playa Leona, cae en Puerto Caimito), la planta de Laguna Alta (declara Nuevo
+     Emperador en Arraiján, cae en El Arado, La Chorrera) y la Loma de Burunga (cae en Arraiján
+     cabecera porque la capa no separa Burunga). El mapa cuenta los reportes en el corregimiento
+     declarado y rotula los puntos como «ubicación aproximada»; las coordenadas no se corrigieron
+     porque no hay fuente verificada para hacerlo.
+5. **Capa de límites desactualizada en Arraiján (F08):** la capa tiene 6 de los 9 corregimientos
+   del INEC 2023. Burunga, Cerro Silvestre y Vacamonte quedan `SIN_GEOMETRIA`: sus reportes se
+   cuentan y listan, pero no colorean ningún polígono. Se evaluó geoBoundaries (STRI 2012, CC BY 4.0),
+   que incluye Burunga y Cerro Silvestre pero tampoco tiene Vacamonte ni atributos de distrito, y
+   OpenStreetMap, que en esta zona solo tiene nodos de poblado y no polígonos de corregimiento. No se
+   mezclan fuentes ni se dibujan polígonos a mano.
+
 ## 6. Límites y alcance de evaluaciones
 
 1. **Datos no verificables con fuentes institucionales abiertas:**
@@ -117,4 +134,6 @@ Procedencia detallada de cada campo utilizado por el motor de cálculo de priori
    - No se dispone de un manual oficial de ponderación de prioridad aprobado por el IDAAN para emergencias; los pesos 35/30/20/15 son una propuesta algorítmica de coordinación asistida.
 2. **Interpretación de `evals/impact.json`:**
    - Las métricas (cobertura de la demanda crítica, minutos hasta la primera entrega crítica y comunidades atendidas) comparan órdenes de atención sobre el escenario de `data/demo_scenario.json`, con demandas, flota y velocidades que son supuestos. Indican el efecto relativo de la priorización, no tiempos reales.
+   - El planificador no usa red vial: estima distancias en línea recta × 1.4. El mapa del plan
+     (`road_routing: NO_CALCULADA`) muestra asignación y orden de visitas, nunca trayectos.
    - Ningún resultado del evaluador o del solver debe extrapolarse como una medición de impacto operativo en la red física real del IDAAN ni como una validación de rutas reales de transporte público.

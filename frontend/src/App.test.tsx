@@ -321,3 +321,54 @@ test('plan shows unserved places without location as a limitation, not as a rout
   expect(screen.getByText('Ninguna comunidad recibe agua en este plan.')).toBeInTheDocument()
   expect(screen.getByText(/el sistema no registra si el agua llegó/)).toBeInTheDocument()
 })
+
+test('map tab colours corregimientos from backend counts and keeps assignment apart from roads', async () => {
+  const user = userEvent.setup()
+  const square = [[[[-79.8, 8.9], [-79.7, 8.9], [-79.7, 9], [-79.8, 9], [-79.8, 8.9]]]]
+  const boundaries = { source: 'OCHA/HDX COD-AB', source_url: 'x', license: 'CC BY-IGO', missing_in_source: ['corr-b'],
+    features: [{ properties: { id: 'corr-a', name: 'Barrio A', district: 'La Chorrera', pcode: 'PA1' },
+      geometry: { type: 'MultiPolygon', coordinates: square } }] }
+  const area = (id: string, name: string, reports: number, incidents: number, geometry = 'COD_AB') =>
+    ({ id, name, district: 'La Chorrera', population: 100, geometry, reports, incidents, catalog_point_reports: 0 })
+  const activity = { days: null, status: null, reports: 5, incidents: 2,
+    corregimientos: [area('corr-a', 'Barrio A', 3, 1), area('corr-b', 'Barrio B', 2, 1, 'SIN_GEOMETRIA')],
+    unassigned: { reports: 0, incidents: 0, community_ids: [] } }
+  const place = (id: string, lat: number | null) => ({ id, name: id === 'h' ? 'Hospital' : 'Sector X', lat, lng: lat && -79.75,
+    location: lat ? 'ESTIMADA' : 'SIN_UBICACION', corregimiento_id: 'corr-a' })
+  const planMap = { plan_id: 'p1', status: 'PROPOSED', created_at: '2026-10-16', excluded_trucks: ['t9'],
+    road_routing: 'NO_CALCULADA', distance_model: 'Distancias: línea recta × 1.4.',
+    routes: [{ truck_id: 't1', truck_name: 'Troncal 02', capacity: 10000, gallons: 5000, trips: 1, km: 12,
+      shift: '08:00–16:00', ends_at: '09:30', depot: place('pot', 8.95),
+      stops: [{ order: 1, trip: 1, arrival: '08:23', gallons: 5000, incident_ids: ['i1'], place: place('h', 8.95) }] }],
+    unserved: [{ reason: 'SIN_UBICACION', gallons_missing: null, detail: 'x', incident_ids: ['i2'], place: place('s', null) }] }
+  const urls: string[] = []
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async url => {
+    const u = String(url); urls.push(u)
+    if (u.includes('/map/boundaries')) return Response.json(boundaries)
+    if (u.includes('/map/activity')) return Response.json(activity)
+    if (u.includes('/map/plans/')) return Response.json(planMap)
+    if (u.endsWith('/admin/plans?limit=20')) return Response.json([{ id: 'p1', status: 'PROPOSED', created_at: '2026-10-16', demand_gallons: 1, planned_gallons: 1 }])
+    return Response.json(u.includes('/plans/latest') ? null : [])
+  })
+  const { container } = mount(<CoordinationPage token="test-coordinator-token" />)
+  await user.click(await screen.findByRole('tab', { name: 'Mapa' }))
+  await screen.findByRole('img', { name: /reportes por corregimiento/ })
+  expect(container.querySelector('path.shade-4')).toBeInTheDocument()
+  expect(screen.getByText(/Sin polígono en la fuente: Barrio B \(2 rep\.\)/)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: '30 días' }))
+  await user.selectOptions(screen.getByLabelText('Estado del incidente'), 'SCHEDULED')
+  await waitFor(() => expect(urls).toContain('/api/admin/map/activity?days=30&status=SCHEDULED'))
+  await user.click(screen.getByRole('button', { name: /Barrio A/ }))
+  expect(screen.getByRole('heading', { name: 'Barrio A' })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Cisternas' }))
+  expect(await screen.findByText('No calculada')).toBeInTheDocument()
+  expect(screen.getByText('NO_CALCULADA')).toBeInTheDocument()
+  expect(container.querySelector('line, polyline')).toBeNull()  // no straight lines posing as roads
+  expect(screen.getByText(/se resalta su corregimiento/)).toBeInTheDocument()
+  expect(container.querySelector('path.area-gap')).toBeInTheDocument()
+  expect(screen.getByText(/Excluidas por el coordinador en este plan: t9/)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: /Troncal 02/ }))
+  expect(screen.getByText('1. Hospital')).toBeInTheDocument()
+  expect(container.querySelector('.marker text')).toHaveTextContent('1')
+})

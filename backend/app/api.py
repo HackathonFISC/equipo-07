@@ -11,13 +11,18 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 
+from app import geo
 from app.config import Settings
 from app.contracts import (
     ExecutionReceipt,
+    IncidentStatus,
     IncidentTimelineEvent,
+    PlanMap,
     PlanRequest,
     PlanReviewInput,
+    PlanSummary,
     PublicReportStatus,
+    ReportActivity,
     ReportInput,
     ReviewInput,
 )
@@ -34,8 +39,11 @@ from app.services import (
     get_public_report_status,
     incident_timeline,
     latest_plan,
+    plan_geography,
+    plan_summaries,
     rate_limit,
     record_dict,
+    report_activity,
     request_plan,
     retry_execution,
     review_plan,
@@ -143,6 +151,24 @@ def create_app(settings: Settings | None = None):
     @app.post("/api/admin/plans", dependencies=protected, status_code=202)
     async def create_plan(body: PlanRequest):
         return await request_plan(db, body)
+
+    @app.get("/api/admin/plans", dependencies=protected, response_model=list[PlanSummary])
+    async def plans(limit: int = Query(20, ge=1, le=50)):
+        return await plan_summaries(db, limit)
+
+    @app.get("/api/admin/map/boundaries", dependencies=protected)
+    def map_boundaries():
+        return geo.boundaries()
+
+    @app.get("/api/admin/map/activity", dependencies=protected, response_model=ReportActivity)
+    async def map_activity(
+        days: int | None = Query(None, ge=1, le=365), status: IncidentStatus | None = None
+    ):
+        return await report_activity(db, days, status)
+
+    @app.get("/api/admin/map/plans/{plan_id}", dependencies=protected, response_model=PlanMap)
+    async def map_plan(plan_id: UUID):
+        return await plan_geography(db, str(plan_id))
 
     @app.get("/api/admin/plans/latest", dependencies=protected)
     async def current_plan():
