@@ -219,6 +219,7 @@ class PlanResult(Contract):
     demand_gallons: int
     planned_gallons: int
     explanation: list[str]
+    impact: dict | None = None
 
 
 class PlanRequest(Contract):

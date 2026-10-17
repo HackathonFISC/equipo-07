@@ -406,3 +406,32 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
 - Prueba de modelos (imagen de prueba generada localmente): nemotron-3.5-super-vl 7.1 s (respondió en
   inglés), nemotron-3-nano-omni 10.8 s y 7.7 s con el prompt final, en español y con `relevant: false`
   correcto. gemma-3-12b-it no está disponible (404).
+
+## 2026-10-17 — F5-04: Panel de impacto en el plan
+
+- Herramienta: Antigravity Assistant, a pedido del usuario, en `main` sin commits.
+- F5-04: Panel de impacto comparativo en el planificador de rutas de distribución de agua.
+  - Backend:
+    - `backend/app/contracts.py`: Añadido campo `impact: dict | None = None` a `PlanResult`.
+    - `backend/app/tools.py`: Enriquecido `PlannerTools.planning_inputs` para agregar conteo de reportes y marca temporal del primer reporte (`first_report_at`) por incidente usando `Association` y `Report`.
+    - `backend/app/agents.py`: `PlannerAgent.plan` construye objetos `Demand` para `impact.py:compare()` asignando rangos de llegada 1..N e invoca el comparador determinístico de impacto (AguaIA vs volumen vs orden de llegada). Anexa el resultado comparativo en `result.impact` antes de persistir el plan.
+    - `backend/app/providers.py`: `MockLLMProvider` ampliado con palabras clave «corte» y «desabastecimiento» para clasificar consistentemente incidentes en el escenario de demo.
+    - `backend/tests/test_impact.py`: Añadida prueba `test_planner_agent_impact_matches_impact_json_for_demo_scenario` que verifica la coincidencia exacta de métricas con `evals/impact.json` (mediana 143 vs 292 min, delta 149 min, 100 % cobertura crítica, 6/6 comunidades y verificación de protección de endpoint con 401).
+  - Frontend:
+    - `frontend/src/types.ts`: Añadidas interfaces `PlanImpact`, `ImpactComparison` e `ImpactStrategyMetrics`; `impact?: PlanImpact | null` en `DistributionPlan.result`.
+    - `frontend/src/pages/PlanPanel.tsx`: Tarjeta interactiva `.impact-card` que presenta: «AguaIA frente a por volumen de reportes: +X % de demanda crítica cubierta · primera entrega crítica Y min antes» (en el escenario demo: +0 % y 149 min antes), columnas comparativas lado a lado y cláusula de honestidad si no supera la alternativa (`not_better`).
+    - `frontend/src/styles.css`: Estilos visuales dedicados para la tarjeta de impacto, grid comparativo, métricas destacadas y nota de transparencia.
+    - `frontend/src/App.test.tsx`: Prueba de renderizado de la tarjeta de impacto con las métricas exactas del escenario F2-01.
+  - Documentación:
+    - `docs/REQUIREMENTS.md`: RF37 registrado como Implementado.
+- R0:
+  - Backend: ruff check (0 errores), ruff format (limpio), mypy (limpio en contratos/dominio/config).
+  - Pytest: **162 passed** (87 % cobertura).
+  - Evals: **54/54** escenarios superados (100 %).
+  - Datos: `validate_datasets.py` superado, 20 ubicaciones, 4 cisternas, `git diff data/` limpio.
+  - Frontend: `npm run lint` (0 errores), `npm run typecheck` (0 errores), `npm test` (**10/10 tests pasados**), `npm run build` bundle generado limpiamente.
+- Revisión (Claude Code): la tarjeta convertía una mediana ausente en «0 min», mostraba diferencias
+  negativas como «-N min antes», escribía «+0 %» para puntos porcentuales y exponía claves internas de
+  `not_better`. Ahora los textos salen de `frontend/src/impact.ts`: «misma cobertura crítica (100 %)»,
+  «N min antes/después», «sin comparación posible» cuando falta la mediana y etiquetas en español.
+  Prueba nueva de esos casos; Vitest 11/11.

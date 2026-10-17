@@ -1,6 +1,12 @@
+import json
+from pathlib import Path
+
 from app.impact import ScenarioReport, build_demands, compare, ordered_demands, trucks_from_catalog
 from app.services import fleet_catalog, location_catalog
+from tests.conftest import AUTH
+from tests.test_evaluations import details, planned, review, submit
 
+ROOT = Path(__file__).resolve().parents[2]
 LOCATIONS = location_catalog()
 COMMUNITIES = {"ref-rey-vista-alegre": {"population": 4000, "vulnerability": 0.6}}
 
@@ -73,3 +79,85 @@ def test_no_trucks_means_no_delivery_for_anyone():
         assert values["communities_served"] == 0
         assert values["critical_coverage_pct"] == 0
         assert values["critical_first_arrival_minutes"] == {"median": None, "max": None}
+
+
+async def approved_report(system, item):
+    payload = {
+        "community_id": item["community_id"],
+        "description": item["description"],
+    }
+    if item.get("hours_without_water") is not None:
+        payload["hours_without_water"] = item["hours_without_water"]
+    key, response = await submit(system, payload)
+    assert response.status_code == 202
+    await system.work()
+    d = await details(system, key)
+    assert d["status"] == "WAITING_APPROVAL"
+    p = d["proposal"]["priority"]
+    score = (
+        round((p["score_min"] + p["score_max"]) / 2) if p["score_min"] != p["score_max"] else None
+    )
+    assert (await review(system, key, approved_score=score)).status_code == 202
+    await system.work()
+    detail = await details(system, key)
+    assert detail["status"] == "APPROVED"
+    return detail["proposal"]["incident_id"]
+
+
+async def test_planner_agent_impact_matches_impact_json_for_demo_scenario(system):
+    scenario_path = ROOT / "data/demo_scenario.json"
+    scenario_data = json.loads(scenario_path.read_text(encoding="utf-8"))
+    expected_impact = json.loads((ROOT / "evals/impact.json").read_text(encoding="utf-8"))
+
+    for item in scenario_data["reports"]:
+        await approved_report(system, item)
+
+    unavailable = scenario_data.get("planner_config", {}).get("unavailable_trucks", [])
+    plan = await planned(system, unavailable_trucks=unavailable)
+
+    assert plan["result"] is not None
+    assert "impact" in plan["result"]
+    impact = plan["result"]["impact"]
+    assert impact is not None
+
+    # AguaIA metrics
+    ag = impact["strategies"]["aguaia"]
+    exp_ag = expected_impact["strategies"]["aguaia"]
+    assert ag["critical_coverage_pct"] == exp_ag["critical_coverage_pct"] == 100.0
+    assert (
+        ag["critical_first_arrival_minutes"]["median"]
+        == exp_ag["critical_first_arrival_minutes"]["median"]
+        == 143
+    )
+    assert ag["communities_served"] == exp_ag["communities_served"] == 6
+
+    # Volumen baseline metrics
+    vol = impact["strategies"]["volumen"]
+    exp_vol = expected_impact["strategies"]["volumen"]
+    assert vol["critical_coverage_pct"] == exp_vol["critical_coverage_pct"] == 100.0
+    assert (
+        vol["critical_first_arrival_minutes"]["median"]
+        == exp_vol["critical_first_arrival_minutes"]["median"]
+        == 292
+    )
+    assert vol["communities_served"] == exp_vol["communities_served"] == 6
+
+    # Comparison metrics (AguaIA vs Volumen)
+    # Primera entrega crítica: 292 - 143 = 149 min antes
+    ag_wait = ag["critical_first_arrival_minutes"]["median"]
+    vol_wait = vol["critical_first_arrival_minutes"]["median"]
+    diff_minutes = (vol_wait or 0) - (ag_wait or 0)
+    assert diff_minutes == 149
+
+    vs_vol = impact["aguaia_vs"]["volumen"]
+    exp_vs_vol = expected_impact["aguaia_vs"]["volumen"]
+    assert vs_vol["critical_coverage_pp"] == exp_vs_vol["critical_coverage_pp"] == 0.0
+    assert vs_vol["not_better"] == exp_vs_vol["not_better"]
+
+    # Security: endpoint is protected, unauthenticated gets 401
+    unauth = await system.client.get("/api/admin/plans/latest")
+    assert unauth.status_code == 401
+
+    auth_resp = await system.client.get("/api/admin/plans/latest", headers=AUTH)
+    assert auth_resp.status_code == 200
+    assert auth_resp.json()["result"]["impact"] == impact

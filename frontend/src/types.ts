@@ -49,6 +49,31 @@ export interface UnservedDemand {
   community_id: string; name: string; incident_ids: string[]; reason: string
   gallons_missing: number | null; detail: string
 }
+export interface ImpactStrategyMetrics {
+  description: string
+  order: string[]
+  critical_coverage_pct: number | null
+  critical_planned_gallons: number
+  critical_demand_gallons: number
+  critical_first_arrival_minutes: { median: number | null; max: number | null }
+  critical_without_delivery: string[]
+  communities_served: number
+  communities_total: number
+  planned_gallons: number
+  demand_gallons: number
+  without_delivery: string[]
+}
+
+export interface ImpactComparison {
+  critical_coverage_pp: number
+  not_better: string[]
+}
+
+export interface PlanImpact {
+  strategies: Record<string, ImpactStrategyMetrics>
+  aguaia_vs: Record<string, ImpactComparison>
+}
+
 export interface DistributionPlan {
   id: string; status: PlanStatus; error: string | null; created_at: string
   request: { unavailable_trucks: string[] }
@@ -56,6 +81,7 @@ export interface DistributionPlan {
   result: null | {
     policy_version: string; routes: TruckRoute[]; unserved: UnservedDemand[]
     demand_gallons: number; planned_gallons: number; explanation: string[]
+    impact?: PlanImpact | null
   }
   events: { agent: string; tool: string | null; event: string; detail: Record<string, unknown>; at: string }[]
 }

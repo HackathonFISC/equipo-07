@@ -1,6 +1,6 @@
 """Finite, transactional operations available to agents; never exposed as LLM tools."""
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.contracts import (
     DuplicateEvaluationSchema,
@@ -190,6 +190,26 @@ class PlannerTools:
                     {**record_dict(incident), "community_name": name, "score": score},
                 )
                 item["score"] = max(item["score"], score)
+
+            assoc_data = (
+                await session.execute(
+                    select(
+                        Association.incident_id,
+                        func.count(Association.report_id).label("report_count"),
+                        func.min(Report.created_at).label("first_report_at"),
+                    )
+                    .join(Report, Report.id == Association.report_id)
+                    .group_by(Association.incident_id)
+                )
+            ).all()
+            assoc_map = {r.incident_id: (r.report_count, r.first_report_at) for r in assoc_data}
+            for inc_id, item in incidents.items():
+                if inc_id in assoc_map:
+                    item["report_count"], item["first_report_at"] = assoc_map[inc_id]
+                else:
+                    item["report_count"] = 1
+                    item["first_report_at"] = item.get("created_at")
+
             return {
                 "request": plan.request,
                 "incidents": list(incidents.values()),

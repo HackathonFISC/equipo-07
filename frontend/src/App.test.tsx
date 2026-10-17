@@ -6,6 +6,7 @@ import App from './App'
 import { polling } from './api'
 import { CitizenPage } from './pages/CitizenPage'
 import { CoordinationPage } from './pages/CoordinationPage'
+import { arrivalText, coverageText } from './impact'
 import type { Detail, DistributionPlan } from './types'
 
 function mount(child: React.ReactNode) {
@@ -145,6 +146,74 @@ test('coordinator reviews a proposed tanker plan with reasons for each stop', as
   expect(JSON.parse(posted!.body as string)).toEqual({ decision: 'APPROVE', reason: 'Flota confirmada' })
 })
 
+test('plan panel renders impact comparison card with exact metrics for scenario F2-01', async () => {
+  const plan: DistributionPlan = {
+    id: 'p-impact', status: 'PROPOSED', error: null, created_at: '2026-10-16', review: null,
+    request: { unavailable_trucks: ['cisterna-hospital-01'] },
+    events: [],
+    result: {
+      policy_version: 'v1.0.0-demo', demand_gallons: 38000, planned_gallons: 38000,
+      explanation: ['Plan optimizado'],
+      routes: [],
+      unserved: [],
+      impact: {
+        strategies: {
+          aguaia: {
+            description: 'Puntaje aprobado por el coordinador',
+            order: ['crit-esc-guillermo-andreve', 'crit-hosp-nicolas-solano'],
+            critical_coverage_pct: 100.0,
+            critical_planned_gallons: 21000,
+            critical_demand_gallons: 21000,
+            critical_first_arrival_minutes: { median: 143, max: 180 },
+            critical_without_delivery: [],
+            communities_served: 6,
+            communities_total: 6,
+            planned_gallons: 38000,
+            demand_gallons: 38000,
+            without_delivery: [],
+          },
+          volumen: {
+            description: 'Más reportes primero',
+            order: ['ref-rey-vista-alegre', 'crit-hosp-nicolas-solano'],
+            critical_coverage_pct: 100.0,
+            critical_planned_gallons: 21000,
+            critical_demand_gallons: 21000,
+            critical_first_arrival_minutes: { median: 292, max: 293 },
+            critical_without_delivery: [],
+            communities_served: 6,
+            communities_total: 6,
+            planned_gallons: 38000,
+            demand_gallons: 38000,
+            without_delivery: [],
+          },
+        },
+        aguaia_vs: {
+          volumen: {
+            critical_coverage_pp: 0.0,
+            not_better: ['critical_coverage_pct', 'communities_served'],
+          },
+        },
+      },
+    },
+  }
+
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async url => {
+    if (String(url).includes('/plans/latest')) return Response.json(plan)
+    return Response.json([])
+  })
+
+  mount(<CoordinationPage token="test-coordinator-token" />)
+  expect(
+    await screen.findByText(
+      'AguaIA frente a por volumen de reportes: misma cobertura crítica (100 %) · primera entrega crítica 149 min antes'
+    )
+  ).toBeInTheDocument()
+  expect(screen.getByText('DIFERENCIACIÓN · IMPACTO FRENTE A BASELINE')).toBeInTheDocument()
+  expect(screen.getByText(/143 min/)).toBeInTheDocument()
+  expect(screen.getByText(/292 min/)).toBeInTheDocument()
+  expect(screen.getByText(/Sin ventaja en: cobertura crítica, comunidades atendidas/)).toBeInTheDocument()
+})
+
 test('token never persists in browser storage and logout clears access', async () => {
   const user = userEvent.setup()
   const local = vi.spyOn(Storage.prototype, 'setItem')
@@ -168,4 +237,13 @@ test('polling stops at every terminal state', () => {
   for (const status of ['APPROVED', 'REJECTED', 'ERROR', 'NEEDS_INFORMATION'] as const) {
     expect(polling(status)).toBe(false)
   }
+})
+
+test('impact card never invents minutes or a gain it does not have', () => {
+  expect(arrivalText(null, 292)).toBe('primera entrega crítica sin comparación posible')
+  expect(arrivalText(300, 250)).toBe('primera entrega crítica 50 min después')
+  expect(arrivalText(143, 143)).toBe('primera entrega crítica a la misma hora')
+  expect(coverageText(12.5, 100)).toBe('+12.5 pp de demanda crítica cubierta')
+  expect(coverageText(-10, 50)).toBe('-10 pp de demanda crítica cubierta')
+  expect(coverageText(0, null)).toBe('sin demanda crítica que cubrir')
 })

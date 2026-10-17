@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api'
 import { ErrorMessage } from '../components'
+import { arrivalText, coverageText, impactMetricLabels } from '../impact'
 import type { DistributionPlan, FleetTruck, PlanStatus } from '../types'
 
 const planStatusLabels: Record<PlanStatus, string> = {
@@ -129,6 +130,52 @@ export function PlanPanel({ token }: { token: string }) {
             <div><strong>{result.routes.length}</strong><span>cisternas con ruta</span></div>
             <div><strong>{result.routes.reduce((sum, r) => sum + r.km, 0).toFixed(0)} km</strong><span>recorrido estimado</span></div>
           </div>
+
+          {result.impact && (() => {
+            const volumen = result.impact.strategies?.volumen
+            const aguaia = result.impact.strategies?.aguaia
+            const vsVolumen = result.impact.aguaia_vs?.volumen
+            if (!volumen || !aguaia || !vsVolumen) return null
+            const agMedian = aguaia.critical_first_arrival_minutes?.median ?? null
+            const volMedian = volumen.critical_first_arrival_minutes?.median ?? null
+            const minutes = (value: number | null) => (value === null ? 'sin entrega' : `${value} min`)
+
+            return (
+              <div className="impact-card" data-testid="impact-card">
+                <div className="impact-header">
+                  <span className="eyebrow">DIFERENCIACIÓN · IMPACTO FRENTE A BASELINE</span>
+                  <h3 className="impact-title">
+                    AguaIA frente a por volumen de reportes: {coverageText(vsVolumen.critical_coverage_pp, aguaia.critical_coverage_pct)} · {arrivalText(agMedian, volMedian)}
+                  </h3>
+                </div>
+                <div className="impact-metrics-grid">
+                  <div className="impact-col">
+                    <span className="impact-col-title">Estrategia AguaIA</span>
+                    <span className="impact-stat">
+                      <strong>{aguaia.critical_coverage_pct ?? '—'} %</strong> cobertura crítica
+                    </span>
+                    <span className="impact-sub">
+                      1ª entrega crítica: {minutes(agMedian)} (mediana) · {aguaia.communities_served}/{aguaia.communities_total} comunidades
+                    </span>
+                  </div>
+                  <div className="impact-col">
+                    <span className="impact-col-title">Por volumen de reportes</span>
+                    <span className="impact-stat">
+                      <strong>{volumen.critical_coverage_pct ?? '—'} %</strong> cobertura crítica
+                    </span>
+                    <span className="impact-sub">
+                      1ª entrega crítica: {minutes(volMedian)} (mediana) · {volumen.communities_served}/{volumen.communities_total} comunidades
+                    </span>
+                  </div>
+                </div>
+                {vsVolumen.not_better.length > 0 && (
+                  <p className="muted text-sm impact-transparency">
+                    Sin ventaja en: {vsVolumen.not_better.map(key => impactMetricLabels[key] ?? key).join(', ')}. Mismo solver determinístico, misma flota y mismas demandas.
+                  </p>
+                )}
+              </div>
+            )
+          })()}
 
           {result.routes.length === 0 && <p className="muted">No hay demandas aprobadas que puedan atenderse con la flota disponible.</p>}
 

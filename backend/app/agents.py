@@ -10,6 +10,7 @@ from app.contracts import (
 )
 from app.domain import calculate_priority, is_critical_location, resolve_criticality
 from app.grounding import critical_evidence, extract_temporal_grounding
+from app.impact import Demand, compare
 from app.planner import plan_distribution
 from app.providers import ProviderError
 from app.tools import AgentTools, CommunicationTools, PlannerTools
@@ -160,6 +161,7 @@ class PlannerAgent:
         for incident in context["incidents"]:
             by_community.setdefault(incident["community_id"], []).append(incident)
         demands, skipped = [], []
+        community_water_incidents: dict[str, list[dict]] = {}
         for community_id, incidents in sorted(by_community.items()):
             needs_water = [i for i in incidents if i["kind"] != "LEAK"]
             location = locations.get(community_id)
@@ -183,6 +185,7 @@ class PlannerAgent:
                         max_truck_capacity=location["road_access"]["max_tanker_capacity_gallons"],
                     )
                 )
+                community_water_incidents[community_id] = needs_water
                 continue
             skipped.append(
                 UnservedDemand(
@@ -194,8 +197,40 @@ class PlannerAgent:
                     detail=SKIP_DETAIL[reason],
                 )
             )
+
+        # Baseline impact evaluation using the same demands and fleet inputs
+        community_first_seen: dict[str, str] = {}
+        community_report_counts: dict[str, int] = {}
+        for cid, inc_list in community_water_incidents.items():
+            community_report_counts[cid] = sum(i.get("report_count", 1) for i in inc_list)
+            first_times = [
+                str(i["first_report_at"]) for i in inc_list if i.get("first_report_at") is not None
+            ]
+            if not first_times:
+                first_times = [
+                    str(i["created_at"]) for i in inc_list if i.get("created_at") is not None
+                ]
+            community_first_seen[cid] = min(first_times) if first_times else str(cid)
+
+        sorted_by_arrival = sorted(
+            community_first_seen.keys(),
+            key=lambda cid: (community_first_seen[cid], cid),
+        )
+        arrival_ranks = {cid: rank + 1 for rank, cid in enumerate(sorted_by_arrival)}
+
+        impact_demands = [
+            Demand(
+                plan=d,
+                reports=community_report_counts.get(d.community_id, 1),
+                first_report=arrival_ranks.get(d.community_id, 1),
+            )
+            for d in demands
+        ]
+        impact_metrics = compare(impact_demands, trucks) if impact_demands else None
+
         result = plan_distribution(demands, trucks)
         result.unserved.extend(skipped)
+        result.impact = impact_metrics
         if unavailable:
             result.explanation.append(
                 "Cisternas excluidas por el coordinador: " + ", ".join(sorted(unavailable)) + "."

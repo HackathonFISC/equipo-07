@@ -57,7 +57,8 @@ class MockLLMProvider:
                     "falta de agua",
                     "interrupcion",
                     "no tenemos agua",
-                    "corte de agua",
+                    "corte",
+                    "desabastecimiento",
                     # Jerga panameña: «la pluma está seca», «no cae ni una gota».
                     "seca",
                     "no cae",
