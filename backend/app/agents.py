@@ -5,10 +5,17 @@ from app.contracts import (
     NormalizedReportSchema,
     PlanDemand,
     PlanTruck,
+    PriorityInputs,
     UnservedDemand,
     plain,
 )
-from app.domain import calculate_priority, is_critical_location, resolve_criticality
+from app.domain import (
+    DURATION_BOUNDS,
+    calculate_priority,
+    explain_priority,
+    is_critical_location,
+    resolve_criticality,
+)
 from app.grounding import critical_evidence, extract_temporal_grounding
 from app.impact import Demand, compare
 from app.planner import plan_distribution
@@ -27,18 +34,19 @@ class Agents:
         if report["normalized"] is not None:
             return {"normalized": report["normalized"]}
         normalized = await self.provider.extract_report(report["description"])
+        normalized.flags = ["INFORMACION_INSUFICIENTE"] if normalized.kind == "UNKNOWN" else []
+        # This field belongs to the citizen, never to model inference.
+        normalized.duration_bucket = report["duration_bucket"]
         temporal = extract_temporal_grounding(report["description"])
         observed = temporal.hours
+        if temporal.is_imprecise:
+            normalized.hours_without_water = None
+            normalized.flags.append("DURACION_IMPRECISA")
         if (
             normalized.hours_without_water is not None
             and normalized.hours_without_water not in observed
         ):
-            if temporal.is_imprecise:
-                normalized.hours_without_water = None
-                if "DURACION_IMPRECISA" not in normalized.flags:
-                    normalized.flags.append("DURACION_IMPRECISA")
-            else:
-                raise ProviderError("UNGROUNDED_HOURS")
+            raise ProviderError("UNGROUNDED_HOURS")
         critical = critical_evidence(report["description"])
         if normalized.critical_institution is True and critical is not True:
             raise ProviderError("UNGROUNDED_CRITICAL_INSTITUTION")
@@ -52,9 +60,18 @@ class Agents:
             normalized.hours_without_water = None
         elif report["hours_without_water"] is not None:
             normalized.hours_without_water = report["hours_without_water"]
+        elif len(observed) == 1 and normalized.duration_bucket is None:
+            normalized.hours_without_water = observed[0]
+        if normalized.duration_bucket is not None:
+            low, high = DURATION_BOUNDS[normalized.duration_bucket]
+            if any(not low <= h < high or h == 0 for h in observed):
+                normalized.flags.append("CONTRADICCION_DURACION")
+                normalized.duration_bucket = None
+            normalized.hours_without_water = None
         if any(h > 2160 for h in observed):
             normalized.flags.append("DURACION_FUERA_DE_RANGO")
             normalized.hours_without_water = None
+            normalized.duration_bucket = None
         normalized.summary = report["description"]
         return {"normalized": await self.tools.save_normalized(key, normalized)}
 
@@ -70,7 +87,11 @@ class Agents:
             if plain(c["summary"]) == plain(normalized["summary"])
             and c["kind"] == normalized["kind"]
         ]
-        if len(exact) == 1:
+        if not candidates:
+            assessment = DuplicateEvaluationSchema(
+                match_confidence="LOW", reasoning="Sin candidatos compatibles en sector y ventana"
+            )
+        elif len(exact) == 1:
             assessment = DuplicateEvaluationSchema(
                 match_confidence="HIGH",
                 matched_incident_id=UUID(exact[0]["id"]),
@@ -98,6 +119,26 @@ class Agents:
             effective_critical,
             context["vulnerability"],
             context["population"],
+            duration_bucket=normalized.duration_bucket,
+        )
+        priority.inputs = PriorityInputs(
+            community_id=context["community_id"],
+            hours_without_water=normalized.hours_without_water,
+            duration_bucket=normalized.duration_bucket,
+            duration_source=(
+                "CONFLICT"
+                if "CONTRADICCION_DURACION" in normalized.flags
+                else "CITIZEN"
+                if context["hours_without_water"] is not None
+                or normalized.duration_bucket is not None
+                else "TEXT"
+                if normalized.hours_without_water is not None
+                else "UNKNOWN"
+            ),
+            critical_institution=effective_critical,
+            population=context["population"],
+            vulnerability=context["vulnerability"],
+            is_synthetic=context["is_synthetic"],
         )
         priority.flags.extend(normalized.flags)
         priority.flags.extend(crit_flags)
@@ -105,18 +146,9 @@ class Agents:
             priority.flags.append("DATOS_SECTOR_SINTETICOS")
         if state["association_status"] == "PENDING_REVIEW":
             priority.flags.append("ASOCIACION_TENTATIVA")
-        # Raw inputs travel with the factors: factors are points, and a model asked to explain
-        # them without the hours reads the 26 duration points as "26 horas".
-        result = await self.provider.explain_priority_proposal(
-            {
-                "id": state["incident_id"],
-                "kind": normalized.kind,
-                "hours_without_water": normalized.hours_without_water,
-                "critical_institution": effective_critical,
-            },
-            priority.model_dump(),
-        )
-        return {"priority": await self.tools.save_proposal(key, priority, result.explanation)}
+        return {
+            "priority": await self.tools.save_proposal(key, priority, explain_priority(priority))
+        }
 
 
 SKIP_DETAIL = {

@@ -8,7 +8,6 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
 from app.contracts import (
-    CoordinationProposalSchema,
     DuplicateEvaluationSchema,
     ImageEvidenceSchema,
     NormalizedReportSchema,
@@ -29,9 +28,6 @@ class LLMProvider(Protocol):
     async def evaluate_duplicate(
         self, report: dict, candidates: list[dict]
     ) -> DuplicateEvaluationSchema: ...
-    async def explain_priority_proposal(
-        self, incident: dict, priority: dict
-    ) -> CoordinationProposalSchema: ...
     async def describe_image(self, data: bytes, mime_type: str) -> ImageEvidenceSchema: ...
 
 
@@ -83,37 +79,10 @@ class MockLLMProvider:
             return DuplicateEvaluationSchema(
                 match_confidence="LOW", reasoning="Simulación: sin evidencia compatible"
             )
-        ambiguous = len(compatible) > 1 or "quizas" in plain(report["summary"])
         return DuplicateEvaluationSchema(
-            match_confidence="MEDIUM" if ambiguous else "HIGH",
+            match_confidence="MEDIUM",
             matched_incident_id=UUID(compatible[0]["id"]),
-            reasoning="Simulación por tipo de incidencia y sector; no es inferencia de IA",
-        )
-
-    async def explain_priority_proposal(self, incident, priority):
-        factors = priority.get("factors", {})
-        immediate = priority.get("immediate_review", False)
-        prefix = (
-            "🚨 ALERTA CRÍTICA: Institución vital de salud o educación involucrada. "
-            if immediate
-            else ""
-        )
-        hours_pts = factors.get("hours", [0, 0])[0]
-        crit_pts = factors.get("critical", [0, 0])[0]
-        vuln_pts = factors.get("vulnerability", [0, 0])[0]
-        pop_pts = factors.get("population", [0, 0])[0]
-        score_range = f"{priority['score_min']}–{priority['score_max']}/100 pts"
-        breakdown = (
-            f"Desglose: {hours_pts} pts por duración, {crit_pts} pts por criticidad institucional, "
-            f"{vuln_pts} pts por vulnerabilidad social, {pop_pts} pts por población del sector"
-        )
-        confidence = f"Nivel de confianza en los datos: {priority.get('confidence_level', 'N/D')}."
-        action = "Requiere supervisión y autorización del coordinador para programar asignaciones."
-        return CoordinationProposalSchema(
-            explanation=(
-                f"{prefix}Evaluación determinística: prioridad calculada en rango {score_range} "
-                f"({breakdown}). {confidence} {action}"
-            )
+            reasoning="Simulación: mismo tipo y sector no prueban el mismo incidente; revisar",
         )
 
     async def describe_image(self, data, mime_type):
@@ -172,6 +141,8 @@ class NvidiaLLMProvider:
                     {"role": "user", "content": json.dumps(data, ensure_ascii=False)},
                 ],
             )
+            if result.choices[0].finish_reason != "stop" or result.choices[0].message.refusal:
+                raise ProviderError("INCOMPLETE_RESPONSE")
             return schema.model_validate_json(result.choices[0].message.content or "")
         except (APIError, ValidationError, IndexError) as exc:
             # Never include upstream messages: they may echo credentials or citizen data.
@@ -194,6 +165,8 @@ class NvidiaLLMProvider:
                     }
                 ],
             )
+            if result.choices[0].finish_reason != "stop" or result.choices[0].message.refusal:
+                raise ProviderError("INCOMPLETE_RESPONSE")
             content = (result.choices[0].message.content or "").strip()
             # Some vision models wrap the JSON in a Markdown fence.
             content = content.removeprefix("```json").removeprefix("```").removesuffix("```")
@@ -206,7 +179,9 @@ class NvidiaLLMProvider:
             "Actúa como analista de ingesta de incidentes de agua en Panamá Oeste. "
             "Extrae el tipo de problema (OUTAGE corte/falta de agua, LEAK roturas/fugas, "
             "LOW_PRESSURE baja presión, UNKNOWN si no está claro) y horas sin suministro. "
-            "Si no se indican horas, asigna null. Identifica instituciones críticas "
+            "Sin horas exactas, o ante intervalos, límites o aproximaciones, asigna null. "
+            "duration_bucket es un campo ciudadano: devuelve null, nunca lo infieras. "
+            "Identifica instituciones críticas "
             "(hospitales, policlínicas, escuelas, asilos) solo con evidencia textual explícita. "
             "No asumas ni infieras ubicación geográfica ni población.",
             {"text": text},
@@ -218,27 +193,15 @@ class NvidiaLLMProvider:
             "Actúa como verificador de deduplicación de incidentes de agua en Panamá Oeste. "
             "Compara el reporte entrante contra incidentes candidatos abiertos en el sector. "
             "Asigna match_confidence HIGH únicamente con certeza clara de coincidencia geográfica "
-            "y de causa. Asigna MEDIUM ante ambigüedad o dudas razonables. Asigna LOW si describe "
+            "y de causa. Asigna MEDIUM ante ambigüedad o dudas razonables. "
+            "Mismo sector y tipo no bastan para HIGH: una comunidad puede tener "
+            "varios eventos. Compara referencias locales y tiempos solo si están disponibles; "
+            "fecha de recepción no es inicio del corte. No inventes coordenadas ni causas. "
+            "Una contradicción requiere MEDIUM; no es corroboración. Asigna LOW si describe "
             "un evento nuevo. matched_incident_id DEBE ser el UUID exacto de un candidato "
             "si match_confidence es HIGH o MEDIUM, o null si es LOW.",
             {"report": report, "candidates": candidates},
             DuplicateEvaluationSchema,
-        )
-
-    async def explain_priority_proposal(self, incident, priority):
-        return await self.structured(
-            "Actúa como analista operativo del centro de mando de agua de Panamá Oeste. "
-            "Genera una justificación explicable y concisa (2 a 3 oraciones) para el coordinador, "
-            "detallando por qué se determinó el rango de prioridad calculado (score_min a "
-            "score_max de 100) según los 4 factores determinísticos: duración sin servicio, "
-            "infraestructura crítica afectada, vulnerabilidad comunitaria y población del sector. "
-            "Cada factor es [puntos mínimos, puntos máximos], no horas ni personas: la duración "
-            "real es incident.hours_without_water (null si se desconoce). Nunca presentes puntos "
-            "como horas. "
-            "NUNCA calcules ni alteres puntuaciones (el motor determinístico es la única fuente "
-            "de verdad). Esta propuesta requiere autorización del coordinador.",
-            {"incident": incident, "priority": priority},
-            CoordinationProposalSchema,
         )
 
 

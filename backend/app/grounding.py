@@ -48,6 +48,19 @@ IMPRECISE_TIME_RE = re.compile(
     r"hace varios dias|desde hace dias|desde la manana|desde la tarde|desde anoche)\b"
 )
 
+# A bound or range is never an exact duration; retain its wording in the original report.
+TIME_NUMBER = r"(?:\d+(?:[.,]\d+)?|medio|" + "|".join(WORD_NUMBERS) + ")"
+TIME_RANGE_RE = re.compile(
+    rf"\b(?:entre|de)\s+{TIME_NUMBER}\s+(?:horas?|dias?|semanas?)\s+"
+    rf"(?:y|a|hasta)\s+{TIME_NUMBER}\b|"
+    rf"\b(?:entre|de)\s+{TIME_NUMBER}\s+(?:y|a|hasta)\s+{TIME_NUMBER}\s+"
+    r"(?:horas?|dias?|semanas?)\b|"
+    r"\b(?:mas de|menos de|al menos|hasta|aproximadamente|alrededor de|unas?|casi)\s+"
+    rf"{TIME_NUMBER}\s*(?:horas?|hrs?|dias?|semanas?)\b|"
+    rf"\b{TIME_NUMBER}\s+(?:horas?|dias?|semanas?)\s+o\s+mas\b|"
+    r"\b\d+\s*[-–]\s*\d+\s*(?:horas?|dias?)\b"
+)
+
 
 @dataclass(frozen=True)
 class TemporalGrounding:
@@ -59,6 +72,8 @@ def stated_hours(text: str) -> list[float]:
     """Extrae las duraciones explícitas del texto convertidas a horas."""
     lowered = plain(text)
     hours: list[float] = []
+    if TIME_RANGE_RE.search(lowered):
+        return hours
 
     # 1. Horas explícitas con dígitos: "24 horas", "1.5 hora", "12 hrs"; también la falta
     #    de ortografía común "24 oras", que un LLM sí lee como horas.
@@ -102,5 +117,5 @@ def extract_temporal_grounding(text: str) -> TemporalGrounding:
     """Extrae horas y determina si el texto contiene una duración imprecisa."""
     lowered = plain(text)
     hours = stated_hours(text)
-    is_imprecise = bool(IMPRECISE_TIME_RE.search(lowered))
+    is_imprecise = bool(IMPRECISE_TIME_RE.search(lowered) or TIME_RANGE_RE.search(lowered))
     return TemporalGrounding(hours=hours, is_imprecise=is_imprecise)

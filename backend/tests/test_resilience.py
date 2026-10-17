@@ -181,7 +181,7 @@ async def test_model_only_sees_candidates_of_the_same_kind(system):
     state.update(await agents.ingest(state))
     assert state["normalized"]["kind"] == "LOW_PRESSURE"
     association = await agents.verify(state)
-    assert seen == [[]]
+    assert seen == []
     assert association["incident_id"] != outage
 
 

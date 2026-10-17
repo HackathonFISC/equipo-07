@@ -1,5 +1,65 @@
 # Ponytail review — 2026-10-16
 
+## Ponytail Review · AG-41 · 2026-10-17
+
+What this change does: preserves declared duration intervals, stores the inputs behind each
+priority and explains them without an LLM. It also keeps scheduled incidents scheduled when a
+duplicate is approved, rejects incomplete provider output and makes failures traceable by node.
+
+Scope: uncommitted backend changes and their callers (API, graph, tools, worker, messaging,
+impact fixtures and tests). Read frontend consumers to specify the additive contract, without
+editing them. Expected load: one local worker; no claim of multiple-host concurrency or NIM accuracy.
+This is an assisted local review, not an independent human sign-off.
+
+Checks and corrections made during review:
+
+1. Preserve old Idempotency-Key hashes when the new duration_bucket is absent/null.
+2. Check buckets against textual exact hours and keep contradictions uncertain; do not infer
+   exact hours from a bound or range. Require a temporal unit so a range of houses is not a duration.
+3. Filter incident type before SQL LIMIT 20 and recheck candidates before writing. Mock semantic
+   matches stay tentative; contradictory durations cannot become HIGH associations.
+4. Keep stored proposals/checkpoints compatible; do not recompute an existing proposal after a
+   catalog change or overwrite historical explanations with unverified new provenance.
+5. Reject length/refusal responses even with otherwise valid JSON; preserve provider isolation
+   and avoid logging upstream messages. Discard model-supplied audit flags.
+6. Keep approval gates, weights, solver, frontend and map worktree unchanged. The scheduled-state
+   fix is in apply_decision, backed by a regression with an approved plan and a second report.
+7. Close the two sqlite3 connections in the new populated-database migration test explicitly:
+   a connection context manager commits/rolls back but does not close its handle.
+
+No remaining must-fix finding in this diff after these corrections. Evals E55–64 cover numerical
+integrity and intervals; provider, migration and recovery tests cover the remaining changes.
+Full results and baseline are recorded in EVALUATION.md. Review of this patch by another team
+member remains pending. Historical diagrams/results remain identifiable as earlier evidence.
+
+Verdict: Ship for the documented local setup after applying the migration; UI adoption is pending.
+Not checked: real NIM inference, frontend/browser, Linux/PostgreSQL, remote CI or sustained load.
+
+### PR preparado (local; no se publicó)
+
+**Título:** fix: preservar duración y explicar prioridades con datos reproducibles (AG-41).
+
+**Problema y comportamiento resultante:** un intervalo se convertía en horas representativas,
+y el modelo podía relatar puntos como horas/personas/porcentajes. El backend ahora acepta un
+bucket durable, conserva inputs por propuesta y usa una explicación determinista. Aprobar un
+duplicado ya no reabre un incidente SCHEDULED.
+
+**Requisitos:** RF34, RF35 y RNF10; tarea AG-41 local, sin Issue remoto.
+
+**Validación:** pytest completo y evals reales, Ruff/mypy y migraciones vacías/con datos; casos
+negativos de contratos y proveedor, hash anterior y replay. Detalle en EVALUATION.md.
+
+**Contratos y datos:** duration_bucket opcional, priority.inputs opcional y report administrativo;
+migración e7a4c2d9b610 aditiva, campos nuevos con defaults para checkpoints antiguos. Método
+interno explain_priority_proposal retirado. Tipos/fixtures TS deben adoptar el contrato en una
+entrega posterior; se documenta la excepción al cambio conjunto porque frontend está fuera de
+alcance por instrucción explícita. No se recategorizan reportes antiguos ni se alteran aprobaciones.
+
+**Checklist:** diff/alcance, validación pertinente, documentos/bitácora y autorización protegida
+revisados localmente. Simulación y límites explícitos. Revisión por otro integrante pendiente.
+
+---
+
 What this change does: AguaIA accepts water reports into a durable queue, runs three agents and
 stores a priority proposal. A protected human review resumes LangGraph and records the final decision.
 

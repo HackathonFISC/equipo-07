@@ -1,5 +1,15 @@
 # Backlog preparado para GitHub Issues
 
+## AG-41 · Integridad de los agentes (RF34, RF35, RNF10)
+
+Backend y evals, P0. Criterios: reproducir 17–67 con población 2630; conservar intervalos
+sin horas exactas; explicación sin inferencia numérica; instantánea reproducible y acceso
+administrativo directo al reporte; candidatos compatibles y replay sin duplicar efectos;
+pruebas y evals antes/después. Contratos aditivos: `duration_bucket` opcional en ReportInput,
+`inputs` opcional en PriorityResult y `report` en detalle administrativo. Mantener payloads
+anteriores, hash de idempotencia, checkpoints y propuestas históricas. Frontend no se edita;
+su adopción del intervalo se documentará. Sin nuevos umbrales, agentes ni aprobación automática.
+
 Actualizado el 2026-10-16 a partir de [GAP_ANALYSIS](GAP_ANALYSIS.md). **No se crearon Issues
 remotos.** Cada bloque `AG-xx` puede copiarse como una Issue. El backlog anterior (B01–B13) se
 conserva en el [Apéndice B](#apéndice-b--backlog-anterior-preservado), con su equivalencia.
