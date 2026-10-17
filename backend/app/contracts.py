@@ -55,7 +55,11 @@ class ReportInput(Contract):
         ):
             raise ValueError("El reporte contiene instrucciones ajenas al servicio")
         if not re.search(
-            r"\b(aguas?|acueductos?|tuberias?|tubos?|grifos?|plumas?|llaves?|fugas?|suministros?|presion(es)?|cisternas?|tanques?|potables?|hidrantes?|bombas?|valvulas?|cortes?|suspension(es)?|desabastecimientos?|filtracion(es)?|roturas?|goteos?|goteras?|chorros?)\b",
+            r"\b(aguas?|acueductos?|tuberias?|tubos?|grifos?|plumas?|llaves?|fugas?|suministros?"
+            r"|presion(es)?|cisternas?|tanques?|potables?|hidrantes?|bombas?|valvulas?|cortes?"
+            r"|suspension(es)?|desabastecimientos?|filtracion(es)?|roturas?|goteos?|goteras?"
+            # Jerga y términos locales (F4-03): «no cae ni una gota», «el IDAAN no viene».
+            r"|chorros?|gotas?|idaan|medidor(es)?|mangueras?|acometidas?|no cae)\b",
             text,
         ):
             raise ValueError("Describe un problema del servicio de agua")

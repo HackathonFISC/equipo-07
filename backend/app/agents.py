@@ -104,8 +104,16 @@ class Agents:
             priority.flags.append("DATOS_SECTOR_SINTETICOS")
         if state["association_status"] == "PENDING_REVIEW":
             priority.flags.append("ASOCIACION_TENTATIVA")
+        # Raw inputs travel with the factors: factors are points, and a model asked to explain
+        # them without the hours reads the 26 duration points as "26 horas".
         result = await self.provider.explain_priority_proposal(
-            {"id": state["incident_id"], "kind": normalized.kind}, priority.model_dump()
+            {
+                "id": state["incident_id"],
+                "kind": normalized.kind,
+                "hours_without_water": normalized.hours_without_water,
+                "critical_institution": effective_critical,
+            },
+            priority.model_dump(),
         )
         return {"priority": await self.tools.save_proposal(key, priority, result.explanation)}
 

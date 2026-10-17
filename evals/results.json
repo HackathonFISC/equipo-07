@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-17T07:47:41.290151+00:00",
+  "generated_at": "2026-10-17T08:57:02.592911+00:00",
   "mode": "mock-deterministic",
-  "passed": 40,
-  "total": 40,
+  "passed": 54,
+  "total": 54,
   "scenario_pass_rate": 1.0,
   "metrics": {
     "consolidation_scenarios": {
@@ -24,6 +24,10 @@
     "priority_scenarios": {
       "passed": 9,
       "total": 9
+    },
+    "robustness_scenarios": {
+      "passed": 14,
+      "total": 14
     }
   },
   "pytest_exit_code": 0,
@@ -31,202 +35,272 @@
     {
       "id": "E01",
       "passed": true,
-      "seconds": 1.022
+      "seconds": 1.092
     },
     {
       "id": "E02",
       "passed": true,
-      "seconds": 0.674
+      "seconds": 0.888
     },
     {
       "id": "E03",
       "passed": true,
-      "seconds": 0.529
+      "seconds": 0.378
     },
     {
       "id": "E04",
       "passed": true,
-      "seconds": 1.071
+      "seconds": 0.737
     },
     {
       "id": "E05",
       "passed": true,
-      "seconds": 1.519
+      "seconds": 0.948
     },
     {
       "id": "E06",
       "passed": true,
-      "seconds": 1.732
+      "seconds": 1.101
     },
     {
       "id": "E07",
       "passed": true,
-      "seconds": 1.524
+      "seconds": 0.995
     },
     {
       "id": "E08",
       "passed": true,
-      "seconds": 1.212
+      "seconds": 0.872
     },
     {
       "id": "E09",
       "passed": true,
-      "seconds": 1.011
+      "seconds": 0.851
     },
     {
       "id": "E10",
       "passed": true,
-      "seconds": 0.396
+      "seconds": 0.334
     },
     {
       "id": "E11",
       "passed": true,
-      "seconds": 0.44
+      "seconds": 0.342
     },
     {
       "id": "E12",
       "passed": true,
-      "seconds": 0.348
+      "seconds": 0.318
     },
     {
       "id": "E13",
       "passed": true,
-      "seconds": 0.86
+      "seconds": 0.983
     },
     {
       "id": "E14",
       "passed": true,
-      "seconds": 1.108
+      "seconds": 0.955
     },
     {
       "id": "E15",
       "passed": true,
-      "seconds": 1.392
+      "seconds": 0.97
     },
     {
       "id": "E16",
       "passed": true,
-      "seconds": 1.436
+      "seconds": 0.841
     },
     {
       "id": "E17",
       "passed": true,
-      "seconds": 1.338
+      "seconds": 1.1
     },
     {
       "id": "E18",
       "passed": true,
-      "seconds": 1.807
+      "seconds": 1.266
     },
     {
       "id": "E19",
       "passed": true,
-      "seconds": 1.4
+      "seconds": 1.047
     },
     {
       "id": "E20",
       "passed": true,
-      "seconds": 1.004
+      "seconds": 0.732
     },
     {
       "id": "E21",
       "passed": true,
-      "seconds": 0.748
+      "seconds": 0.592
     },
     {
       "id": "E22",
       "passed": true,
-      "seconds": 1.226
+      "seconds": 1.085
     },
     {
       "id": "E32",
       "passed": true,
-      "seconds": 0.806
+      "seconds": 1.092
     },
     {
       "id": "E33",
       "passed": true,
-      "seconds": 0.81
+      "seconds": 0.821
     },
     {
       "id": "E34",
       "passed": true,
-      "seconds": 1.452
+      "seconds": 0.749
     },
     {
       "id": "E35",
       "passed": true,
-      "seconds": 0.965
+      "seconds": 0.897
     },
     {
       "id": "E36",
       "passed": true,
-      "seconds": 0.999
+      "seconds": 0.824
     },
     {
       "id": "E37",
       "passed": true,
-      "seconds": 0.905
+      "seconds": 0.926
     },
     {
       "id": "E38",
       "passed": true,
-      "seconds": 0.941
+      "seconds": 1.002
     },
     {
       "id": "E39",
       "passed": true,
-      "seconds": 1.166
+      "seconds": 1.202
     },
     {
       "id": "E40",
       "passed": true,
-      "seconds": 1.073
+      "seconds": 1.12
     },
     {
       "id": "E23",
       "passed": true,
-      "seconds": 1.259
+      "seconds": 1.294
     },
     {
       "id": "E24",
       "passed": true,
-      "seconds": 1.811
+      "seconds": 1.865
     },
     {
       "id": "E25",
       "passed": true,
-      "seconds": 1.869
+      "seconds": 1.693
     },
     {
       "id": "E26",
       "passed": true,
-      "seconds": 1.217
+      "seconds": 1.016
     },
     {
       "id": "E27",
       "passed": true,
-      "seconds": 1.068
+      "seconds": 1.137
     },
     {
       "id": "E28",
       "passed": true,
-      "seconds": 1.281
+      "seconds": 1.139
     },
     {
       "id": "E29",
       "passed": true,
-      "seconds": 1.332
+      "seconds": 1.07
     },
     {
       "id": "E30",
       "passed": true,
-      "seconds": 1.225
+      "seconds": 1.067
     },
     {
       "id": "E31",
       "passed": true,
-      "seconds": 1.033
+      "seconds": 0.995
+    },
+    {
+      "id": "E41",
+      "passed": true,
+      "seconds": 0.889
+    },
+    {
+      "id": "E42",
+      "passed": true,
+      "seconds": 0.958
+    },
+    {
+      "id": "E43",
+      "passed": true,
+      "seconds": 1.027
+    },
+    {
+      "id": "E44",
+      "passed": true,
+      "seconds": 0.951
+    },
+    {
+      "id": "E45",
+      "passed": true,
+      "seconds": 0.984
+    },
+    {
+      "id": "E46",
+      "passed": true,
+      "seconds": 1.016
+    },
+    {
+      "id": "E47",
+      "passed": true,
+      "seconds": 0.954
+    },
+    {
+      "id": "E48",
+      "passed": true,
+      "seconds": 1.005
+    },
+    {
+      "id": "E49",
+      "passed": true,
+      "seconds": 0.965
+    },
+    {
+      "id": "E50",
+      "passed": true,
+      "seconds": 1.044
+    },
+    {
+      "id": "E51",
+      "passed": true,
+      "seconds": 0.944
+    },
+    {
+      "id": "E52",
+      "passed": true,
+      "seconds": 0.309
+    },
+    {
+      "id": "E53",
+      "passed": true,
+      "seconds": 0.318
+    },
+    {
+      "id": "E54",
+      "passed": true,
+      "seconds": 0.345
     }
   ],
   "note": "Contract/scenario assertions, not real-model accuracy"

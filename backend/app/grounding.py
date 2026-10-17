@@ -60,8 +60,9 @@ def stated_hours(text: str) -> list[float]:
     lowered = plain(text)
     hours: list[float] = []
 
-    # 1. Horas explícitas con dígitos: "24 horas", "1.5 hora", "12h"
-    for match in re.finditer(r"(?<![\d.-])(\d+(?:[.,]\d+)?)\s*(?:horas?|hrs?)\b", lowered):
+    # 1. Horas explícitas con dígitos: "24 horas", "1.5 hora", "12 hrs"; también la falta
+    #    de ortografía común "24 oras", que un LLM sí lee como horas.
+    for match in re.finditer(r"(?<![\d.-])(\d+(?:[.,]\d+)?)\s*(?:h?oras?|hrs?)\b", lowered):
         val = float(match.group(1).replace(",", "."))
         hours.append(val)
 

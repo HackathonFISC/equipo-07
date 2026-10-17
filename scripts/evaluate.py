@@ -91,6 +91,7 @@ def main():
             "E39",
             "E40",
         ],
+        "robustness_scenarios": [f"E{n}" for n in range(41, 55)],
     }
     metrics = {
         name: {

@@ -31,6 +31,7 @@ def test_critical_evidence(text, expected):
     [
         ("Llevamos 24 horas sin agua", [24.0]),
         ("Corte de 12 hrs", [12.0]),
+        ("Llevamos 24 oras sin agua", [24.0]),
         ("Sin agua desde hace tres horas", [3.0]),
         ("Llevamos 1 dia sin agua", [24.0]),
         ("Sin agua desde hace 3 días", [72.0]),

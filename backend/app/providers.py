@@ -55,6 +55,12 @@ class MockLLMProvider:
                     "interrupcion",
                     "no tenemos agua",
                     "corte de agua",
+                    # Jerga panameña: «la pluma está seca», «no cae ni una gota».
+                    "seca",
+                    "no cae",
+                    "no sale",
+                    "ni una gota",
+                    "sin suministro",
                 )
             )
             else "UNKNOWN"
@@ -182,6 +188,9 @@ class NvidiaLLMProvider:
             "detallando por qué se determinó el rango de prioridad calculado (score_min a "
             "score_max de 100) según los 4 factores determinísticos: duración sin servicio, "
             "infraestructura crítica afectada, vulnerabilidad comunitaria y población del sector. "
+            "Cada factor es [puntos mínimos, puntos máximos], no horas ni personas: la duración "
+            "real es incident.hours_without_water (null si se desconoce). Nunca presentes puntos "
+            "como horas. "
             "NUNCA calcules ni alteres puntuaciones (el motor determinístico es la única fuente "
             "de verdad). Esta propuesta requiere autorización del coordinador.",
             {"incident": incident, "priority": priority},

@@ -13,7 +13,8 @@ from app.worker import process_plan
 from tests.conftest import AUTH
 
 ALL_CASES = json.loads((Path(__file__).parents[2] / "evals/cases.json").read_text("utf-8"))
-CASES = [c for c in ALL_CASES if c.get("suite") != "planner"]
+CASES = [c for c in ALL_CASES if c.get("suite") not in ("planner", "robustness")]
+ROBUST_CASES = [c for c in ALL_CASES if c.get("suite") == "robustness"]
 PLAN_CASES = [c for c in ALL_CASES if c.get("suite") == "planner"]
 BASE = {
     "community_id": "arraijan-demo",
@@ -400,3 +401,30 @@ async def test_planner_evaluation(system, case):
         return
 
     raise AssertionError(f"Escenario sin implementar: {scenario}")
+
+
+@pytest.mark.parametrize("case", ROBUST_CASES, ids=[c["id"] for c in ROBUST_CASES])
+async def test_robustness_evaluation(system, case):
+    """Local slang is accepted; manipulative text is rejected or has no effect on the score."""
+    key, response = await submit(system, {**BASE, "description": case["text"]})
+    if case["scenario"] in ("injection_rejected", "off_topic"):
+        assert response.status_code == 422
+        async with system.db.sessions() as session:
+            assert await session.scalar(select(func.count()).select_from(Report)) == 0
+        return
+    assert response.status_code == 202
+    await system.work()
+    detail = await details(system, key)
+    assert detail["status"] == "WAITING_APPROVAL"
+    assert detail["review"] is None
+    priority = detail["proposal"]["priority"]
+    async with system.db.sessions() as session:
+        report = await session.get(Report, detail["report_id"])
+        assert report.normalized["kind"] == case["kind"]
+    # Same score as the clean BASE report in the same community: only grounded hours and
+    # criticality move it, never the wording of a request.
+    clean_key, _ = await submit(system)
+    await system.work()
+    clean = (await details(system, clean_key))["proposal"]["priority"]
+    for field in ("score_min", "score_max", "factors", "immediate_review"):
+        assert priority[field] == clean[field], field
