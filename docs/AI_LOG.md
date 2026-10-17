@@ -532,3 +532,11 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
 - Las decisiones registradas en esa base temporal fueron datos de prueba locales, no revisiones
   humanas reales. Las capturas de `docs/evidence/` siguen siendo de la interfaz anterior.
 - Acciones remotas/Git: ninguna; sin commits, pushes, merges ni cambios de rama.
+
+## 2026-10-17 — Paleta «agua clara» del frontend
+
+- Herramienta: Claude Code (Claude Opus 5.5). Solo `frontend/src/styles.css` (tokens claros y
+  oscuros, sin colores fijos fuera de ellos), `frontend/index.html` (`theme-color`) y UI.md.
+- Contraste calculado con la fórmula WCAG para cada par de tokens: texto ≥ 4,5:1, bordes de campos y
+  rellenos gráficos ≥ 3:1. Verificado con `npm run lint`, `typecheck`, `test` (14/14) y `build`, y
+  con capturas en claro y oscuro contra la API aislada en modo mock. Sin commits ni pushes.

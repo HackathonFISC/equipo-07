@@ -6,7 +6,9 @@ contratos, endpoints, autenticación, agentes, reglas de prioridad ni planificad
 ## Dirección
 
 - Herramienta operativa para el coordinador y formulario sencillo para el ciudadano, con la misma
-  identidad: un acento verde petróleo sobre neutros fríos, Public Sans autoalojada
+  identidad «agua clara»: superficies en blanco cálido sobre una neblina aqua, turquesa para
+  gráficos y el verde azulado profundo solo en botones y texto de acción (tokens en
+  `styles.css`; texto ≥ 4,5:1, bordes de campos y gráficos ≥ 3:1). Public Sans autoalojada
   (`@fontsource-variable/public-sans`) e iconos Phosphor (`@phosphor-icons/react`) en lugar de emojis.
 - Colores semánticos (ok, aviso, peligro) solo para estados. Modo claro y oscuro por
   `prefers-color-scheme`; las animaciones de entrada desaparecen con `prefers-reduced-motion`.
