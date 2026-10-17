@@ -366,6 +366,34 @@ function ExecutionDetail({ id, token, onViewTimeline }: { id: string; token: str
         </div>
       )}
 
+      {!!detail.evidence?.length && (
+        <section aria-label="Evidencia del ciudadano" className="stack evidence-section">
+          <h3>Evidencia enviada por el ciudadano</h3>
+          <ul className="evidence-list">
+            {detail.evidence.map((item, i) => (
+              <li key={i}>
+                <strong>{item.kind === 'image' ? 'Foto' : item.kind === 'voice' || item.kind === 'audio' ? 'Audio (sin transcribir)' : 'Archivo'}</strong>
+                {' '}· {item.channel} · {item.status === 'STORED' ? 'guardado' : 'no guardado'}
+                {item.analysis?.status === 'DONE' && (
+                  <p className="text-sm">
+                    {item.analysis.simulated ? 'Simulación' : `Análisis de IA (${item.analysis.model})`}:{' '}
+                    {item.analysis.description}{' '}
+                    <em>
+                      {item.analysis.relevant === true ? '— relevante para el reporte'
+                        : item.analysis.relevant === false ? '— no parece relacionada con el agua'
+                        : ''}
+                    </em>
+                  </p>
+                )}
+                {item.analysis?.status === 'ERROR' && <p className="text-sm muted">Análisis no disponible ({item.analysis.error}).</p>}
+                {item.kind === 'image' && item.status === 'STORED' && !item.analysis && <p className="text-sm muted">Análisis en curso…</p>}
+              </li>
+            ))}
+          </ul>
+          <small className="muted">El análisis es orientativo: no cambia el tipo, las horas ni el puntaje. Decide la persona coordinadora.</small>
+        </section>
+      )}
+
       <section aria-label="Trazabilidad" className="stack trace-section">
         <div className="trace-header">
           <h3>Trazabilidad de la ejecución</h3>

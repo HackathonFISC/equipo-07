@@ -9,6 +9,7 @@ from app.agents import CommunicationAgent, PlannerAgent
 from app.config import Settings
 from app.db import Database, checkpoints
 from app.graph import build_graph
+from app.integrations.evidence import analyze_next_image
 from app.models import DistributionPlan, Execution, Notification, Review
 from app.providers import make_provider
 from app.services import log_event, plan_event, trace
@@ -178,6 +179,7 @@ async def run():
                         not await process_one(db, graph, provider)
                         and not await process_plan(db, planner)
                         and not await process_notifications(db, communicator)
+                        and not await analyze_next_image(db, settings, provider)
                     ):
                         await asyncio.sleep(0.5)
     finally:

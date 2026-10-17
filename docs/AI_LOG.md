@@ -392,3 +392,17 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
 - R0: ruff, formato y mypy limpios; `alembic upgrade head` + `check` limpios con una sola cabeza;
   pytest **157 passed**, cobertura 87 %; `evaluate.py` 54/54; `validate_datasets.py` rc=0 sin diff en
   `data/`; `impact.json` sin cambios; frontend `npm ci`, lint, typecheck, Vitest 9/9 y build OK.
+
+## 2026-10-17 — Análisis orientativo de fotos del ciudadano
+
+- Herramienta: Claude Code (Opus 5.5), a pedido del usuario, en `main`.
+- `providers.describe_image` (NVIDIA, `NVIDIA_VISION_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`)
+  devuelve `ImageEvidenceSchema {description ≤200, relevant}`. El mock responde «Simulación: imagen
+  no analizada por IA» con `relevant: null`.
+- `integrations/evidence.analyze_next_image`: job del worker (no del chat), una foto por vuelta,
+  resultado guardado en el adjunto. Un fallo se registra como ERROR y no se reintenta.
+- `execution_detail` añade `evidence`; la vista de Coordinación muestra foto o audio y el análisis,
+  aclarando que es orientativo.
+- Prueba de modelos (imagen de prueba generada localmente): nemotron-3.5-super-vl 7.1 s (respondió en
+  inglés), nemotron-3-nano-omni 10.8 s y 7.7 s con el prompt final, en español y con `relevant: false`
+  correcto. gemma-3-12b-it no está disponible (404).

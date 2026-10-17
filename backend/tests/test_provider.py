@@ -148,3 +148,41 @@ async def test_nvidia_errors_do_not_fallback_or_leak(fault):
         with pytest.raises(ProviderError) as exc:
             await provider.extract_report("Sin agua")
         assert "secret" not in str(exc.value)
+
+
+async def test_nvidia_describe_image_sends_data_url_and_parses_fenced_json():
+    captured = []
+    body = '```json\n{"description": "Tubería rota con agua en la acera", "relevant": true}\n```'
+
+    def handle(request):
+        captured.append(json.loads(request.content))
+        return httpx.Response(
+            200,
+            json={
+                "id": "t",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "v",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": body},
+                    }
+                ],
+            },
+        )
+
+    async with AsyncOpenAI(
+        api_key="fake-test-key",
+        base_url="https://test.invalid/v1",
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(handle)),
+    ) as client:
+        provider = NvidiaLLMProvider(Settings(_env_file=None, nvidia_vision_model="v"), client)
+        result = await provider.describe_image(b"\xff\xd8\xff", "image/jpeg")
+    assert result.relevant is True and "Tubería" in result.description
+    [request] = captured
+    assert request["model"] == "v"
+    image = request["messages"][0]["content"][1]["image_url"]["url"]
+    assert image.startswith("data:image/jpeg;base64,")
+    assert "nunca describas personas" in request["messages"][0]["content"][0]["text"]

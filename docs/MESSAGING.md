@@ -3,7 +3,10 @@
 El chatbot vive en `backend/app/integrations/`. Guía al ciudadano paso a paso, guarda cada mensaje
 de forma durable y, al confirmar, entrega el reporte al mismo `submit_report` del formulario web
 (reporte + ejecución `QUEUED`). El webhook y el receptor nunca ejecutan el grafo: lo hace el
-worker de siempre. No hay transcripción, visión ni respuestas generadas por IA.
+worker de siempre. No hay transcripción ni respuestas generadas por IA. Las **fotos** sí se analizan: el worker
+pide a `NVIDIA_VISION_MODEL` una frase de descripción y si se relaciona con el agua, y el
+coordinador lo ve en el expediente como dato orientativo (no cambia tipo, horas ni puntaje; el
+prompt prohíbe describir personas, caras, placas o documentos).
 
 **Estado de los canales:** Telegram es el canal de la demo. WhatsApp está implementado y probado
 solo con eventos simulados: sin una cuenta Meta Business verificada no se pudo conectar, así que

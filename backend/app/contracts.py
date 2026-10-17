@@ -90,6 +90,13 @@ class CoordinationProposalSchema(Contract):
     explanation: str = Field(min_length=1, max_length=1200)
 
 
+class ImageEvidenceSchema(Contract):
+    """Advisory reading of a citizen photo for the coordinator; it never changes the score."""
+
+    description: str = Field(min_length=1, max_length=200)
+    relevant: bool | None = None
+
+
 class ReviewInput(Contract):
     decision: Literal["APPROVE", "REJECT", "CORRECT"]
     reason: str = Field(min_length=5, max_length=600)

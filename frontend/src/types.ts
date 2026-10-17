@@ -25,6 +25,12 @@ export interface Detail extends Execution {
   review: null | { payload: Review; created_at: string; applied_at: string | null; actor: string }
   traces: { id: number; agent: string; tool: string | null; event: string; category: string
     detail: Record<string, unknown>; created_at: string }[]
+  evidence?: EvidenceItem[]
+}
+export interface EvidenceItem {
+  channel: string; kind: string; mime_type: string; status: string
+  analysis?: { status: 'DONE' | 'ERROR'; description?: string; relevant?: boolean | null
+    model?: string; simulated?: boolean; error?: string } | null
 }
 export interface Incident {
   id: string; community_id: string; summary: string; kind: string; status: string

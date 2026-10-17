@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     llm_provider: Literal["mock", "nvidia"] = "mock"
     nvidia_api_key: SecretStr = SecretStr("")
     nvidia_model: str = "openai/gpt-oss-20b"
+    nvidia_vision_model: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     llm_timeout_seconds: float = Field(default=30, gt=0, le=60)
     dedup_window_hours: int = Field(default=72, ge=48, le=168)

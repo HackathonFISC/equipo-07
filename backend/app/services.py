@@ -278,7 +278,31 @@ async def execution_detail(db, execution_id):
             "review": record_dict(review) if review else None,
             "association": record_dict(association) if association else None,
             "traces": [record_dict(e) for e in events],
+            "evidence": await citizen_evidence(session, execution.report_id),
         }
+
+
+async def citizen_evidence(session, report_id):
+    """Files the citizen sent through a messaging channel, with the advisory photo analysis."""
+    from app.integrations.models import InboundDraft, InboundMessage
+
+    drafts = select(InboundDraft.id).where(InboundDraft.report_id == report_id)
+    messages = await session.scalars(
+        select(InboundMessage)
+        .where(InboundMessage.draft_id.in_(drafts))
+        .order_by(InboundMessage.received_at, InboundMessage.id)
+    )
+    return [
+        {
+            "channel": message.channel,
+            "kind": item.get("kind"),
+            "mime_type": item.get("mime_type"),
+            "status": item.get("status"),
+            "analysis": item.get("analysis"),
+        }
+        for message in messages
+        for item in message.attachments or []
+    ]
 
 
 def log_event(**data):
