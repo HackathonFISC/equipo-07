@@ -1,0 +1,155 @@
+{
+    "id": "cfe110d2-b315-41c5-ac86-4451f5790082",
+    "status": "APPROVED",
+    "request": {
+        "unavailable_trucks": []
+    },
+    "result": {
+        "policy_version": "v1.0.0-demo",
+        "routes": [
+            {
+                "truck_id": "cisterna-burunga-01",
+                "truck_name": "Cisterna \u00c3\udc81gil Burunga 01",
+                "capacity": 3000,
+                "base_name": "Planta Potabilizadora Laguna Alta",
+                "shift": "06:00\u00e2\u20ac\u201c14:00",
+                "trips": 1,
+                "km": 53.8,
+                "fuel_gallons": 8.7,
+                "gallons": 3000,
+                "ends_at": "08:18",
+                "stops": [
+                    {
+                        "community_id": "crit-hosp-nicolas-solano",
+                        "name": "Hospital Regional Nicol\u00c3\u00a1s A. Solano",
+                        "incident_ids": [
+                            "f35b8c07-7b72-4a05-acb2-f664055df4da"
+                        ],
+                        "trip": 1,
+                        "arrival": "06:54",
+                        "gallons": 3000,
+                        "reason": "Puntaje 68 (instituci\u00c3\u00b3n cr\u00c3\u00adtica); carga adicional en la ronda 2. Cisterna \u00c3\udc81gil Burunga 01 es la cisterna compatible que termina esta entrega m\u00c3\u00a1s temprano."
+                    }
+                ]
+            },
+            {
+                "truck_id": "cisterna-hospital-01",
+                "truck_name": "Mega Cisterna Hospitalaria 01",
+                "capacity": 10000,
+                "base_name": "Planta Potabilizadora de Mendoza (ACP / IDAAN)",
+                "shift": "05:00\u00e2\u20ac\u201c13:00",
+                "trips": 1,
+                "km": 60.3,
+                "fuel_gallons": 15.9,
+                "gallons": 10000,
+                "ends_at": "07:49",
+                "stops": [
+                    {
+                        "community_id": "crit-hosp-nicolas-solano",
+                        "name": "Hospital Regional Nicol\u00c3\u00a1s A. Solano",
+                        "incident_ids": [
+                            "f35b8c07-7b72-4a05-acb2-f664055df4da"
+                        ],
+                        "trip": 1,
+                        "arrival": "06:00",
+                        "gallons": 10000,
+                        "reason": "Puntaje 68 (instituci\u00c3\u00b3n cr\u00c3\u00adtica); primera carga. Mega Cisterna Hospitalaria 01 es la cisterna compatible que termina esta entrega m\u00c3\u00a1s temprano."
+                    }
+                ]
+            },
+            {
+                "truck_id": "cisterna-troncal-02",
+                "truck_name": "Mega Cisterna Troncal 02",
+                "capacity": 10000,
+                "base_name": "Planta Jaime D\u00c3\u00adaz Quintero (El Trapichito)",
+                "shift": "08:00\u00e2\u20ac\u201c16:00",
+                "trips": 1,
+                "km": 22.7,
+                "fuel_gallons": 6.1,
+                "gallons": 2000,
+                "ends_at": "09:07",
+                "stops": [
+                    {
+                        "community_id": "crit-hosp-nicolas-solano",
+                        "name": "Hospital Regional Nicol\u00c3\u00a1s A. Solano",
+                        "incident_ids": [
+                            "f35b8c07-7b72-4a05-acb2-f664055df4da"
+                        ],
+                        "trip": 1,
+                        "arrival": "08:23",
+                        "gallons": 2000,
+                        "reason": "Puntaje 68 (instituci\u00c3\u00b3n cr\u00c3\u00adtica); carga adicional en la ronda 3. Mega Cisterna Troncal 02 es la cisterna compatible que termina esta entrega m\u00c3\u00a1s temprano."
+                    }
+                ]
+            }
+        ],
+        "unserved": [],
+        "demand_gallons": 15000,
+        "planned_gallons": 15000,
+        "explanation": [
+            "Orden de atenci\u00c3\u00b3n: mayor puntaje aprobado por el coordinador primero; a igual puntaje, instituciones cr\u00c3\u00adticas.",
+            "Equidad: cada comunidad recibe una primera carga antes de que otra reciba una segunda.",
+            "Restricciones: capacidad de cada cisterna, capacidad m\u00c3\u00a1xima admitida por el acceso vial, turno del conductor con regreso a planta y recarga en la planta base.",
+            "Distancias: l\u00c3\u00adnea recta \u00c3\u2014 1.4 a 30 km/h (supuesto de planificaci\u00c3\u00b3n, no tr\u00c3\u00a1fico real)."
+        ]
+    },
+    "review": {
+        "decision": "APPROVE",
+        "reason": "Prueba M0 de linea base F0: plan revisado."
+    },
+    "error": null,
+    "events": [
+        {
+            "agent": "human",
+            "tool": null,
+            "event": "PLAN_REQUESTED",
+            "detail": {
+                "unavailable_trucks": []
+            },
+            "at": "2026-10-17T04:21:21.664128"
+        },
+        {
+            "agent": "worker",
+            "tool": null,
+            "event": "START",
+            "detail": {},
+            "at": "2026-10-17T04:21:21.925399"
+        },
+        {
+            "agent": "planner",
+            "tool": "plan_distribution",
+            "event": "PLAN_PROPOSED",
+            "detail": {
+                "policy_version": "v1.0.0-demo",
+                "routes": 3,
+                "unserved": 0,
+                "planned_gallons": 15000,
+                "demand_gallons": 15000
+            },
+            "at": "2026-10-17T04:21:22.115683"
+        },
+        {
+            "agent": "worker",
+            "tool": null,
+            "event": "END",
+            "detail": {
+                "status": "PROPOSED",
+                "error": null
+            },
+            "at": "2026-10-17T04:21:22.130441"
+        },
+        {
+            "agent": "human",
+            "tool": "save_plan_decision",
+            "event": "PLAN_REVIEWED",
+            "detail": {
+                "decision": "APPROVE",
+                "reason": "Prueba M0 de linea base F0: plan revisado.",
+                "scheduled_incidents": 1
+            },
+            "at": "2026-10-17T04:21:52.178684"
+        }
+    ],
+    "created_at": "2026-10-17T04:21:21.673748",
+    "updated_at": "2026-10-17T04:21:52.179834"
+}

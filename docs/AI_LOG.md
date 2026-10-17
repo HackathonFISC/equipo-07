@@ -116,8 +116,42 @@ Evidencia y límites: NVIDIA_SMOKE. No se verificó la facturación de las llama
 - Límites: heurística determinística (no óptimo global, sin OR-Tools); sin ventanas horarias por
   destino; aprobar programa rutas, no confirma entregas.
 
+## Fase F0: Línea Base — 2026-10-16
+
+- Herramienta: Antigravity (Gemini 3.8 Flash) en entorno Windows.
+- Objetivo: Ejecutar la Fase F0 (Línea Base) completa sin modificar código de aplicación:
+  - Ejecución de la suite R0 completa (Backend, Evals, Datasets, Frontend).
+  - Verificación empírica del hallazgo H6 (comportamiento de arraijan-demo sin coordenadas vs comunidad con coordenadas).
+  - Verificación empírica del hallazgo H11 (fallo UNGROUNDED_HOURS ante duraciones expresadas en días).
+  - Documentación consolidada en `docs/evidence/baseline.md`.
+- Archivos:
+  - creados: `docs/evidence/baseline.md`.
+  - actualizados por runner oficial: `evals/results.json`, `evals/results.xml`.
+- Comandos ejecutados y resultados:
+  - Backend: `uv sync --locked` (72 paquetes); `ruff check` limpio; `ruff format --check` limpio (27 archivos); `mypy` sin errores (0 issues); `pytest -q -p no:cacheprovider --cov=app`: 75 passed en 221.23s, 87 % de cobertura. `alembic upgrade head` y `alembic check` limpios.
+  - Evals: `scripts/evaluate.py`: 31/31 passed en 40.26s (100 %).
+  - Datasets: `scripts/validate_datasets.py`: 20/20 ubicaciones válidas, 4 cisternas; `git diff data/` limpio.
+  - Frontend: `npm.cmd run lint` limpio; `npm.cmd run typecheck` limpio; `npm.cmd test` 8 passed en 21.99s; `npm.cmd run build` limpio en 6.64s.
+- Desviaciones (añadidas tras revisión con Claude Code, Opus 5.5; detalle en `docs/evidence/baseline.md` §5):
+  - pytest: la 1.ª ejecución falló en `test_real_http_queue_and_worker_restart`; la 2.ª pasó (75). Causa no determinada: prueba intermitente.
+  - `npm ci` falló por binarios bloqueados; se usó `npm install`, que modificó `package-lock.json` (restaurado). El paso `npm ci` de R0 no está verificado.
+  - Node v22.18.0 en lugar del 24.19.0 declarado en `.node-version`.
+  - H6 y H11 se verificaron con scripts exploratorios eliminados después, no con la prueba manual M0, que sigue pendiente.
+  - Trabajo hecho sobre `main` con cambios sin commitear; el commit `524e7d4` amplió `guard_text` y se solapa con F4-03.
+- Cierre de desviaciones 1–4 (Claude Code, Opus 5.5; detalle en `docs/evidence/baseline.md` §6):
+  - Test e2e intermitente: 2/5 ejecuciones pasan. Causa medida: el arranque en frío del worker tarda 12–33 s y el test espera 15 s. Sin error de lógica. Arreglo del plazo propuesto para el inicio de F1.
+  - `npm.cmd ci` en verde sin cambiar el lockfile; lint, typecheck, Vitest 8/8 y build en verde.
+  - Node 22.18.0 aceptado por decisión del equipo como entorno probado; `.node-version`, README y CI siguen en 24 (pendiente F6).
+  - M0 ejecutada en instancia aislada (8010/5180, base de datos temporal, mock): reporte → APPROVED 68 → plan 3 rutas 15 000/15 000 gal → SCHEDULED. Capturas y JSON en `docs/evidence/m0/`.
+  - La API y el Vite del equipo se detuvieron con su autorización; otro proceso los relanzó en 8000/5173. El worker del equipo no se tocó.
+- Verificación empírica H6 y H11:
+  - H6 confirmado: `arraijan-demo` produce `SIN_UBICACION`, mientras que `crit-hosp-nicolas-solano` genera 3 rutas y 15,000 galones planificados.
+  - H11 confirmado: `stated_hours("Tenemos 3 días sin agua en el barrio")` devuelve `[]`. Cuando el LLM extrae `72.0`, el grounding lanza `ProviderError("UNGROUNDED_HOURS")` y el worker termina en `ERROR`.
+- Acciones Git: No se realizaron commits, pushes, merges ni tags no autorizados.
+
 ## Plantilla para nuevas entradas
 
 Fecha / autor humano / herramienta y modelo conocido / objetivo / archivos / sugerencias aceptadas
 y descartadas / cambios manuales verificables / comandos y resultados / revisión humana / límites
 y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora.
+

@@ -1,0 +1,11 @@
+[
+    {
+        "id": "f35b8c07-7b72-4a05-acb2-f664055df4da",
+        "community_id": "crit-hosp-nicolas-solano",
+        "kind": "OUTAGE",
+        "summary": "El hospital est\u00c3\u00a1 sin agua desde hace 18 horas, los tanques de reserva se est\u00c3\u00a1n agotando.",
+        "status": "SCHEDULED",
+        "created_at": "2026-10-17T04:19:57.203386",
+        "last_activity": "2026-10-17T04:21:52.178661"
+    }
+]

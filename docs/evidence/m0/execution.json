@@ -1,0 +1,294 @@
+{
+    "id": "99a47bda-0029-40dd-a69e-684473c105dd",
+    "report_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+    "status": "APPROVED",
+    "provider": "mock-deterministic",
+    "is_simulated": true,
+    "error": null,
+    "attempts": 2,
+    "created_at": "2026-10-17T04:19:56.187143",
+    "updated_at": "2026-10-17T04:21:01.676963",
+    "proposal": {
+        "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+        "incident_id": "f35b8c07-7b72-4a05-acb2-f664055df4da",
+        "priority": {
+            "score_min": 68,
+            "score_max": 68,
+            "confidence_level": "HIGH",
+            "factors": {
+                "hours": [
+                    18,
+                    18
+                ],
+                "critical": [
+                    30,
+                    30
+                ],
+                "vulnerability": [
+                    19,
+                    19
+                ],
+                "population": [
+                    1,
+                    1
+                ]
+            },
+            "flags": [],
+            "policy_version": "v1.0.0-demo",
+            "immediate_review": true
+        },
+        "explanation": "\u00f0\u0178\u0161\u00a8 ALERTA CR\u00c3\udc8dTICA: Instituci\u00c3\u00b3n vital de salud o educaci\u00c3\u00b3n involucrada. Evaluaci\u00c3\u00b3n determin\u00c3\u00adstica: prioridad calculada en rango 68\u00e2\u20ac\u201c68/100 pts (Desglose: 18 pts por duraci\u00c3\u00b3n, 30 pts por criticidad institucional, 19 pts por vulnerabilidad social, 1 pts por poblaci\u00c3\u00b3n del sector). Nivel de confianza en los datos: HIGH. Requiere supervisi\u00c3\u00b3n y autorizaci\u00c3\u00b3n del coordinador para programar asignaciones.",
+        "final_score": 68,
+        "created_at": "2026-10-17T04:19:57.332895"
+    },
+    "review": {
+        "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+        "payload": {
+            "decision": "APPROVE",
+            "reason": "Prueba M0 de linea base F0: hospital verificado en catalogo.",
+            "corrected_score": null,
+            "association": null
+        },
+        "actor": "coordinator-shared-token",
+        "created_at": "2026-10-17T04:21:01.308778",
+        "applied_at": "2026-10-17T04:21:01.622798"
+    },
+    "association": {
+        "report_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+        "incident_id": "f35b8c07-7b72-4a05-acb2-f664055df4da",
+        "status": "CONFIRMED",
+        "reasoning": "Simulaci\u00c3\u00b3n: sin evidencia compatible",
+        "confidence": "LOW"
+    },
+    "traces": [
+        {
+            "id": 1,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "audit",
+            "agent": "api",
+            "tool": "save_report",
+            "event": "REPORT_ACCEPTED",
+            "detail": {},
+            "created_at": "2026-10-17T04:19:56.193672"
+        },
+        {
+            "id": 2,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "worker",
+            "tool": null,
+            "event": "START",
+            "detail": {
+                "attempt": 1
+            },
+            "created_at": "2026-10-17T04:19:56.605274"
+        },
+        {
+            "id": 3,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "ingestion",
+            "tool": null,
+            "event": "START",
+            "detail": {},
+            "created_at": "2026-10-17T04:19:56.957909"
+        },
+        {
+            "id": 4,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "ingestion",
+            "tool": "save_normalized_report",
+            "event": "NORMALIZED",
+            "detail": {
+                "kind": "OUTAGE",
+                "flags": []
+            },
+            "created_at": "2026-10-17T04:19:57.059800"
+        },
+        {
+            "id": 5,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "ingestion",
+            "tool": null,
+            "event": "END",
+            "detail": {},
+            "created_at": "2026-10-17T04:19:57.067185"
+        },
+        {
+            "id": 6,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "verification",
+            "tool": null,
+            "event": "START",
+            "detail": {},
+            "created_at": "2026-10-17T04:19:57.129062"
+        },
+        {
+            "id": 7,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "audit",
+            "agent": "verification",
+            "tool": "consolidate_incident",
+            "event": "CONSOLIDATED",
+            "detail": {
+                "incident_id": "f35b8c07-7b72-4a05-acb2-f664055df4da",
+                "association_status": "CONFIRMED",
+                "confidence": "LOW",
+                "reasoning": "Simulaci\u00c3\u00b3n: sin evidencia compatible",
+                "candidates": 0
+            },
+            "created_at": "2026-10-17T04:19:57.217640"
+        },
+        {
+            "id": 8,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "verification",
+            "tool": null,
+            "event": "END",
+            "detail": {},
+            "created_at": "2026-10-17T04:19:57.227414"
+        },
+        {
+            "id": 9,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "coordination",
+            "tool": null,
+            "event": "START",
+            "detail": {},
+            "created_at": "2026-10-17T04:19:57.244293"
+        },
+        {
+            "id": 10,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "audit",
+            "agent": "coordination",
+            "tool": "calculate_priority",
+            "event": "PROPOSED",
+            "detail": {
+                "score_min": 68,
+                "score_max": 68,
+                "confidence_level": "HIGH",
+                "factors": {
+                    "hours": [
+                        18,
+                        18
+                    ],
+                    "critical": [
+                        30,
+                        30
+                    ],
+                    "vulnerability": [
+                        19,
+                        19
+                    ],
+                    "population": [
+                        1,
+                        1
+                    ]
+                },
+                "flags": [],
+                "policy_version": "v1.0.0-demo",
+                "immediate_review": true
+            },
+            "created_at": "2026-10-17T04:19:57.337533"
+        },
+        {
+            "id": 11,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "coordination",
+            "tool": null,
+            "event": "END",
+            "detail": {},
+            "created_at": "2026-10-17T04:19:57.345993"
+        },
+        {
+            "id": 12,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "worker",
+            "tool": null,
+            "event": "END",
+            "detail": {
+                "status": "WAITING_APPROVAL"
+            },
+            "created_at": "2026-10-17T04:19:57.401914"
+        },
+        {
+            "id": 13,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "audit",
+            "agent": "human",
+            "tool": null,
+            "event": "REVIEW_ACCEPTED",
+            "detail": {
+                "decision": "APPROVE"
+            },
+            "created_at": "2026-10-17T04:21:01.311553"
+        },
+        {
+            "id": 14,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "worker",
+            "tool": null,
+            "event": "START",
+            "detail": {
+                "attempt": 2
+            },
+            "created_at": "2026-10-17T04:21:01.464951"
+        },
+        {
+            "id": 15,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "finalize",
+            "tool": null,
+            "event": "START",
+            "detail": {},
+            "created_at": "2026-10-17T04:21:01.542618"
+        },
+        {
+            "id": 16,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "audit",
+            "agent": "human",
+            "tool": "save_decision",
+            "event": "DECISION_APPLIED",
+            "detail": {
+                "decision": "APPROVE",
+                "final_score": 68,
+                "policy_version": "v1.0.0-demo",
+                "incident_id": "f35b8c07-7b72-4a05-acb2-f664055df4da"
+            },
+            "created_at": "2026-10-17T04:21:01.629727"
+        },
+        {
+            "id": 17,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "finalize",
+            "tool": null,
+            "event": "END",
+            "detail": {},
+            "created_at": "2026-10-17T04:21:01.643144"
+        },
+        {
+            "id": 18,
+            "execution_id": "99a47bda-0029-40dd-a69e-684473c105dd",
+            "category": "technical",
+            "agent": "worker",
+            "tool": null,
+            "event": "END",
+            "detail": {
+                "status": "APPROVED"
+            },
+            "created_at": "2026-10-17T04:21:01.678734"
+        }
+    ]
+}
