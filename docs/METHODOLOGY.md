@@ -1,6 +1,6 @@
 # Metodología, despliegue y funcionamiento
 
-Documento de entrega del Reto 1 (Agua). Resume cómo trabajamos, cómo funciona AguaIA y cómo se
+Documento de entrega del Reto 1 (Agua). Resume cómo trabajamos, cómo funciona HidroAgente y cómo se
 despliega. El detalle técnico vive en [ARCHITECTURE](ARCHITECTURE.md) (decisiones D1–D7),
 [IMPLEMENTATION](IMPLEMENTATION.md), [EVALUATION](EVALUATION.md), [GUARDRAILS](GUARDRAILS.md) y
 [DATA_SOURCES](DATA_SOURCES.md).

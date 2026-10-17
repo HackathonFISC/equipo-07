@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* AguaIA: agua clara. Warm white surfaces on an aqua mist; deep teal only for actions and text,
+/* HidroAgente: agua clara. Warm white surfaces on an aqua mist; deep teal only for actions and text,
    brighter turquoise for graphics. Semantic tones (ok, warn, danger, progress) only carry state.
    Text pairs >= 4.5:1, field borders and graphic fills >= 3:1 against their background. */
 :root {
@@ -191,7 +191,7 @@ legend { padding: 0; font-weight: 650; font-size: .95rem; margin-bottom: 8px; }
 .topbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .topbar-inner { max-width: 1320px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 16px; min-height: 64px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 750; font-size: 1.15rem; letter-spacing: -0.02em; border-radius: var(--r-sm); }
-.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--fill); color: var(--surface); font-size: 20px; }
+.brand-mark { width: 38px; height: 38px; }
 .brand small { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
 .topbar-end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .mode { font-size: .8rem; }

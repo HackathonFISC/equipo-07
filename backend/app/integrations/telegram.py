@@ -217,7 +217,7 @@ async def deliver_zone_alerts(db, telegram: Telegram) -> int:
             ):
                 continue
             text = (
-                f"AguaIA informa: otro vecino reportó {PROBLEMS[incident.kind]} en "
+                f"HidroAgente informa: otro vecino reportó {PROBLEMS[incident.kind]} en "
                 f"{names[incident.community_id]}, la zona de tu último reporte. "
                 f"Ya está registrado para su atención; no necesitas reportarlo de nuevo."
             )

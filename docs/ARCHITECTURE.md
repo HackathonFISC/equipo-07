@@ -1,6 +1,6 @@
 # AGUAIA — ESPECIFICACIÓN ARQUITECTÓNICA Y DISEÑO TÉCNICO
 
-> **Proyecto:** AguaIA — Centro de Coordinación Agéntico para la Crisis del Agua en Panamá Oeste  
+> **Proyecto:** HidroAgente — Centro de Coordinación Agéntico para la Crisis del Agua en Panamá Oeste  
 > **Evento:** Hackathon FISC AI Agents 2026 — Reto 1: Agua  
 > **Equipo:** Sebastián Feng (@MrFengH), Cristian Muir (@iCrxisz), Mahmoud ElSayed (@Matimod55)  
 > **Estado:** Aprobado y Consolidado tras sesión de `grill-me` (7/7 decisiones bloqueadas)  
@@ -10,7 +10,7 @@
 
 ## 1. VISIÓN GENERAL Y CONTEXTO
 
-AguaIA es una plataforma agéntica y determinística diseñada para abordar la gestión, verificación y distribución equitativa de agua potable durante contingencias en Panamá Oeste (especialmente en los distritos de Arraiján y La Chorrera).
+HidroAgente es una plataforma agéntica y determinística diseñada para abordar la gestión, verificación y distribución equitativa de agua potable durante contingencias en Panamá Oeste (especialmente en los distritos de Arraiján y La Chorrera).
 
 El sistema supera el modelo de un simple "chatbot ciudadano" transformándose en un **centro de operaciones auditable** que integra:
 - Ingesta estructurada de reportes multicanal.

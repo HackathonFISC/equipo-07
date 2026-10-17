@@ -217,7 +217,7 @@ test('plan panel renders impact comparison card with exact metrics for scenario 
   await userEvent.setup().click(await screen.findByRole('tab', { name: /Cisternas/ }))
   expect(
     await screen.findByText(
-      'AguaIA frente a por volumen de reportes: misma cobertura crítica (100 %) · primera entrega crítica 149 min antes'
+      'HidroAgente frente a por volumen de reportes: misma cobertura crítica (100 %) · primera entrega crítica 149 min antes'
     )
   ).toBeInTheDocument()
   expect(screen.getByText('Comparación con atender por volumen de reportes')).toBeInTheDocument()

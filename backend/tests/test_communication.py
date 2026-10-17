@@ -38,7 +38,7 @@ async def test_communication_agent_scheduled_and_unserved(system, communicator):
     hosp_notif = next(n for n in notifs if n["community_id"] == "crit-hosp-nicolas-solano")
     assert hosp_notif["kind"] == "SCHEDULED"
     assert hosp_notif["arrival"] is not None
-    assert "AguaIA informa" in hosp_notif["text"]
+    assert "HidroAgente informa" in hosp_notif["text"]
     assert hosp_key in hosp_notif["incident_ids"]
 
     # Verificar aviso para la fuga (UNSERVED)
@@ -141,7 +141,7 @@ async def test_public_report_status_security_and_linkage(system, communicator):
     assert data_after["notice"] is not None
     assert data_after["notice"]["kind"] == "SCHEDULED"
     assert data_after["notice"]["arrival"] is not None
-    assert "AguaIA informa" in data_after["notice"]["text"]
+    assert "HidroAgente informa" in data_after["notice"]["text"]
 
     # Test 404 con ID inexistente
     fake_id = str(uuid4())

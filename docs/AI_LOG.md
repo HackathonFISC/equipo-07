@@ -678,3 +678,14 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
   RF42. La traza ERROR del grafo usa el mismo código controlado que el worker.
 - Verificación sobre el merge: 206 pytest (88 %), Ruff, formato, mypy, una cabeza de Alembic,
   evals 64/64, impacto sin cambios (143 frente a 292 min), Vitest 30/30, lint, typecheck y build.
+
+## 2026-10-17 — Cambio de nombre público a HidroAgente
+
+- Herramienta: Claude Code (Claude Opus 5.5), a pedido del usuario.
+- El nombre visible pasa de AguaIA a HidroAgente: título y metadatos de la pestaña, favicon y
+  logo nuevos (`public/logo.png`, recorte a 192 px del logo entregado), barra superior, pie,
+  tarjeta de impacto y aviso de entrega en Cisternas, bienvenida del chatbot, avisos «HidroAgente
+  informa» de Telegram y del Agente de Comunicación, y título de la API en OpenAPI. README y
+  documentación principal actualizados.
+- Sin cambios: paquetes, módulos, rutas, claves `aguaia`/`aguaia_vs` del contrato de impacto,
+  bases de datos, variables de entorno, token de ejemplo, datasets y registros históricos.

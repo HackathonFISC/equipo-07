@@ -1,4 +1,4 @@
-# Arquitectura aprobada de AguaIA
+# Arquitectura aprobada de HidroAgente
 
 La especificación original recibida está en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Ese archivo conserva las siete decisiones D1–D7. La implementación las desarrolla en

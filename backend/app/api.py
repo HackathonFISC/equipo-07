@@ -60,7 +60,7 @@ def create_app(settings: Settings | None = None):
         yield
         await db.engine.dispose()
 
-    app = FastAPI(title="AguaIA", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="HidroAgente", version="0.1.0", lifespan=lifespan)
     app.state.db = db
     app.state.settings = settings
     app.add_middleware(

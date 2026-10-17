@@ -111,13 +111,13 @@ function Impact({ plan }: { plan: NonNullable<DistributionPlan['result']> }) {
       <div className="stack-sm">
         <span className="kicker">Comparación con atender por volumen de reportes</span>
         <h3 id="impact-title">
-          AguaIA frente a por volumen de reportes: {coverageText(vsVolumen.critical_coverage_pp, aguaia.critical_coverage_pct)} · {arrivalText(agMedian, volMedian)}
+          HidroAgente frente a por volumen de reportes: {coverageText(vsVolumen.critical_coverage_pp, aguaia.critical_coverage_pct)} · {arrivalText(agMedian, volMedian)}
         </h3>
         <p className="hint">Mismo planificador, misma flota y mismas demandas; solo cambia el orden de atención.</p>
       </div>
       <div className="impact-grid">
         <div className="impact-col ours">
-          <span className="small muted">Orden de AguaIA (puntaje aprobado)</span>
+          <span className="small muted">Orden de HidroAgente (puntaje aprobado)</span>
           <strong>{aguaia.critical_coverage_pct ?? 'Sin dato'} %</strong>
           <span className="small">de la demanda crítica cubierta</span>
           <span className="hint">1ª entrega crítica: {minutes(agMedian)} (mediana). {aguaia.communities_served}/{aguaia.communities_total} comunidades.</span>
@@ -342,7 +342,7 @@ export function PlanPanel({ token, lookups, onShowMap }: { token: string; lookup
           <h3>Decisión del coordinador: {current.review.decision === 'APPROVE' ? 'Aprobado' : 'Rechazado'}</h3>
           <p><strong>Razón:</strong> {current.review.reason}</p>
           {current.review.decision === 'APPROVE' && (
-            <p className="note warn"><WarningIcon aria-hidden="true" />Rutas programadas. La entrega real se confirma fuera de AguaIA: el sistema no registra si el agua llegó.</p>
+            <p className="note warn"><WarningIcon aria-hidden="true" />Rutas programadas. La entrega real se confirma fuera de HidroAgente: el sistema no registra si el agua llegó.</p>
           )}
         </section>
       )}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeftIcon, DropIcon, EyeIcon, EyeSlashIcon, LockKeyIcon, SignOutIcon, WarningIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, EyeIcon, EyeSlashIcon, LockKeyIcon, SignOutIcon, WarningIcon } from '@phosphor-icons/react'
 import { api } from './api'
 import { ErrorMessage, Pill } from './components'
 import { CitizenPage } from './pages/CitizenPage'
@@ -80,9 +80,9 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="topbar-inner">
-          <a className="brand" href="#" onClick={e => { e.preventDefault(); setPage('citizen') }} aria-label="AguaIA, ir al reporte ciudadano">
-            <span className="brand-mark" aria-hidden="true"><DropIcon weight="fill" /></span>
-            <span>AguaIA<small>Panamá Oeste</small></span>
+          <a className="brand" href="#" onClick={e => { e.preventDefault(); setPage('citizen') }} aria-label="HidroAgente, ir al reporte ciudadano">
+            <img className="brand-mark" src="/logo.png" alt="" width="38" height="38" />
+            <span>HidroAgente<small>Panamá Oeste</small></span>
           </a>
           <div className="topbar-end">
             {page === 'citizen' ? (
@@ -132,7 +132,7 @@ export default function App() {
 
       <footer className="footer">
         <div className="footer-inner">
-          <span><strong>AguaIA</strong>. Hackathon FISC AI Agents 2026, reto 1: crisis del agua en Panamá Oeste.</span>
+          <span><strong>HidroAgente</strong>. Hackathon FISC AI Agents 2026, reto 1: crisis del agua en Panamá Oeste.</span>
           <span>La IA propone; una persona del equipo de coordinación decide.</span>
         </div>
       </footer>

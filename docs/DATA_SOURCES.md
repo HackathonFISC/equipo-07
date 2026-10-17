@@ -1,4 +1,4 @@
-# Procedencia y gobernanza de datos en AguaIA
+# Procedencia y gobernanza de datos en HidroAgente
 
 Documento de referencia para la procedencia de datos, clasificación de fuentes, cifras de contexto y límites del sistema para el Reto 1 (Agua — Panamá Oeste).
 
@@ -81,7 +81,7 @@ Procedencia detallada de cada campo utilizado por el motor de cálculo de priori
 
 | Campo | Tipo | Fuente / Justificación |
 |---|---|---|
-| Pesos 35 / 30 / 20 / 15 | SUPUESTO | Ponderaciones porcentuales aprobadas como política de demostración de AguaIA (35 % tiempo sin agua, 30 % criticidad de la institución, 20 % factor de vulnerabilidad, 15 % volumen demográfico); no constituyen una resolución ministerial ni criterio normativo oficial del IDAAN o MINSA. |
+| Pesos 35 / 30 / 20 / 15 | SUPUESTO | Ponderaciones porcentuales aprobadas como política de demostración de HidroAgente (35 % tiempo sin agua, 30 % criticidad de la institución, 20 % factor de vulnerabilidad, 15 % volumen demográfico); no constituyen una resolución ministerial ni criterio normativo oficial del IDAAN o MINSA. |
 
 ---
 
@@ -92,7 +92,7 @@ Procedencia detallada de cada campo utilizado por el motor de cálculo de priori
 1. **299,079 habitantes en Arraiján** ([F01]), según el Censo 2023.
 2. **258,221 habitantes en La Chorrera** ([F02]), según el Censo 2023.
 3. **557,300 habitantes entre los dos distritos** ([F01] + [F02]): es la suma de las dos cifras
-   anteriores, el área que cubre el catálogo de AguaIA.
+   anteriores, el área que cubre el catálogo de HidroAgente.
 4. **Hospital Regional Nicolás A. Solano con 250 camas de internamiento** ([F05]): Es el hospital público regional de referencia del MINSA en La Chorrera, encargado de la atención de pacientes de los distritos de La Chorrera, Arraiján, Capira, Chame y San Carlos.
 5. **Policlínica de Arraiján para unos 300 mil habitantes** ([F04]): la Policlínica «Dr. Blas Daniel Gómez Chetro» de la CSS deriva los casos mayores al Hospital Regional Nicolás A. Solano.
 6. **Un solo corte afecta a varios sectores a la vez** ([F03]): el IDAAN anunció la suspensión de la planta de Laguna Alta por 12 horas el 10 de junio de 2024, con efectos en Nuevo Chorrillo, Burunga, Vista Alegre y Cerro Silvestre, sectores que también aparecen en el catálogo.

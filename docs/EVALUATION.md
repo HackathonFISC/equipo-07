@@ -9,7 +9,7 @@ con estas métricas. No se ejecutó CI remoto.
 |---|---|
 | Backend: `pytest -q -p no:cacheprovider --cov=app` | **206 passed**; cobertura de líneas **88 %** |
 | Evals: `python ../scripts/evaluate.py` | **64/64**; resultados en `evals/results.json` y `evals/results.xml` |
-| Impacto: `python ../scripts/impact_report.py` | Mediana de la primera entrega crítica 143 min (AguaIA) frente a 292 min (volumen y llegada); cobertura crítica 100 % en las tres (`evals/impact.json`) |
+| Impacto: `python ../scripts/impact_report.py` | Mediana de la primera entrega crítica 143 min (HidroAgente) frente a 292 min (volumen y llegada); cobertura crítica 100 % en las tres (`evals/impact.json`) |
 | Frontend: `npm test` (Vitest 5.0.5) | **30/30** (`api.test.ts`, `App.test.tsx` y `coordination.test.tsx`) |
 | Frontend: lint, typecheck y build | Aprobados |
 | Backend: Ruff lint y formato | Aprobados en `app/`, `tests/` y `migrations/` |
@@ -47,10 +47,10 @@ modelo a marcar una institución crítica; la compuerta lo bloqueó y el reporte
 ### 3. Impacto
 
 `scripts/impact_report.py` corre el mismo solver, con la misma flota y las mismas demandas del
-escenario F2-01, en tres órdenes: el puntaje aprobado de AguaIA, más reportes primero y orden de
-llegada. Con AguaIA la mediana de la primera entrega a las tres instituciones críticas (hospital,
+escenario F2-01, en tres órdenes: el puntaje aprobado de HidroAgente, más reportes primero y orden de
+llegada. Con HidroAgente la mediana de la primera entrega a las tres instituciones críticas (hospital,
 escuela y centro de salud) es 143 min; con las otras dos es 292 min. La cobertura crítica es 100 %
-en las tres, es decir, AguaIA no cubre más demanda: llega antes. El plan real muestra la misma
+en las tres, es decir, HidroAgente no cubre más demanda: llega antes. El plan real muestra la misma
 comparación en su tarjeta de impacto. **Límite:** es un escenario sintético con velocidad media de
 30 km/h, tortuosidad 1.4 y demandas supuestas ([DATA_SOURCES](DATA_SOURCES.md)); no modela tráfico,
 desvíos ni averías, y un solo escenario no prueba la ventaja en general.

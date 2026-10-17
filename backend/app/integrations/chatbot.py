@@ -75,7 +75,7 @@ UNITS = {
 
 PROMPTS = {
     "CONSENT": (
-        "Hola. Soy el asistente de AguaIA: te ayudo a reportar problemas con el suministro de "
+        "Hola. Soy el asistente de HidroAgente: te ayudo a reportar problemas con el suministro de "
         "agua en Panamá Oeste para que el equipo de coordinación los revise.\n\n"
         "Usaremos lo que nos envíes (ubicación aproximada, descripción, duración y archivos) solo "
         "para registrar y gestionar tu reporte. No te pediremos nombre ni cédula. "

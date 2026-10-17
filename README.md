@@ -1,4 +1,4 @@
-# AguaIA — Coordinación del agua en Panamá Oeste
+# HidroAgente — Coordinación del agua en Panamá Oeste
 
 <!-- Cambia el 0 por el número de su reto y deja la línea tal cual ("Reto: N"):
        1 = Agua · 2 = Educación · 3 = Empleabilidad
@@ -21,9 +21,12 @@ El Hospital Regional Nicolás A. Solano, con 250 camas, atiende a cinco distrito
 
 Cuando falta el agua, los reportes llegan dispersos y repetidos. Si las cisternas se reparten por
 volumen de quejas o por orden de llegada, el sector que más reporta puede pasar delante de un hospital
-o una escuela. AguaIA consolida los reportes, propone prioridades explicables y planifica las
+o una escuela. HidroAgente consolida los reportes, propone prioridades explicables y planifica las
 cisternas, siempre con aprobación humana. Es un centro de coordinación, no un chatbot ni un sistema
 de despacho automático.
+
+> **Nombre:** el proyecto se llamaba AguaIA. Los identificadores internos (paquetes, rutas, claves
+> `aguaia` de la API, bases de datos y el token de ejemplo) conservan ese nombre.
 
 > **Datos:** las cifras anteriores tienen fuente; las poblaciones de sectores, demandas, coordenadas,
 > pesos del puntaje y flota son estimaciones o supuestos de demostración, **no datos oficiales del
@@ -203,7 +206,7 @@ Recorrido:
 1. Entra por **Acceso para coordinadores** (pie de la página ciudadana), ingresa el token, revisa factores, intervalo y trazas de cada
    reporte y aprueba, corrige o rechaza con una razón.
 2. En **Plan de distribución de cisternas** marca las cisternas no disponibles, genera el plan y revisa
-   paradas, horarios, demanda no atendida y la tarjeta de impacto: «AguaIA frente a por volumen de
+   paradas, horarios, demanda no atendida y la tarjeta de impacto: «HidroAgente frente a por volumen de
    reportes: misma cobertura crítica (100 %) · primera entrega crítica 149 min antes».
 3. Aprueba el plan. El agente de Comunicación genera los avisos por comunidad.
 4. En la página ciudadana, en «¿Ya hiciste un reporte? Consulta con tu código», usa el código del reporte y verás la hora estimada de llegada,
@@ -221,7 +224,7 @@ Cifras de la última ejecución local (`evals/results.json`, `evals/impact.json`
   de escenarios con el mock, no la calidad de un modelo real.
 - **Impacto:** `scripts/impact_report.py` corre el mismo solver con tres órdenes sobre F2-01. La
   mediana de la primera entrega a las instituciones críticas baja de 292 min (por volumen y por
-  llegada) a 143 min con AguaIA; la cobertura crítica es 100 % en las tres.
+  llegada) a 143 min con HidroAgente; la cobertura crítica es 100 % en las tres.
 - **Frontend:** 30 pruebas Vitest.
 
 AG-52 verificó backend, frontend y el ciclo real con HTTP, LangGraph y worker en modo mock,

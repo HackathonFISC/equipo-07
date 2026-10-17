@@ -306,8 +306,8 @@ class CommunicationAgent:
             all_incident_ids = sorted({inc_id for s in stops for inc_id in s["incident_ids"]})
 
             text = (
-                f"AguaIA informa: Se ha programado la entrega de agua por camión cisterna en tu "
-                f"comunidad ({name}). Primera entrega estimada: {earliest_arrival}. "
+                f"HidroAgente informa: Se ha programado la entrega de agua por camión cisterna "
+                f"en tu comunidad ({name}). Primera entrega estimada: {earliest_arrival}. "
                 f"Volumen programado: {total_gallons:,} galones. "
                 f"Por favor mantén recipientes limpios listos."
             )
@@ -332,7 +332,7 @@ class CommunicationAgent:
             reason_detail = item.get("detail", "Demanda no factible en este turno de distribución.")
 
             text = (
-                f"AguaIA informa: Tu reporte en {name} ha sido procesado. "
+                f"HidroAgente informa: Tu reporte en {name} ha sido procesado. "
                 f"En esta ronda no fue posible programar cisterna: {reason_detail} "
                 f"Los equipos continúan trabajando para atender la contingencia."
             )

@@ -20,7 +20,7 @@ siguiente vuelta del receptor (cada ≤10 s).
 ## Flujo de la conversación
 
 1. **Inicio y consentimiento** (`/start`, «Hola» o cualquier primer mensaje): saludo, qué hace
-   AguaIA, para qué se usan los datos y opciones «Acepto y comenzar» o «Cancelar». No se pide
+   HidroAgente, para qué se usan los datos y opciones «Acepto y comenzar» o «Cancelar». No se pide
    nombre ni cédula.
 2. **Distrito**: Arraiján, Capira, Chame, La Chorrera o San Carlos.
 3. **Corregimiento**: solo los del distrito elegido.
