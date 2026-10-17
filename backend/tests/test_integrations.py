@@ -473,3 +473,65 @@ async def test_approved_plan_notice_reaches_the_telegram_citizen_once(system):
     [notice] = sent[before:]
     assert notice["chat_id"] == "7001"
     assert "Primera entrega estimada" in notice["text"] and report.id in notice["text"]
+
+
+async def test_zone_alert_follows_the_latest_telegram_report(system):
+    from datetime import timedelta
+
+    from app.integrations.telegram import deliver_zone_alerts
+    from app.models import Association, Incident, now
+
+    start = now() - timedelta(days=30)
+
+    async def citizen_report(minutes, zone):
+        async with system.db.sessions.begin() as session:
+            report = Report(
+                id=f"00000000-0000-0000-0000-00000000000{minutes}",
+                community_id=zone,
+                description=DESCRIPTION,
+                payload_hash="x" * 64,
+                created_at=start + timedelta(minutes=minutes),
+            )
+            incident = Incident(
+                community_id=zone, kind="OUTAGE", summary=DESCRIPTION, created_at=report.created_at
+            )
+            session.add_all([report, incident])
+            await session.flush()
+            session.add_all(
+                [
+                    Association(
+                        report_id=report.id,
+                        incident_id=incident.id,
+                        status="CONFIRMED",
+                        reasoning="r",
+                        confidence="HIGH",
+                    ),
+                    InboundDraft(
+                        channel="telegram",
+                        conversation_id="7001",
+                        status="SUBMITTED",
+                        report_id=report.id,
+                        fields={},
+                    ),
+                ]
+            )
+
+    async def damage(zone, kind="LEAK"):
+        async with system.db.sessions.begin() as session:
+            session.add(Incident(community_id=zone, kind=kind, summary="dato privado"))
+
+    old, latest = "corr-arraijan-vacamonte", "ref-rey-vista-alegre"
+    await citizen_report(1, old)
+    await citizen_report(2, latest)
+    await damage(old)
+    await damage(latest)
+    sent = []
+    async with telegram_api([], sent) as client:
+        telegram = Telegram(client, "123:TEST")
+        assert await deliver_zone_alerts(system.db, telegram) == 1
+        assert await deliver_zone_alerts(system.db, telegram) == 0
+    [alert] = sent
+    assert alert["chat_id"] == "7001"
+    assert "fuga de agua" in alert["text"] and "Vista Alegre" in alert["text"]
+    # Another citizen's description never reaches the chat.
+    assert "dato privado" not in alert["text"]
