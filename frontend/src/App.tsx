@@ -1,165 +1,139 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeftIcon, DropIcon, EyeIcon, EyeSlashIcon, LockKeyIcon, SignOutIcon, WarningIcon } from '@phosphor-icons/react'
 import { api } from './api'
-import { ErrorMessage } from './components'
+import { ErrorMessage, Pill } from './components'
 import { CitizenPage } from './pages/CitizenPage'
 import { CoordinationPage } from './pages/CoordinationPage'
+
+type Health = { is_simulated: boolean; provider?: string }
+
+function loginError(error: Error & { status?: number }) {
+  if (error.status === 401) return 'El token no es correcto. Revisa que esté completo y sin espacios.'
+  if (error.status === 503) return 'El servidor no tiene configurado el token de coordinación (COORDINATOR_TOKEN). Pide a quien administra el servicio que lo configure.'
+  return `No pudimos comprobar el acceso: ${error.message}`
+}
+
+function Login({ onEnter, notice }: { onEnter: (token: string) => void; notice: string | null }) {
+  const [draft, setDraft] = useState('')
+  const [visible, setVisible] = useState(false)
+  // Probe a protected endpoint first, so a wrong token is reported here and not as an empty console.
+  const verify = useMutation({
+    mutationFn: (token: string) => api('/admin/executions?offset=0&limit=1', {}, token),
+    onSuccess: (_, token) => { setDraft(''); onEnter(token) },
+  })
+  return (
+    <section className="login panel raised stack" aria-labelledby="login-title">
+      <span className="login-icon" aria-hidden="true"><LockKeyIcon /></span>
+      <div className="stack-sm">
+        <h1 id="login-title" style={{ fontSize: '1.6rem' }}>Acceso de coordinación</h1>
+        <p className="muted">
+          Para el equipo que revisa reportes y aprueba planes de cisternas en Panamá Oeste.
+          El token se guarda solo en la memoria de esta pestaña y se borra al salir o al cerrarla.
+        </p>
+      </div>
+      {notice && <p className="note warn" role="status"><WarningIcon aria-hidden="true" />{notice}</p>}
+      <form className="stack" onSubmit={e => { e.preventDefault(); verify.mutate(draft.trim()) }}>
+        <div className="field">
+          <label htmlFor="coordinator-token">Token de coordinación</label>
+          <span className="password">
+            <input
+              id="coordinator-token"
+              required
+              type={visible ? 'text' : 'password'}
+              autoComplete="off"
+              minLength={16}
+              value={draft}
+              aria-describedby="token-hint"
+              onChange={e => { setDraft(e.target.value); verify.reset() }}
+            />
+            <button type="button" className="ghost" onClick={() => setVisible(!visible)}
+              aria-label={visible ? 'Ocultar token' : 'Mostrar token'} aria-pressed={visible}>
+              {visible ? <EyeSlashIcon aria-hidden="true" /> : <EyeIcon aria-hidden="true" />}
+            </button>
+          </span>
+          <span id="token-hint" className="hint">Mínimo 16 caracteres. En una prueba local es el valor de COORDINATOR_TOKEN en el archivo .env.</span>
+        </div>
+        {verify.error && <p role="alert" className="error">{loginError(verify.error)}</p>}
+        <button type="submit" disabled={verify.isPending}>
+          {verify.isPending ? 'Comprobando…' : 'Entrar'}
+        </button>
+      </form>
+    </section>
+  )
+}
 
 export default function App() {
   const [page, setPage] = useState<'citizen' | 'coordination'>('citizen')
   const [token, setToken] = useState('')
-  const [draftToken, setDraftToken] = useState('')
+  const [notice, setNotice] = useState<string | null>(null)
   const client = useQueryClient()
-  const health = useQuery({
-    queryKey: ['health'],
-    queryFn: () => api<{ is_simulated: boolean }>('/health'),
-  })
+  const health = useQuery({ queryKey: ['health'], queryFn: () => api<Health>('/health') })
+
+  const leave = (message: string | null) => {
+    setToken('')
+    setNotice(message)
+    client.removeQueries({ queryKey: ['admin'] })
+  }
 
   return (
-    <div className="app-layout">
-      <header className="app-header">
-        <div className="header-inner">
-          <a
-            className="brand"
-            href="#"
-            onClick={(e) => { e.preventDefault(); setPage('citizen') }}
-            aria-label="AguaIA inicio"
-          >
-            <span className="brand-mark">💧</span>
-            <span className="brand-text">Agua<strong>IA</strong></span>
-            <span className="tag-panama">Panamá Oeste</span>
+    <div className="app">
+      <header className="topbar">
+        <div className="topbar-inner">
+          <a className="brand" href="#" onClick={e => { e.preventDefault(); setPage('citizen') }} aria-label="AguaIA, ir al reporte ciudadano">
+            <span className="brand-mark" aria-hidden="true"><DropIcon weight="fill" /></span>
+            <span>AguaIA<small>Panamá Oeste</small></span>
           </a>
-
-          {page === 'coordination' && (
-            <nav aria-label="Navegación principal">
-              <button className="nav-tab" onClick={() => setPage('citizen')}>
-                Ir al reporte ciudadano
+          <div className="topbar-end">
+            {page === 'citizen' ? (
+              <button type="button" className="ghost" onClick={() => setPage('coordination')}>
+                Acceso para coordinadores
               </button>
-            </nav>
-          )}
+            ) : (
+              <>
+                {token && health.data && (
+                  <span className="mode">
+                    {health.data.is_simulated
+                      ? <Pill tone="warn">Análisis simulado</Pill>
+                      : <Pill tone="progress">Análisis con IA{health.data.provider ? ` (${health.data.provider})` : ''}</Pill>}
+                  </span>
+                )}
+                <button type="button" className="ghost" onClick={() => setPage('citizen')}>
+                  <ArrowLeftIcon aria-hidden="true" /> Vista ciudadana
+                </button>
+                {token && (
+                  <button type="button" className="secondary small" onClick={() => leave(null)}>
+                    <SignOutIcon aria-hidden="true" /> Salir
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </header>
 
-      {page === 'citizen' ? (
-        health.data?.is_simulated && (
-          <div className="demo-banner">
-            <div className="banner-content">
-              <span className="banner-text">
-                <strong>Versión de demostración:</strong> los ejemplos de esta página son casos ficticios.
-              </span>
-            </div>
-          </div>
-        )
-      ) : (
-        <div className="demo-banner">
-          <div className="banner-content">
-            <span className="banner-dot" />
-            {health.data ? (
-              health.data.is_simulated ? (
-                <span className="banner-text">
-                  <strong>DEMO OFFLINE</strong> · Interpretación determinística verificada y reproducible (Sin costo de API)
-                </span>
-              ) : (
-                <span className="banner-text">
-                  <strong>MODO NVIDIA NIM</strong> · Inferencia real mediante microservicios NVIDIA NIM (DeepSeek / Kimi)
-                </span>
-              )
-            ) : (
-              <span className="banner-text">Conectando con el servicio de operaciones…</span>
-            )}
-            <span className="banner-divider">|</span>
-            <span className="banner-note">Hackathon FISC AI Agents 2026 · UTP</span>
-          </div>
+      {page === 'citizen' && health.data?.is_simulated && (
+        <div className="notice-strip">
+          <div><WarningIcon aria-hidden="true" /><span><strong>Versión de demostración:</strong> los ejemplos de esta página son casos ficticios.</span></div>
         </div>
       )}
 
-      <main className="main-content">
+      <main className="page" id="contenido">
         <ErrorMessage error={health.error} />
         {page === 'citizen' ? (
           <CitizenPage />
         ) : token ? (
-          <>
-            <div className="session-bar">
-              <div className="session-info">
-                <span className="session-status-dot" />
-                <span>Sesión activa de coordinación operativa</span>
-                <span className="session-security-note">(Token protegido en memoria volátil de React)</span>
-              </div>
-              <button
-                className="secondary exit-btn"
-                onClick={() => {
-                  setToken('')
-                  client.removeQueries({ queryKey: ['admin'] })
-                }}
-              >
-                Salir
-              </button>
-            </div>
-            <CoordinationPage key={token} token={token} />
-          </>
+          <CoordinationPage key={token} token={token}
+            onUnauthorized={() => leave('La sesión dejó de ser válida: el token cambió en el servidor. Vuelve a introducirlo.')} />
         ) : (
-          <section className="card login-card stack">
-            <div className="login-header">
-              <span className="lock-icon">🔒</span>
-              <h1>Acceso de coordinación</h1>
-              <p className="muted">
-                Área reservada para coordinadores de contingencia del IDAAN, SINAPROC o municipios de Arraiján y La Chorrera.
-              </p>
-            </div>
-
-            <div className="callout info">
-              Introduce el token configurado para esta demostración. Se conserva solo en memoria de sesión mientras esta pestaña está abierta.
-            </div>
-
-            <form
-              className="stack"
-              onSubmit={e => {
-                e.preventDefault()
-                client.removeQueries({ queryKey: ['admin'] })
-                setToken(draftToken)
-                setDraftToken('')
-              }}
-            >
-              <label>
-                Token de coordinación
-                <input
-                  required
-                  type="password"
-                  autoComplete="off"
-                  minLength={16}
-                  value={draftToken}
-                  onChange={e => setDraftToken(e.target.value)}
-                  placeholder="Introduce el COORDINATOR_TOKEN configurado..."
-                />
-              </label>
-              <button type="submit" className="login-submit-btn">
-                Entrar
-              </button>
-            </form>
-
-            <div className="login-footer-hint">
-              <small className="muted">
-                ¿Prueba local? Consulta el valor de <code>COORDINATOR_TOKEN</code> en tu archivo <code>.env</code>.
-              </small>
-            </div>
-          </section>
+          <Login notice={notice} onEnter={value => { client.removeQueries({ queryKey: ['admin'] }); setNotice(null); setToken(value) }} />
         )}
       </main>
 
-      <footer className="app-footer">
+      <footer className="footer">
         <div className="footer-inner">
-          <div className="footer-left">
-            <strong>AguaIA</strong> · Hackathon FISC AI Agents 2026 · Reto 1: Crisis del Agua en Panamá Oeste
-          </div>
-          {page === 'citizen' ? (
-            <button type="button" className="link-btn" onClick={() => setPage('coordination')}>
-              Acceso para coordinadores
-            </button>
-          ) : (
-            <div className="footer-motto">
-              <span>Priorizar con evidencia matemática. Decidir con supervisión humana.</span>
-            </div>
-          )}
+          <span><strong>AguaIA</strong>. Hackathon FISC AI Agents 2026, reto 1: crisis del agua en Panamá Oeste.</span>
+          <span>La IA propone; una persona del equipo de coordinación decide.</span>
         </div>
       </footer>
     </div>

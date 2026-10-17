@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { CaretRightIcon, CheckIcon, CopyIcon, InfoIcon, TruckIcon, WarningIcon } from '@phosphor-icons/react'
 import { api, polling, publicStatusPolling } from '../api'
 import { ErrorMessage, ProcessStepper, StatusBadge } from '../components'
 import type { Community, PublicReportStatus, Receipt, Status } from '../types'
@@ -29,15 +30,15 @@ const demoExamples = [
     description: 'Fuga grande de agua potable por rotura de tubería principal en la calle central cerca del parque.' },
 ]
 
-const statusMessages: Record<Status, { tone: string; text: string }> = {
-  QUEUED: { tone: 'info', text: 'Recibimos tu reporte. En unos segundos empezaremos a revisarlo.' },
-  RUNNING: { tone: 'info', text: 'Estamos revisando tu reporte y comparándolo con otros avisos de tu zona.' },
-  WAITING_APPROVAL: { tone: 'pending', text: 'Una persona del equipo de coordinación está revisando tu reporte para decidir qué tan urgente es. No necesitas hacer nada más.' },
-  RESUME_QUEUED: { tone: 'info', text: 'El equipo de coordinación ya tomó una decisión. La estamos registrando.' },
-  APPROVED: { tone: 'success', text: 'El equipo aprobó la prioridad de tu reporte. Esto todavía no significa que un camión cisterna vaya en camino.' },
-  REJECTED: { tone: 'warning', text: 'El equipo de coordinación revisó tu reporte y no aprobó la prioridad propuesta.' },
-  NEEDS_INFORMATION: { tone: 'warning', text: 'Nos falta un dato. Cuéntanos si no sale agua, si sale muy poca o si hay una fuga.' },
-  ERROR: { tone: 'error', text: 'Tu reporte quedó guardado, pero hubo un problema al revisarlo. El equipo puede volver a intentarlo; no necesitas enviarlo otra vez.' },
+const statusMessages: Record<Status, string> = {
+  QUEUED: 'Recibimos tu reporte. En unos segundos empezaremos a revisarlo.',
+  RUNNING: 'Estamos revisando tu reporte y comparándolo con otros avisos de tu zona.',
+  WAITING_APPROVAL: 'Una persona del equipo de coordinación está revisando tu reporte para decidir qué tan urgente es. No necesitas hacer nada más.',
+  RESUME_QUEUED: 'El equipo de coordinación ya tomó una decisión. La estamos registrando.',
+  APPROVED: 'El equipo aprobó la prioridad de tu reporte. Esto todavía no significa que un camión cisterna vaya en camino.',
+  REJECTED: 'El equipo de coordinación revisó tu reporte y no aprobó la prioridad propuesta.',
+  NEEDS_INFORMATION: 'Nos falta un dato. Cuéntanos si no sale agua, si sale muy poca o si hay una fuga.',
+  ERROR: 'Tu reporte quedó guardado, pero hubo un problema al revisarlo. El equipo puede volver a intentarlo; no necesitas enviarlo otra vez.',
 }
 
 function getUUID(): string {
@@ -52,6 +53,7 @@ function getUUID(): string {
 }
 
 export function CitizenPage() {
+  const [district, setDistrict] = useState('')
   const [community, setCommunity] = useState('')
   const [description, setDescription] = useState('')
   const [hours, setHours] = useState('')
@@ -93,12 +95,7 @@ export function CitizenPage() {
   const current = receipt
     ? (execution.data || receipt)
     : publicStatus.data
-    ? {
-        report_id: publicStatus.data.report_id,
-        thread_id: '',
-        status: publicStatus.data.status,
-        is_simulated: false,
-      }
+    ? { report_id: publicStatus.data.report_id, thread_id: '', status: publicStatus.data.status, is_simulated: false }
     : null
 
   const receiptHeading = useRef<HTMLHeadingElement>(null)
@@ -109,6 +106,15 @@ export function CitizenPage() {
     receiptHeading.current?.focus()
     receiptHeading.current?.scrollIntoView?.({ block: 'center' })
   }, [receipt, searchedId])
+
+  // Districts come from the catalog itself, so a new district appears without code changes.
+  const byDistrict = useMemo(() => {
+    const groups = new Map<string, Community[]>()
+    for (const c of communities.data ?? []) groups.set(c.district, [...(groups.get(c.district) ?? []), c])
+    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b, 'es'))
+  }, [communities.data])
+  const selected = communities.data?.find(c => c.id === community)
+  const locked = !!submittedBody
 
   const startNewReport = (keepText: boolean) => {
     setReceipt(null)
@@ -125,10 +131,10 @@ export function CitizenPage() {
   }
 
   const handleQuickFill = (example: typeof demoExamples[number]) => {
-    if (communities.data?.some(c => c.id === example.community)) {
-      setCommunity(example.community)
-    } else if (communities.data?.[0]) {
-      setCommunity(communities.data[0].id)
+    const match = communities.data?.find(c => c.id === example.community) ?? communities.data?.[0]
+    if (match) {
+      setDistrict(match.district)
+      setCommunity(match.id)
     }
     setDescription(example.description)
     setHours(example.hours)
@@ -143,267 +149,260 @@ export function CitizenPage() {
     }
   }
 
-  // Agrupar comunidades por distrito si están disponibles
-  const arraijanCommunities = communities.data?.filter(c => c.district === 'Arraiján') || []
-  const chorreraCommunities = communities.data?.filter(c => c.district === 'La Chorrera') || []
-  const otherCommunities = communities.data?.filter(c => c.district !== 'Arraiján' && c.district !== 'La Chorrera') || []
+  const durationLabel = durationOptions.find(o => o.value === hours)?.label
+  const descriptionReady = description.trim().length >= 8
 
   return (
-    <div className="citizen-grid">
-      <section className="card form-card" aria-labelledby="citizen-title">
-        <div className="card-header">
-          <h1 id="citizen-title">¿Tienes problemas con el agua?</h1>
-          {!current && <p className="card-subtext">Avísanos en 1 minuto. No pedimos tu nombre ni tu teléfono.</p>}
-        </div>
-
+    <div className="citizen">
+      <section className="panel raised" aria-labelledby="citizen-title">
         {current ? (
-          <div aria-live="polite" className="stack submission-success">
-            <div className="receipt-banner">
-              <h2 ref={receiptHeading} tabIndex={-1}>
-                {receipt ? 'Recibimos tu reporte' : 'Estado de tu reporte'}
-              </h2>
-              <StatusBadge status={current.status} audience="citizen" />
+          <div aria-live="polite" className="receipt">
+            <div className="receipt-head">
+              <span className="receipt-icon" aria-hidden="true"><CheckIcon weight="bold" /></span>
+              <div className="stack-sm">
+                <h1 id="citizen-title" ref={receiptHeading} tabIndex={-1}>
+                  {receipt ? 'Recibimos tu reporte' : 'Estado de tu reporte'}
+                </h1>
+                <div><StatusBadge status={current.status} audience="citizen" /></div>
+              </div>
             </div>
 
-            <p className={`status-msg ${statusMessages[current.status].tone}`}>
-              {statusMessages[current.status].text}
-            </p>
-
+            <p className="status-text">{statusMessages[current.status]}</p>
             <ProcessStepper status={current.status} />
 
             {publicStatus.data?.notice && (
-              <div
-                className={`callout ${
-                  publicStatus.data.notice.kind === 'SCHEDULED' ? 'success' : 'warning'
-                } arrival-notice-card`}
-              >
-                <div className="arrival-badge">
+              <div className={`arrival ${publicStatus.data.notice.kind === 'SCHEDULED' ? 'scheduled' : 'unserved'}`}>
+                <strong className="row" style={{ gap: 8 }}>
                   {publicStatus.data.notice.kind === 'SCHEDULED'
-                    ? '🚚 Camión cisterna programado'
-                    : 'ℹ️ Información de tu reporte'}
-                </div>
+                    ? <><TruckIcon aria-hidden="true" /> Camión cisterna programado</>
+                    : <><InfoIcon aria-hidden="true" /> Información de tu reporte</>}
+                </strong>
                 {publicStatus.data.notice.arrival && (
-                  <div className="arrival-time-row">
-                    <span className="arrival-label">Hora estimada de llegada:</span>
-                    <strong className="arrival-clock">{publicStatus.data.notice.arrival}</strong>
+                  <div>
+                    <span className="muted small">Hora estimada de llegada</span>
+                    <div className="arrival-time">{publicStatus.data.notice.arrival}</div>
                   </div>
                 )}
-                <p className="arrival-text">{publicStatus.data.notice.text}</p>
+                <p>{publicStatus.data.notice.text}</p>
                 {publicStatus.data.notice.kind === 'SCHEDULED' && (
-                  <small className="muted arrival-legend">
-                    Nota: La hora estimada corresponde al día de hoy según la programación aprobada por coordinación.
-                  </small>
+                  <small className="muted">La hora estimada corresponde al día de hoy según la programación aprobada por coordinación.</small>
                 )}
               </div>
             )}
 
-
-            <div className="report-id-box">
-              <span className="id-label">Código de tu reporte</span>
-              <code className="break-all">{current.report_id}</code>
-              <div className="copy-row">
-                <button type="button" className="secondary" onClick={() => copyReportId(current.report_id)}>
-                  Copiar código
+            <div className="code-box">
+              <span className="small muted">Código de seguimiento</span>
+              <code>{current.report_id}</code>
+              <div className="row">
+                <button type="button" className="secondary small" onClick={() => copyReportId(current.report_id)}>
+                  <CopyIcon aria-hidden="true" /> Copiar código
                 </button>
-                <span role="status" className="muted">
+                <span role="status" className="small muted">
                   {copyState === 'copied' && 'Código copiado.'}
                   {copyState === 'failed' && 'No se pudo copiar. Mantén presionado el código para copiarlo.'}
                 </span>
               </div>
-              <small className="muted">Guárdalo: identifica tu reporte si el equipo de coordinación lo necesita.</small>
+              <small className="muted">Guárdalo: con este código puedes consultar el estado de tu reporte desde esta página.</small>
             </div>
 
             <ErrorMessage error={execution.error} />
 
-            {current.status === 'NEEDS_INFORMATION' ? (
-              <button type="button" onClick={() => startNewReport(true)}>
-                Completar mi reporte
-              </button>
-            ) : (
-              <button type="button" className="secondary" onClick={() => startNewReport(false)}>
-                Hacer otro reporte
-              </button>
-            )}
+            <div className="row">
+              {current.status === 'NEEDS_INFORMATION' ? (
+                <button type="button" onClick={() => startNewReport(true)}>Completar mi reporte</button>
+              ) : (
+                <button type="button" className="secondary" onClick={() => startNewReport(false)}>Hacer otro reporte</button>
+              )}
+            </div>
           </div>
         ) : (
           <>
+            <div className="citizen-intro">
+              <h1 id="citizen-title">¿Tienes problemas con el agua?</h1>
+              <p>Avísanos en un minuto. No pedimos tu nombre ni tu teléfono.</p>
+            </div>
+
             <form
-            className="stack"
-            onSubmit={event => {
-              event.preventDefault()
-              const body = submittedBody || JSON.stringify({
-                community_id: community,
-                description: description.trim(),
-                hours_without_water: hours === '' ? null : Number(hours),
-              })
-              setSubmittedBody(body)
-              submission.mutate(body)
-            }}
-          >
-            <label>
-              Comunidad
-              <select
-                required
-                value={community}
-                disabled={!!submittedBody}
-                aria-describedby="community-help"
-                onChange={e => setCommunity(e.target.value)}
-              >
-                <option value="">Elige tu comunidad</option>
-                {arraijanCommunities.length > 0 && (
-                  <optgroup label="Distrito de Arraiján">
-                    {arraijanCommunities.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </optgroup>
-                )}
-                {chorreraCommunities.length > 0 && (
-                  <optgroup label="Distrito de La Chorrera">
-                    {chorreraCommunities.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </optgroup>
-                )}
-                {otherCommunities.length > 0 && (
-                  <optgroup label="Otros sectores">
-                    {otherCommunities.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </optgroup>
-                )}
-                {(!arraijanCommunities.length && !chorreraCommunities.length) &&
-                  communities.data?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
-            <p id="community-help" className="field-help">Si no ves tu barriada, elige la más cercana.</p>
-            {communities.isPending && <p role="status">Cargando comunidades…</p>}
-            <ErrorMessage error={communities.error} />
-
-            <label>
-              Descripción
-              <textarea
-                required
-                minLength={8}
-                maxLength={2000}
-                rows={4}
-                value={description}
-                disabled={!!submittedBody}
-                aria-describedby="description-help"
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Ejemplo: No sale agua desde ayer en la mañana. En la casa vive una persona mayor."
-              />
-            </label>
-            <p id="description-help" className="field-help">
-              Cuéntanos con tus palabras qué pasa: si no sale agua, sale poca o hay una fuga.
-              No escribas nombres, teléfonos ni direcciones.
-              {description.length > 1800 && ` Te quedan ${2000 - description.length} caracteres.`}
-            </p>
-
-            <fieldset className="choice-group" disabled={!!submittedBody}>
-              <legend>¿Cuánto tiempo llevas sin agua?</legend>
-              {durationOptions.map(option => (
-                <label key={option.label} className="choice">
-                  <input
-                    type="radio"
-                    name="hours"
-                    value={option.value}
-                    checked={hours === option.value}
-                    onChange={() => setHours(option.value)}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </fieldset>
-
-            <ErrorMessage error={submission.error} />
-
-            <button className="submit-btn" disabled={submission.isPending || !communities.data?.length}>
-              {submission.isPending ? 'Enviando…' : submittedBody ? 'Intentar de nuevo' : 'Enviar reporte'}
-            </button>
-
-            {submission.isError && (
-              <>
-                <p className="field-help">Si lo intentas de nuevo no se creará un reporte repetido.</p>
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => {
-                    setSubmittedBody(null)
-                    setRequestId(getUUID())
-                    submission.reset()
-                  }}
-                >
-                  Cambiar mi reporte
-                </button>
-              </>
-            )}
-          </form>
-
-          <div className="lookup-box">
-            <h3>¿Ya hiciste un reporte? Consulta con tu código</h3>
-            <p className="field-help">Introduce el código UUID que recibiste al enviar tu reporte.</p>
-            <form
-              className="lookup-form"
-              onSubmit={e => {
-                e.preventDefault()
-                if (lookupCode.trim()) {
-                  setSearchedId(lookupCode.trim())
-                }
+              className="report-form"
+              onSubmit={event => {
+                event.preventDefault()
+                const body = submittedBody || JSON.stringify({
+                  community_id: community,
+                  description: description.trim(),
+                  hours_without_water: hours === '' ? null : Number(hours),
+                })
+                setSubmittedBody(body)
+                submission.mutate(body)
               }}
             >
-              <input
-                type="text"
-                placeholder="Ejemplo: 3a5e8f1b-4d2c-4e89-9a1f-8c7b6d5e4f3a"
-                value={lookupCode}
-                onChange={e => setLookupCode(e.target.value)}
-                required
-              />
-              <button type="submit" className="secondary">
-                Consultar
-              </button>
+              <div className={`step ${selected ? 'is-complete' : ''}`}>
+                <span className="step-num" aria-hidden="true">{selected ? <CheckIcon weight="bold" /> : 1}</span>
+                <div className="step-body">
+                  <span className="step-title">¿Dónde ocurre?</span>
+                  {communities.isPending && <p role="status" className="muted">Cargando comunidades…</p>}
+                  <ErrorMessage error={communities.error} />
+                  {byDistrict.length > 1 && (
+                    <fieldset disabled={locked}>
+                      <legend>Distrito</legend>
+                      <div className="chips">
+                        {[['', 'Todos'] as const, ...byDistrict.map(([name]) => [name, name] as const)].map(([value, text]) => (
+                          <label key={value || 'all'} className="choice">
+                            <input type="radio" name="district" value={value} checked={district === value}
+                              onChange={() => {
+                                setDistrict(value)
+                                if (value && selected && selected.district !== value) setCommunity('')
+                              }} />
+                            {text}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
+                  <div className="field">
+                    <label htmlFor="community">Comunidad o corregimiento</label>
+                    <select id="community" required value={community} disabled={locked} aria-describedby="community-help"
+                      onChange={e => setCommunity(e.target.value)}>
+                      <option value="">Elige tu comunidad</option>
+                      {byDistrict
+                        .filter(([name]) => !district || name === district)
+                        .map(([name, list]) => (
+                          <optgroup key={name} label={`Distrito de ${name}`}>
+                            {list.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          </optgroup>
+                        ))}
+                    </select>
+                    <span id="community-help" className="hint">Si no ves tu barriada, elige el corregimiento o la comunidad más cercana.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`step ${descriptionReady ? 'is-complete' : ''}`}>
+                <span className="step-num" aria-hidden="true">{descriptionReady ? <CheckIcon weight="bold" /> : 2}</span>
+                <div className="step-body">
+                  <div className="field">
+                    <label htmlFor="description" className="step-title">¿Qué está pasando?</label>
+                    <textarea id="description" required minLength={8} maxLength={2000} rows={4} value={description} disabled={locked}
+                      aria-describedby="description-help" onChange={e => setDescription(e.target.value)}
+                      placeholder="Ejemplo: No sale agua desde ayer en la mañana. En la casa vive una persona mayor." />
+                    <span id="description-help" className="hint">
+                      Cuéntanos con tus palabras si no sale agua, sale poca o hay una fuga. No escribas nombres, teléfonos ni direcciones.
+                    </span>
+                  </div>
+                  <span className="count" aria-live="polite">
+                    {description.length > 1800 ? `Te quedan ${2000 - description.length} caracteres.` : `${description.length} / 2000`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="step is-complete">
+                <span className="step-num" aria-hidden="true">3</span>
+                <div className="step-body">
+                  <fieldset className="stack-sm" disabled={locked}>
+                    <legend className="step-title">¿Cuánto tiempo llevas sin agua?</legend>
+                    <div className="choices cols">
+                      {durationOptions.map(option => (
+                        <label key={option.label} className="choice">
+                          <input type="radio" name="hours" value={option.value} checked={hours === option.value}
+                            onChange={() => setHours(option.value)} />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                </div>
+              </div>
+
+              <div className="step">
+                <span className="step-num" aria-hidden="true">4</span>
+                <div className="step-body">
+                  <span className="step-title">Revisa y envía</span>
+                  <div className="review">
+                    <dl>
+                      <div>
+                        <dt>Lugar</dt>
+                        <dd className={selected ? '' : 'missing'}>{selected ? `${selected.name}, ${selected.district}` : 'Falta elegir la comunidad'}</dd>
+                      </div>
+                      <div>
+                        <dt>Problema</dt>
+                        <dd className={descriptionReady ? '' : 'missing'}>
+                          {descriptionReady
+                            ? (description.trim().length > 140 ? `${description.trim().slice(0, 139)}…` : description.trim())
+                            : 'Falta describirlo (mínimo 8 caracteres)'}
+                        </dd>
+                      </div>
+                      <div><dt>Tiempo sin agua</dt><dd>{durationLabel}</dd></div>
+                    </dl>
+                  </div>
+                  <ErrorMessage error={submission.error} />
+                  <div className="submit-row">
+                    <button type="submit" disabled={submission.isPending || !communities.data?.length}>
+                      {submission.isPending ? 'Enviando…' : submittedBody ? 'Intentar de nuevo' : 'Enviar reporte'}
+                    </button>
+                    {submission.isError && (
+                      <>
+                        <p className="hint">Si lo intentas de nuevo no se creará un reporte repetido.</p>
+                        <button type="button" className="secondary" style={{ justifySelf: 'start' }}
+                          onClick={() => { setSubmittedBody(null); setRequestId(getUUID()); submission.reset() }}>
+                          Cambiar mi reporte
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </form>
-            {publicStatus.isError && searchedId && (
-              <p className="status-msg error">
-                No encontramos ningún reporte con ese código. Revisa que esté bien escrito o crea un reporte nuevo.
-              </p>
-            )}
-          </div>
-        </>
-      )}
+          </>
+        )}
       </section>
 
-      <aside className="intro" aria-labelledby="how-title">
-        <h2 id="how-title">¿Qué pasa con tu reporte?</h2>
-        <ol className="steps">
-          <li><span aria-hidden="true">1</span> Nos cuentas qué pasa con el agua en tu comunidad.</li>
-          <li><span aria-hidden="true">2</span> Lo revisamos y lo juntamos con otros avisos de tu zona.</li>
-          <li><span aria-hidden="true">3</span> Calculamos qué tan urgente es, de forma igual para todos.</li>
-          <li><span aria-hidden="true">4</span> Una persona del equipo de coordinación decide la prioridad.</li>
-        </ol>
+      <aside className="aside" aria-label="Información sobre los reportes">
+        <section className="panel stack" aria-labelledby="lookup-title">
+          <h2 id="lookup-title" style={{ fontSize: '1.1rem' }}>¿Ya hiciste un reporte?</h2>
+          <form className="lookup-form" onSubmit={e => {
+            e.preventDefault()
+            if (lookupCode.trim()) setSearchedId(lookupCode.trim())
+          }}>
+            <label className="sr-only" htmlFor="lookup-code">Código de seguimiento</label>
+            <input id="lookup-code" type="text" required value={lookupCode} onChange={e => setLookupCode(e.target.value)}
+              placeholder="Pega aquí tu código de seguimiento" aria-describedby="lookup-help" />
+            <button type="submit" className="secondary">Consultar</button>
+          </form>
+          <p id="lookup-help" className="hint">Es el código que te mostramos al enviar el reporte, o el que te dio el chat de WhatsApp o Telegram.</p>
+          {publicStatus.isError && searchedId && (
+            <p className="note warn" role="alert">
+              <WarningIcon aria-hidden="true" />
+              No encontramos ningún reporte con ese código. Revisa que esté bien escrito o crea un reporte nuevo.
+            </p>
+          )}
+        </section>
 
-        <p className="note">
-          Esta página no pide datos personales. Reportar no garantiza que llegue un camión cisterna,
-          pero ayuda a decidir a qué comunidades atender primero.
-        </p>
+        <section className="panel stack" aria-labelledby="how-title">
+          <h2 id="how-title" style={{ fontSize: '1.1rem' }}>¿Qué pasa con tu reporte?</h2>
+          <ol className="how">
+            <li>Nos cuentas qué pasa con el agua en tu comunidad.</li>
+            <li>Lo revisamos y lo juntamos con otros avisos de tu zona.</li>
+            <li>Calculamos qué tan urgente es, de forma igual para todos.</li>
+            <li>Una persona del equipo de coordinación decide la prioridad.</li>
+          </ol>
+          <p className="hint">
+            Esta página no pide datos personales. Reportar no garantiza que llegue un camión cisterna,
+            pero ayuda a decidir a qué comunidades atender primero.
+          </p>
+        </section>
 
         {health.data?.is_simulated && (
-          <div className="quick-examples">
-            <h3 className="quick-title">Datos de ejemplo (solo para la demostración)</h3>
-            <p className="field-help">Rellenan el formulario con un caso ficticio.</p>
-            <div className="chips-row">
+          <details className="panel disclosure">
+            <summary><CaretRightIcon aria-hidden="true" /> Rellenar con un ejemplo ficticio</summary>
+            <p className="hint">Solo para la demostración: completa el formulario con un caso inventado.</p>
+            <div className="example-list">
               {demoExamples.map(example => (
-                <button
-                  key={example.label}
-                  type="button"
-                  className="chip-btn"
-                  disabled={!!submittedBody || !!current}
-                  onClick={() => handleQuickFill(example)}
-                >
+                <button key={example.label} type="button" className="secondary small" disabled={locked || !!current}
+                  onClick={() => handleQuickFill(example)}>
                   Ejemplo: {example.label}
                 </button>
               ))}
             </div>
-          </div>
+          </details>
         )}
       </aside>
     </div>

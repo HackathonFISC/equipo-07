@@ -28,8 +28,8 @@ test('validates required fields, submits and shows actual server status', async 
   await screen.findByRole('option', { name: community.name }, { timeout: 5000 })
   await user.click(screen.getByRole('button', { name: 'Enviar reporte' }))
   expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0)
-  await user.selectOptions(screen.getByLabelText('Comunidad'), 'arraijan-demo')
-  await user.type(screen.getByLabelText('Descripción'), 'Estamos sin agua desde ayer')
+  await user.selectOptions(screen.getByLabelText('Comunidad o corregimiento'), 'arraijan-demo')
+  await user.type(screen.getByLabelText('¿Qué está pasando?'), 'Estamos sin agua desde ayer')
   await user.click(screen.getByRole('button', { name: 'Enviar reporte' }))
   expect(await screen.findByText('Lo revisa el equipo')).toBeInTheDocument()
   const posted = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')!
@@ -46,8 +46,8 @@ test('duration options in days are sent as hours inside the policy bucket', asyn
   })
   mount(<CitizenPage />)
   await screen.findByRole('option', { name: community.name }, { timeout: 5000 })
-  await user.selectOptions(screen.getByLabelText('Comunidad'), community.id)
-  await user.type(screen.getByLabelText('Descripción'), 'No sale agua desde anteayer')
+  await user.selectOptions(screen.getByLabelText('Comunidad o corregimiento'), community.id)
+  await user.type(screen.getByLabelText('¿Qué está pasando?'), 'No sale agua desde anteayer')
   await user.click(screen.getByRole('radio', { name: 'Entre 1 y 2 días' }))
   await user.click(screen.getByRole('button', { name: 'Enviar reporte' }))
   await screen.findByText('Recibimos tu reporte')
@@ -74,8 +74,8 @@ test('failed submission keeps idempotency key and payload for retry', async () =
   })
   mount(<CitizenPage />)
   await screen.findByRole('option', { name: community.name }, { timeout: 5000 })
-  await user.selectOptions(screen.getByLabelText('Comunidad'), community.id)
-  await user.type(screen.getByLabelText('Descripción'), 'Estamos sin agua')
+  await user.selectOptions(screen.getByLabelText('Comunidad o corregimiento'), community.id)
+  await user.type(screen.getByLabelText('¿Qué está pasando?'), 'Estamos sin agua')
   await user.click(screen.getByRole('button', { name: 'Enviar reporte' }))
   await screen.findByRole('alert')
   await user.click(screen.getByRole('button', { name: 'Intentar de nuevo' }))
@@ -101,12 +101,15 @@ test('coordinator corrects a proposal through protected API with a reason', asyn
     return Response.json([detail])
   })
   mount(<CoordinationPage token="test-coordinator-token" />)
+  await user.click(await screen.findByRole('tab', { name: /Reportes/ }))
   await user.click(await screen.findByRole('button', { name: /e1/ }))
   await screen.findByText('Revisión humana')
-  await user.selectOptions(screen.getByLabelText('Decisión'), 'CORRECT')
+  await user.click(screen.getByRole('radio', { name: /Corregir puntuación/ }))
   await user.type(screen.getByLabelText('Puntuación corregida'), '82')
   await user.type(screen.getByLabelText('Razón de la decisión'), 'Revisado con el equipo')
   await user.click(screen.getByRole('button', { name: 'Registrar decisión' }))
+  expect(posted).toBeUndefined()
+  await user.click(screen.getByRole('button', { name: 'Confirmar decisión' }))
   await waitFor(() => expect(posted).toBeDefined())
   expect(JSON.parse(posted!.body as string)).toEqual({ decision: 'CORRECT', corrected_score: 82, reason: 'Revisado con el equipo' })
   expect((posted!.headers as Record<string, string>)['X-Coordinator-Token']).toBe('test-coordinator-token')
@@ -137,11 +140,13 @@ test('coordinator reviews a proposed tanker plan with reasons for each stop', as
     return Response.json([])
   })
   mount(<CoordinationPage token="test-coordinator-token" />)
+  await user.click(await screen.findByRole('tab', { name: /Cisternas/ }))
   expect(await screen.findByText('Puntaje 74 (institución crítica); primera carga.')).toBeInTheDocument()
   expect(screen.getByText('Cobertura parcial')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Hay un plan pendiente' })).toBeDisabled()
   await user.type(screen.getByLabelText('Razón de la decisión del plan'), 'Flota confirmada')
   await user.click(screen.getByRole('button', { name: 'Registrar decisión del plan' }))
+  await user.click(screen.getByRole('button', { name: 'Confirmar decisión del plan' }))
   await waitFor(() => expect(posted).toBeDefined())
   expect(JSON.parse(posted!.body as string)).toEqual({ decision: 'APPROVE', reason: 'Flota confirmada' })
 })
@@ -203,12 +208,13 @@ test('plan panel renders impact comparison card with exact metrics for scenario 
   })
 
   mount(<CoordinationPage token="test-coordinator-token" />)
+  await userEvent.setup().click(await screen.findByRole('tab', { name: /Cisternas/ }))
   expect(
     await screen.findByText(
       'AguaIA frente a por volumen de reportes: misma cobertura crítica (100 %) · primera entrega crítica 149 min antes'
     )
   ).toBeInTheDocument()
-  expect(screen.getByText('DIFERENCIACIÓN · IMPACTO FRENTE A BASELINE')).toBeInTheDocument()
+  expect(screen.getByText('Comparación con atender por volumen de reportes')).toBeInTheDocument()
   expect(screen.getByText(/143 min/)).toBeInTheDocument()
   expect(screen.getByText(/292 min/)).toBeInTheDocument()
   expect(screen.getByText(/Sin ventaja en: cobertura crítica, comunidades atendidas/)).toBeInTheDocument()
@@ -224,7 +230,7 @@ test('token never persists in browser storage and logout clears access', async (
   await user.click(screen.getByRole('button', { name: 'Acceso para coordinadores' }))
   await user.type(screen.getByLabelText('Token de coordinación'), 'test-coordinator-token')
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
-  expect(await screen.findByText('Decisiones con contexto.')).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Coordinación del suministro' })).toBeInTheDocument()
   expect(local).not.toHaveBeenCalled()
   await user.click(screen.getByRole('button', { name: 'Salir' }))
   expect(screen.getByLabelText('Token de coordinación')).toHaveValue('')
@@ -246,4 +252,72 @@ test('impact card never invents minutes or a gain it does not have', () => {
   expect(coverageText(12.5, 100)).toBe('+12.5 pp de demanda crítica cubierta')
   expect(coverageText(-10, 50)).toBe('-10 pp de demanda crítica cubierta')
   expect(coverageText(0, null)).toBe('sin demanda crítica que cubrir')
+})
+
+test('login reports a wrong token instead of opening an empty console', async () => {
+  const user = userEvent.setup()
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async url =>
+    String(url).endsWith('/health') ? Response.json({ is_simulated: true })
+      : Response.json({ detail: 'Token de coordinación inválido' }, { status: 401 }))
+  mount(<App />)
+  await user.click(screen.getByRole('button', { name: 'Acceso para coordinadores' }))
+  await user.type(screen.getByLabelText('Token de coordinación'), 'wrong-coordinator-token')
+  await user.click(screen.getByRole('button', { name: 'Entrar' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('El token no es correcto')
+  expect(screen.queryByRole('heading', { name: 'Coordinación del suministro' })).not.toBeInTheDocument()
+})
+
+test('approving an uncertain range sends a score inside it and resolves the tentative association', async () => {
+  const user = userEvent.setup()
+  const detail: Detail = { id: 'e2', report_id: 'r2', status: 'WAITING_APPROVAL', provider: 'mock-deterministic',
+    is_simulated: true, created_at: '2026-10-16T10:00:00', error: null, review: null, traces: [],
+    association: { status: 'PENDING_REVIEW', reasoning: 'Coincidencia parcial con un corte reciente', confidence: 'MEDIUM' },
+    proposal: { incident_id: 'i2', final_score: null, explanation: 'Rango por datos faltantes', priority: {
+      score_min: 26, score_max: 91, confidence_level: 'LOW', factors: { hours: [26, 26], critical: [0, 30] },
+      flags: ['DATOS_INCOMPLETOS'], policy_version: 'v1.0.0-demo', immediate_review: false,
+    } } }
+  let posted: RequestInit | undefined
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+    if (init?.method === 'POST') { posted = init; return Response.json({ status: 'RESUME_QUEUED' }) }
+    if (String(url).includes('/plans/latest')) return Response.json(null)
+    if (String(url).includes('/incidents') || String(url).includes('/fleet') || String(url).includes('/communities')) return Response.json([])
+    if (String(url).endsWith('/e2')) return Response.json(detail)
+    return Response.json([detail])
+  })
+  mount(<CoordinationPage token="test-coordinator-token" />)
+  await user.click(await screen.findByRole('tab', { name: /Reportes/ }))
+  await user.click(await screen.findByRole('button', { name: /e2/ }))
+  expect(await screen.findByText(/la prioridad real puede estar en cualquier punto entre 26 y 91/)).toBeInTheDocument()
+  expect(screen.getAllByText('Dato sin confirmar')).toHaveLength(1)
+  const score = screen.getByLabelText('Puntuación aprobada')
+  await user.clear(score)
+  await user.type(score, '70')
+  await user.click(screen.getByRole('radio', { name: /Sí, es el mismo incidente/ }))
+  await user.type(screen.getByLabelText('Razón de la decisión'), 'Verificado con la junta comunal')
+  await user.click(screen.getByRole('button', { name: 'Registrar decisión' }))
+  expect(screen.getByText('¿Confirmas aprobar con 70 pts?')).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Confirmar decisión' }))
+  await waitFor(() => expect(posted).toBeDefined())
+  expect(JSON.parse(posted!.body as string)).toEqual({
+    decision: 'APPROVE', reason: 'Verificado con la junta comunal', approved_score: 70, association: 'CONFIRM',
+  })
+})
+
+test('plan shows unserved places without location as a limitation, not as a route', async () => {
+  const user = userEvent.setup()
+  const plan: DistributionPlan = {
+    id: 'p2', status: 'APPROVED', error: null, created_at: '2026-10-16', events: [],
+    request: { unavailable_trucks: [] }, review: { decision: 'APPROVE', reason: 'Flota confirmada' },
+    result: { policy_version: 'v1.0.0-demo', demand_gallons: 3000, planned_gallons: 0, explanation: [], routes: [],
+      unserved: [{ community_id: 'sector-sin-censo', name: 'Sector sin censo', incident_ids: ['i9'],
+        reason: 'SIN_UBICACION', gallons_missing: null, detail: 'El sector no tiene coordenadas en el catálogo geográfico.' }] },
+  }
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async url =>
+    Response.json(String(url).includes('/plans/latest') ? plan : []))
+  mount(<CoordinationPage token="test-coordinator-token" />)
+  await user.click(await screen.findByRole('tab', { name: /Cisternas/ }))
+  expect(await screen.findByText('Sin ubicación')).toBeInTheDocument()
+  expect(screen.getByText(/Sin coordenadas verificadas no se calcula ruta ni hora/)).toBeInTheDocument()
+  expect(screen.getByText('Ninguna comunidad recibe agua en este plan.')).toBeInTheDocument()
+  expect(screen.getByText(/el sistema no registra si el agua llegó/)).toBeInTheDocument()
 })

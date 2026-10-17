@@ -1,4 +1,7 @@
+import type { ReactNode } from 'react'
+import { CheckIcon } from '@phosphor-icons/react'
 import { statusLabels } from './api'
+import { confidenceLabels, factorInfo, scoreText } from './labels'
 import type { Priority, Status } from './types'
 
 // Etiquetas en lenguaje llano para la vista ciudadana; Coordinación conserva statusLabels.
@@ -8,133 +11,130 @@ const citizenStatusLabels: Record<Status, string> = {
   ERROR: 'Problema al revisar', NEEDS_INFORMATION: 'Falta un dato',
 }
 
+const statusTone: Record<Status, string> = {
+  QUEUED: 'neutral', RUNNING: 'progress', RESUME_QUEUED: 'progress', WAITING_APPROVAL: 'warn',
+  APPROVED: 'ok', REJECTED: 'neutral', ERROR: 'danger', NEEDS_INFORMATION: 'warn',
+}
+
 export function StatusBadge({ status, audience = 'coordinator' }: { status: Status; audience?: 'citizen' | 'coordinator' }) {
-  const toneClasses: Record<Status, string> = {
-    QUEUED: 'badge-queued',
-    RUNNING: 'badge-running',
-    WAITING_APPROVAL: 'badge-waiting',
-    RESUME_QUEUED: 'badge-resume',
-    APPROVED: 'badge-approved badge-green',
-    REJECTED: 'badge-rejected',
-    ERROR: 'badge-error',
-    NEEDS_INFORMATION: 'badge-needs-info',
-  }
   return (
-    <span className={`badge ${toneClasses[status] || ''}`}>
-      {(audience === 'citizen' ? citizenStatusLabels : statusLabels)[status]}
+    <span className={`badge tone-${statusTone[status] ?? 'neutral'}`}>
+      {(audience === 'citizen' ? citizenStatusLabels : statusLabels)[status] ?? status}
     </span>
   )
+}
+
+export function Pill({ tone = 'neutral', children }: { tone?: string; children: ReactNode }) {
+  return <span className={`badge tone-${tone}`}>{children}</span>
 }
 
 export function ErrorMessage({ error }: { error: Error | null }) {
   return error ? <p role="alert" className="error">{error.message}</p> : null
 }
 
-export function PriorityGauge({ priority, finalScore }: { priority: Priority; finalScore?: number | null }) {
-  const avg = Math.round((priority.score_min + priority.score_max) / 2)
-  const displayScore = finalScore !== null && finalScore !== undefined ? finalScore : `${priority.score_min}–${priority.score_max}`
-  const pct = Math.min(100, Math.max(0, finalScore ?? avg))
-
-  let toneColor = '#0b8076' // Verde/Teal
-  if (pct > 75) toneColor = '#dc2626' // Rojo crítico
-  else if (pct > 50) toneColor = '#ea580c' // Naranja alto
-  else if (pct > 25) toneColor = '#d97706' // Ámbar medio
-
+export function EmptyState({ icon, title, children }: { icon?: ReactNode; title: string; children?: ReactNode }) {
   return (
-    <div className="gauge-container">
-      <div className="gauge-header">
+    <div className="empty">
+      {icon && <span className="empty-icon" aria-hidden="true">{icon}</span>}
+      <p className="empty-title">{title}</p>
+      {children && <div className="empty-body">{children}</div>}
+    </div>
+  )
+}
+
+export function Skeleton({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className="skeleton" aria-hidden="true">
+      {Array.from({ length: lines }, (_, i) => <span key={i} style={{ width: `${92 - i * 14}%` }} />)}
+    </div>
+  )
+}
+
+// A range on the 0-100 scale: an uncertain proposal is drawn as a band, never as one number.
+export function PriorityRange({ priority, finalScore }: { priority: Priority; finalScore?: number | null }) {
+  const { score_min: min, score_max: max } = priority
+  const fixed = finalScore !== null && finalScore !== undefined
+  return (
+    <div className="range">
+      <div className="range-head">
         <div>
-          <span className="gauge-eyebrow">PUNTUACIÓN DE PRIORIDAD DETERMINÍSTICA</span>
-          <div className="gauge-value" style={{ color: toneColor }}>
-            <strong>{displayScore}</strong>
-            <span className="gauge-scale">/ 100 pts</span>
-          </div>
+          <span className="range-label">{fixed ? 'Puntuación aprobada' : 'Puntuación propuesta'}</span>
+          <strong className="range-value">
+            {fixed ? `${finalScore} pts` : scoreText(min, max)}
+            <span> de 100</span>
+          </strong>
+          {fixed && min !== max && <span className="range-note">Propuesta original: {scoreText(min, max)}</span>}
         </div>
-        <div className="gauge-meta">
-          <span className={`confidence-pill confidence-${priority.confidence_level.toLowerCase()}`}>
-            Confianza: {priority.confidence_level === 'HIGH' ? 'ALTA' : priority.confidence_level === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
-          </span>
-          <span className="policy-tag">{priority.policy_version}</span>
-        </div>
+        <span className={`badge tone-${priority.confidence_level === 'HIGH' ? 'ok' : priority.confidence_level === 'MEDIUM' ? 'warn' : 'danger'}`}>
+          Confianza {(confidenceLabels[priority.confidence_level] ?? priority.confidence_level).toLowerCase()}
+        </span>
       </div>
-      <div className="meter-track">
-        <div
-          className="meter-fill"
-          style={{ width: `${pct}%`, backgroundColor: toneColor }}
-        />
+      <div className="range-track" aria-hidden="true">
+        <span className="range-band" style={{ left: `${min}%`, width: `${Math.max(max - min, 1)}%` }} />
+        {fixed && <span className="range-mark" style={{ left: `${finalScore}%` }} />}
       </div>
-      <div className="meter-markers">
-        <span>0 (Mínima)</span>
-        <span>25 (Moderada)</span>
-        <span>50 (Alta)</span>
-        <span>75+ (Crítica)</span>
-      </div>
+      <div className="range-scale" aria-hidden="true"><span>0</span><span>50</span><span>100</span></div>
+      {min !== max && !fixed && (
+        <p className="range-explain">
+          Faltan datos: la prioridad real puede estar en cualquier punto entre {min} y {max}. Al aprobar eliges un valor dentro del rango.
+        </p>
+      )}
     </div>
   )
 }
 
-export function FactorBar({ label, min, max, weight }: { label: string; min: number; max: number; weight: number }) {
-  const display = min === max ? `${min} pts` : `${min}–${max} pts`
-  const pct = Math.round((max / weight) * 100)
+export function FactorList({ factors }: { factors: Record<string, [number, number]> }) {
   return (
-    <div className="factor-row">
-      <div className="factor-header">
-        <span className="factor-name">{label}</span>
-        <span className="factor-points"><strong>{display}</strong> / {weight} pts máx</span>
-      </div>
-      <div className="factor-track">
-        <div className="factor-fill" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
+    <ul className="factors">
+      {Object.entries(factors).map(([name, [min, max]]) => {
+        const info = factorInfo[name] ?? { label: name, max: Math.max(max, 1) }
+        const known = min === max
+        return (
+          <li key={name}>
+            <div className="factor-head">
+              <span>{info.label}</span>
+              <span className="factor-points">
+                <strong>{scoreText(min, max)}</strong> de {info.max}
+              </span>
+            </div>
+            <div className="factor-track" aria-hidden="true">
+              <span className="factor-known" style={{ width: `${(min / info.max) * 100}%` }} />
+              {!known && <span className="factor-unknown" style={{ width: `${((max - min) / info.max) * 100}%` }} />}
+            </div>
+            {!known && <span className="factor-tag">Dato sin confirmar</span>}
+          </li>
+        )
+      })}
+    </ul>
   )
 }
+
+const citizenSteps = [
+  { title: 'Recibido', desc: 'Tu reporte llegó' },
+  { title: 'Revisión', desc: 'Lo comparamos con otros avisos' },
+  { title: 'Urgencia', desc: 'Calculamos qué tan urgente es' },
+  { title: 'Decisión', desc: 'Una persona del equipo decide' },
+]
 
 export function ProcessStepper({ status }: { status: Status }) {
-  const steps = [
-    { num: '1', title: 'Recibido', desc: 'Tu reporte llegó' },
-    { num: '2', title: 'Revisión', desc: 'Lo comparamos con otros avisos' },
-    { num: '3', title: 'Urgencia', desc: 'Calculamos qué tan urgente es' },
-    { num: '4', title: 'Decisión', desc: 'Una persona del equipo decide' },
-  ]
-
-  let activeIndex = 0
-  if (status === 'QUEUED') activeIndex = 0
-  else if (status === 'RUNNING') activeIndex = 1
-  else if (status === 'WAITING_APPROVAL') activeIndex = 3
-  else if (status === 'RESUME_QUEUED') activeIndex = 3
-  else if (status === 'APPROVED' || status === 'REJECTED') activeIndex = 4
-  else if (status === 'NEEDS_INFORMATION' || status === 'ERROR') activeIndex = 1
-
+  const active = { QUEUED: 0, RUNNING: 1, NEEDS_INFORMATION: 1, ERROR: 1, WAITING_APPROVAL: 3,
+    RESUME_QUEUED: 3, APPROVED: 4, REJECTED: 4 }[status] ?? 0
   return (
     <ol className="stepper" aria-label="Progreso del reporte">
-      {steps.map((s, idx) => {
-        const isDone = idx < activeIndex || (idx === 3 && status === 'APPROVED')
-        const isCurrent = idx === activeIndex && status !== 'APPROVED'
+      {citizenSteps.map((step, i) => {
+        const done = i < active
+        const current = i === active
         return (
-          <li
-            key={s.num}
-            className={`step-item ${isDone ? 'step-done' : ''} ${isCurrent ? 'step-active' : ''}`}
-            aria-current={isCurrent ? 'step' : undefined}
-          >
-            <div className="step-circle" aria-hidden="true">{isDone ? '✓' : s.num}</div>
-            <div className="step-content">
-              <strong>{s.title}</strong>
-              <small>{s.desc}</small>
-              <span className="sr-only">{isDone ? '(completado)' : isCurrent ? '(paso actual)' : '(pendiente)'}</span>
-            </div>
+          <li key={step.title} className={done ? 'is-done' : current ? 'is-current' : ''} aria-current={current ? 'step' : undefined}>
+            <span className="stepper-dot" aria-hidden="true">{done ? <CheckIcon weight="bold" /> : i + 1}</span>
+            <span className="stepper-text">
+              <strong>{step.title}</strong>
+              <small>{step.desc}</small>
+              <span className="sr-only">{done ? '(completado)' : current ? '(paso actual)' : '(pendiente)'}</span>
+            </span>
           </li>
         )
       })}
     </ol>
-  )
-}
-
-export function KpiCard({ title, value, subtitle, tone }: { title: string; value: string | number; subtitle: string; tone?: 'amber' | 'emerald' | 'rose' | 'blue' }) {
-  return (
-    <div className={`kpi-card ${tone ? `kpi-${tone}` : ''}`}>
-      <span className="kpi-title">{title}</span>
-      <span className="kpi-value">{value}</span>
-      <span className="kpi-subtitle">{subtitle}</span>
-    </div>
   )
 }

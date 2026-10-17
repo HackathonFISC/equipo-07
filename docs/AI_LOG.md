@@ -511,3 +511,32 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
   crítica 143 min frente a 292 min (volumen y llegada), igual que `evals/impact.json`; aviso
   SCHEDULED del hospital a las 08:23. CI remoto no verificado: requiere sesión de GitHub.
 
+
+## 2026-10-17 — Rediseño de la vista ciudadana y del panel de coordinación (RNF09)
+
+- Herramienta: Claude Code (Claude Opus 5.5) en Windows local.
+- Skills leídas y aplicadas: Ponytail (full) y Ponytail Review, UI UX Pro Max (reglas de
+  accesibilidad, formularios y navegación), Taste (solo criterios estéticos: la skill declara fuera de
+  alcance los paneles y formularios por pasos) e Impeccable (auditoría con su detector mecánico).
+- Trabajo: solo `frontend/` y documentación. Pestañas Resumen, Reportes, Incidentes y Cisternas;
+  decisión humana con consecuencias y confirmación; rango de prioridad dibujado como banda; acceso
+  que verifica el token; plan con ciclo propuesto/aprobado/entrega no registrada. Nuevas
+  dependencias: `@phosphor-icons/react` y `@fontsource-variable/public-sans`. Detalle y
+  limitaciones del backend en UI.md. Sin cambios en backend, contratos, agentes ni migraciones.
+- Verificación: `npm run lint`, `npm run typecheck`, `npm test` (14/14, 11 existentes adaptadas al
+  nuevo flujo con los mismos cuerpos de petición y 3 nuevas) y `npm run build`. Prueba manual con
+  Chrome sin interfaz (protocolo DevTools) contra una API y un worker aislados en modo mock, con
+  base de datos temporal y el escenario F2-01: envío ciudadano, decisión humana aplicada por el
+  worker, plan generado con una cisterna excluida y aprobado; capturas a 1440 y 390 px, claro y
+  oscuro, movimiento reducido. Sin errores de consola salvo el 404 de `favicon.ico` ya existente.
+- Las decisiones registradas en esa base temporal fueron datos de prueba locales, no revisiones
+  humanas reales. Las capturas de `docs/evidence/` siguen siendo de la interfaz anterior.
+- Acciones remotas/Git: ninguna; sin commits, pushes, merges ni cambios de rama.
+
+## 2026-10-17 — Paleta «agua clara» del frontend
+
+- Herramienta: Claude Code (Claude Opus 5.5). Solo `frontend/src/styles.css` (tokens claros y
+  oscuros, sin colores fijos fuera de ellos), `frontend/index.html` (`theme-color`) y UI.md.
+- Contraste calculado con la fórmula WCAG para cada par de tokens: texto ≥ 4,5:1, bordes de campos y
+  rellenos gráficos ≥ 3:1. Verificado con `npm run lint`, `typecheck`, `test` (14/14) y `build`, y
+  con capturas en claro y oscuro contra la API aislada en modo mock. Sin commits ni pushes.
