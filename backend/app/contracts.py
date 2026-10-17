@@ -88,6 +88,7 @@ class CoordinationProposalSchema(Contract):
 class ReviewInput(Contract):
     decision: Literal["APPROVE", "REJECT", "CORRECT"]
     reason: str = Field(min_length=5, max_length=600)
+    approved_score: int | None = Field(default=None, ge=0, le=100, strict=True)
     corrected_score: int | None = Field(default=None, ge=0, le=100, strict=True)
     association: Literal["CONFIRM", "NEW"] | None = None
 
@@ -95,6 +96,8 @@ class ReviewInput(Contract):
     def correction(self) -> "ReviewInput":
         if (self.decision == "CORRECT") != (self.corrected_score is not None):
             raise ValueError("Solo CORRECT requiere corrected_score entre 0 y 100")
+        if self.decision != "APPROVE" and self.approved_score is not None:
+            raise ValueError("approved_score solo aplica a decision APPROVE")
         return self
 
 

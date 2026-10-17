@@ -40,7 +40,8 @@ def test_real_http_queue_and_worker_restart(tmp_path):
         )
 
     def wait_until(check):
-        deadline = time.monotonic() + 15
+        # Worker cold start measured at 12–33 s on Windows (docs/evidence/baseline.md §6.1).
+        deadline = time.monotonic() + 60
         while time.monotonic() < deadline:
             try:
                 if check():
@@ -48,7 +49,7 @@ def test_real_http_queue_and_worker_restart(tmp_path):
             except httpx.ConnectError:
                 pass
             time.sleep(0.1)
-        raise AssertionError("El proceso no alcanzó el estado esperado en 15 segundos")
+        raise AssertionError("El proceso no alcanzó el estado esperado en 60 segundos")
 
     processes = []
     try:
@@ -71,10 +72,20 @@ def test_real_http_queue_and_worker_restart(tmp_path):
             wait_until(lambda: status() == "WAITING_APPROVAL")
             worker.kill()
             worker.wait(timeout=5)
+            detail = client.get(f"/api/admin/executions/{key}", headers=AUTH).json()
+            p = detail["proposal"]["priority"]
+            score = (
+                round((p["score_min"] + p["score_max"]) / 2)
+                if p["score_min"] != p["score_max"]
+                else None
+            )
+            payload = {"decision": "APPROVE", "reason": "Verificado por HTTP"}
+            if score is not None:
+                payload["approved_score"] = score
             decision = client.post(
                 f"/api/executions/{key}/resume",
                 headers=AUTH,
-                json={"decision": "APPROVE", "reason": "Verificado por HTTP"},
+                json=payload,
             )
             assert decision.status_code == 202
             assert status() == "RESUME_QUEUED"
@@ -82,7 +93,10 @@ def test_real_http_queue_and_worker_restart(tmp_path):
             wait_until(lambda: status() == "APPROVED")
             result = client.get(f"/api/admin/executions/{key}", headers=AUTH).json()
             assert result["review"]["applied_at"]
-            assert result["proposal"]["final_score"] == result["proposal"]["priority"]["score_min"]
+            expected_score = (
+                score if score is not None else result["proposal"]["priority"]["score_min"]
+            )
+            assert result["proposal"]["final_score"] == expected_score
             assert len([e for e in result["traces"] if e["event"] == "DECISION_APPLIED"]) == 1
     finally:
         for process in reversed(processes):

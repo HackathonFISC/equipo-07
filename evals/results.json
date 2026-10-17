@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-17T03:03:11.818593+00:00",
+  "generated_at": "2026-10-17T06:01:31.922857+00:00",
   "mode": "mock-deterministic",
-  "passed": 31,
-  "total": 31,
+  "passed": 40,
+  "total": 40,
   "scenario_pass_rate": 1.0,
   "metrics": {
     "consolidation_scenarios": {
@@ -20,6 +20,10 @@
     "planner_scenarios": {
       "passed": 9,
       "total": 9
+    },
+    "priority_scenarios": {
+      "passed": 9,
+      "total": 9
     }
   },
   "pytest_exit_code": 0,
@@ -27,157 +31,202 @@
     {
       "id": "E01",
       "passed": true,
-      "seconds": 1.678
+      "seconds": 1.785
     },
     {
       "id": "E02",
       "passed": true,
-      "seconds": 1.034
+      "seconds": 1.528
     },
     {
       "id": "E03",
       "passed": true,
-      "seconds": 0.795
+      "seconds": 0.693
     },
     {
       "id": "E04",
       "passed": true,
-      "seconds": 1.387
+      "seconds": 1.21
     },
     {
       "id": "E05",
       "passed": true,
-      "seconds": 1.403
+      "seconds": 1.61
     },
     {
       "id": "E06",
       "passed": true,
-      "seconds": 1.689
+      "seconds": 1.553
     },
     {
       "id": "E07",
       "passed": true,
-      "seconds": 1.28
+      "seconds": 1.66
     },
     {
       "id": "E08",
       "passed": true,
-      "seconds": 0.956
+      "seconds": 1.194
     },
     {
       "id": "E09",
       "passed": true,
-      "seconds": 0.966
+      "seconds": 1.277
     },
     {
       "id": "E10",
       "passed": true,
-      "seconds": 0.4
+      "seconds": 0.515
     },
     {
       "id": "E11",
       "passed": true,
-      "seconds": 0.377
+      "seconds": 0.479
     },
     {
       "id": "E12",
       "passed": true,
-      "seconds": 0.382
+      "seconds": 0.472
     },
     {
       "id": "E13",
       "passed": true,
-      "seconds": 1.054
+      "seconds": 1.707
     },
     {
       "id": "E14",
       "passed": true,
-      "seconds": 1.192
+      "seconds": 1.59
     },
     {
       "id": "E15",
       "passed": true,
-      "seconds": 1.079
+      "seconds": 1.533
     },
     {
       "id": "E16",
       "passed": true,
-      "seconds": 0.93
+      "seconds": 1.191
     },
     {
       "id": "E17",
       "passed": true,
-      "seconds": 1.991
+      "seconds": 1.576
     },
     {
       "id": "E18",
       "passed": true,
-      "seconds": 1.673
+      "seconds": 1.965
     },
     {
       "id": "E19",
       "passed": true,
-      "seconds": 1.235
+      "seconds": 1.415
     },
     {
       "id": "E20",
       "passed": true,
-      "seconds": 0.833
+      "seconds": 0.967
     },
     {
       "id": "E21",
       "passed": true,
-      "seconds": 1.853
+      "seconds": 0.883
     },
     {
       "id": "E22",
       "passed": true,
-      "seconds": 1.553
+      "seconds": 1.584
+    },
+    {
+      "id": "E32",
+      "passed": true,
+      "seconds": 1.18
+    },
+    {
+      "id": "E33",
+      "passed": true,
+      "seconds": 1.134
+    },
+    {
+      "id": "E34",
+      "passed": true,
+      "seconds": 1.112
+    },
+    {
+      "id": "E35",
+      "passed": true,
+      "seconds": 1.215
+    },
+    {
+      "id": "E36",
+      "passed": true,
+      "seconds": 1.658
+    },
+    {
+      "id": "E37",
+      "passed": true,
+      "seconds": 1.102
+    },
+    {
+      "id": "E38",
+      "passed": true,
+      "seconds": 1.186
+    },
+    {
+      "id": "E39",
+      "passed": true,
+      "seconds": 1.559
+    },
+    {
+      "id": "E40",
+      "passed": true,
+      "seconds": 1.592
     },
     {
       "id": "E23",
       "passed": true,
-      "seconds": 1.52
+      "seconds": 1.666
     },
     {
       "id": "E24",
       "passed": true,
-      "seconds": 1.976
+      "seconds": 2.174
     },
     {
       "id": "E25",
       "passed": true,
-      "seconds": 2.523
+      "seconds": 2.375
     },
     {
       "id": "E26",
       "passed": true,
-      "seconds": 1.242
+      "seconds": 1.981
     },
     {
       "id": "E27",
       "passed": true,
-      "seconds": 1.175
+      "seconds": 1.467
     },
     {
       "id": "E28",
       "passed": true,
-      "seconds": 1.303
+      "seconds": 1.554
     },
     {
       "id": "E29",
       "passed": true,
-      "seconds": 1.366
+      "seconds": 1.643
     },
     {
       "id": "E30",
       "passed": true,
-      "seconds": 1.43
+      "seconds": 1.521
     },
     {
       "id": "E31",
       "passed": true,
-      "seconds": 1.496
+      "seconds": 1.486
     }
   ],
   "note": "Contract/scenario assertions, not real-model accuracy"

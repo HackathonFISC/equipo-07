@@ -51,7 +51,7 @@ async def test_worker_interrupted_then_recovered(system):
     await recover(system.db)
     await system.work()
     assert (await details(system, key))["status"] == "WAITING_APPROVAL"
-    assert (await review(system, key)).status_code == 202
+    assert (await review(system, key, approved_score=60)).status_code == 202
     async with system.db.sessions.begin() as session:
         row = await session.get(Execution, key)
         row.status = "RUNNING"
@@ -88,6 +88,10 @@ async def test_security_and_conflicts(system):
         json={"decision": "CORRECT", "reason": "Prueba inválida"},
     )
     assert invalid.status_code == 422
+    # Without a tentative association, an association choice is rejected, not silently ignored.
+    stray = await review(system, key, "REJECT", association="NEW")
+    assert stray.status_code == 409
+    assert (await details(system, key))["review"] is None
 
 
 async def test_rate_limit_persisted(system):
@@ -108,7 +112,9 @@ async def test_concurrent_idempotent_reports(system):
 async def test_competing_reviews_cannot_overwrite(system):
     key, _ = await submit(system)
     await system.work()
-    responses = await asyncio.gather(review(system, key), review(system, key, "REJECT"))
+    responses = await asyncio.gather(
+        review(system, key, approved_score=60), review(system, key, "REJECT")
+    )
     assert sorted(r.status_code for r in responses) == [202, 409]
     await system.work()
     assert (await details(system, key))["status"] in ("APPROVED", "REJECTED")
@@ -153,11 +159,11 @@ async def test_recover_after_decision_commit_before_final_checkpoint(system):
 
     key, _ = await submit(system)
     await system.work()
-    assert (await review(system, key)).status_code == 202
+    assert (await review(system, key, approved_score=60)).status_code == 202
     async with system.db.sessions.begin() as session:
         execution = await session.get(Execution, key)
         execution.status = "RUNNING"
-    body = ReviewInput(decision="APPROVE", reason="Revisado en demo")
+    body = ReviewInput(decision="APPROVE", reason="Revisado en demo", approved_score=60)
     await apply_decision(system.db, key, body)
     # Simulate process death after this business commit, before LangGraph's final checkpoint.
     detail = await details(system, key)

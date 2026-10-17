@@ -17,7 +17,7 @@ export interface Priority {
 }
 export interface Review {
   decision: 'APPROVE' | 'REJECT' | 'CORRECT'; reason: string
-  corrected_score?: number; association?: 'CONFIRM' | 'NEW'
+  approved_score?: number; corrected_score?: number; association?: 'CONFIRM' | 'NEW'
 }
 export interface Detail extends Execution {
   proposal: null | { incident_id: string; priority: Priority; explanation: string; final_score: number | null }

@@ -80,6 +80,17 @@ def main():
             "E30",
             "E31",
         ],
+        "priority_scenarios": [
+            "E32",
+            "E33",
+            "E34",
+            "E35",
+            "E36",
+            "E37",
+            "E38",
+            "E39",
+            "E40",
+        ],
     }
     metrics = {
         name: {

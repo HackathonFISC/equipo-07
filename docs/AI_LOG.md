@@ -149,9 +149,63 @@ Evidencia y límites: NVIDIA_SMOKE. No se verificó la facturación de las llama
   - H11 confirmado: `stated_hours("Tenemos 3 días sin agua en el barrio")` devuelve `[]`. Cuando el LLM extrae `72.0`, el grounding lanza `ProviderError("UNGROUNDED_HOURS")` y el worker termina en `ERROR`.
 - Acciones Git: No se realizaron commits, pushes, merges ni tags no autorizados.
 
+## 2026-10-17 — Fase 1 (F1): Núcleo de Priorización
+
+- Autor humano / Solicitud: "adelante con el plan" (autorización explícita para Fase 1 y rama `feat-fase-1-priorizacion`).
+- Herramienta: Antigravity Assistant (Gemini 3.8 Flash High).
+- Decisiones consolidadas aplicadas:
+  - D-01: Rama dedicada `feat-fase-1-priorizacion` (ref `feat/` renombrada por conflicto con ref de archivo Git).
+  - D-02: `is_critical_location` reconoce `category == "institucion_critica"` (salud, escuelas, asilos); nunca `planta_potabilizadora`.
+  - D-03: `ReviewInput` admite `approved_score` determinístico en el intervalo `[score_min, score_max]`; responde HTTP 422 si falta en una propuesta con rango.
+- Archivos creados y modificados:
+  - `backend/app/grounding.py` (creado): Módulo puro de fundamentación lingüística con negación acotada sobre instituciones y parseo temporal de horas, días, semanas y expresiones imprecisas (`extract_temporal_grounding`).
+  - `backend/tests/test_grounding.py` (creado): 30 pruebas unitarias parametrizadas para criticidad, horas y duraciones imprecisas.
+  - `backend/app/domain.py`: Añadidas funciones puras `is_critical_location` y `resolve_criticality`.
+  - `backend/app/tools.py`: `report_context` enriquecido con `in_catalog` y `catalog_critical`.
+  - `backend/app/agents.py`: `Agents.coordinate` usa `resolve_criticality` y propaga banderas `CRITICIDAD_CATALOGO`/`CRITICIDAD_TEXTO`; `Agents.ingest` evita `UNGROUNDED_HOURS` ante duraciones imprecisas; `PlannerAgent.plan` homologado con `is_critical_location`.
+  - `backend/app/contracts.py`: `ReviewInput` extendido con `approved_score`.
+  - `backend/app/services.py`: Validación transaccional de `approved_score` en `enqueue_review` y persistencia en `apply_decision`.
+  - `backend/tests/test_process_e2e.py`: Aumentado timeout de `wait_until` (30 s; después 60 s en la revisión) y agregado `approved_score` en revisión.
+  - `backend/tests/test_evaluations.py`: Implementados escenarios E32 a E40 y actualizado helper `approved()`.
+  - `evals/cases.json`: Añadidos escenarios E32 a E40.
+  - `scripts/evaluate.py`: Agregado grupo `priority_scenarios` (9 escenarios).
+  - `frontend/src/types.ts`: `Review` extendido con `approved_score?: number`.
+  - `frontend/src/pages/CoordinationPage.tsx`: Formulario de revisión adaptado para solicitar y precargar `approvedScore` ante propuestas con rango.
+  - `docs/REQUIREMENTS.md`: Registrados requisitos RF14, RF15 y RF16 (renumerados desde RF12–RF14 para no chocar con RF12/RF13 de la rama `ag45-whatsapp-telegram`).
+- Comandos ejecutados y resultados (Suite R0 completa):
+  - Backend: `ruff check` (PASS), `ruff format --check` (PASS), `mypy` (PASS, 0 issues), `pytest -q -p no:cacheprovider --cov=app`: **114 passed en 178.39s**, cobertura **87%**; `alembic check`: *No new upgrade operations detected*.
+  - Evaluaciones: `scripts/evaluate.py`: **40/40 passed (100%)** en 35.13s (incluyendo 9/9 en `priority_scenarios`).
+  - Datasets: `scripts/validate_datasets.py`: 20/20 ubicaciones válidas, 4 cisternas; `git diff data/` = limpio.
+  - Frontend: `npm.cmd run lint` (0 errors), `npm.cmd run typecheck` (0 errors), `npm.cmd test` (8 passed), `npm.cmd run build` (exitoso).
+- Acciones Git: Rama creada y activada `feat-fase-1-priorizacion` con autorización explícita; ningún commit o push remoto ejecutado sin autorización.
+
+## Revisión y correcciones de F1 — 2026-10-17
+
+- Herramienta: Claude Code (Opus 5.5), a pedido del usuario, sobre `feat-fase-1-priorizacion` sin commits.
+- Correcciones:
+  1. `services.enqueue_review`: restaurada la validación que responde 409 si llega `association` sin
+     asociación tentativa (se había eliminado al añadir `approved_score`). Nueva aserción en
+     `test_security_and_conflicts`; se comprobó que falla sin la validación (202 ≠ 409) y pasa con ella.
+  2. `frontend/src/App.test.tsx`: espera de la opción de comunidad con 5 s en lugar de 1 s. Antes falló
+     2 de 4 ejecuciones; después, 1 falla aislada en 29 ejecuciones (2 tests, sin detalle capturado).
+     Riesgo residual registrado.
+  3. `test_process_e2e.py`: plazo de 60 s (arranque en frío del worker medido en 12–33 s). 3/3 en verde.
+  4. `grounding.py`: «el/al/del medio día» (mediodía) ya no cuenta como 12 h; se reutiliza
+     `contracts.plain` en lugar de una copia. Dos casos nuevos en `test_grounding.py`.
+  5. `REQUIREMENTS.md`: RF12–RF14 renumerados a RF14–RF16 (RF12/RF13 los usa `ag45-whatsapp-telegram`),
+     estado «Implementado» y criticidad descrita por `category`, no por `is_critical_lifeline`.
+- R0 tras las correcciones: `uv sync --locked`, ruff, formato y mypy limpios; `alembic upgrade head` y
+  `check` en base temporal limpios; pytest **116 passed**, cobertura 87 % (`grounding.py` 100 %);
+  `evaluate.py` **40/40** (priority 9/9); `validate_datasets.py` rc=0 y `git diff data/` vacío;
+  frontend lint, typecheck y build OK, Vitest 8/8 en 3 ejecuciones seguidas.
+- No ejecutado: `npm ci` (hay un Vite del equipo corriendo sobre `node_modules`; ya se verificó en F0).
+- Límite conocido: «El hospital no tiene problemas…» sigue contando como evidencia crítica (falso positivo);
+  medirlo con el corpus de F4.
+
 ## Plantilla para nuevas entradas
 
 Fecha / autor humano / herramienta y modelo conocido / objetivo / archivos / sugerencias aceptadas
 y descartadas / cambios manuales verificables / comandos y resultados / revisión humana / límites
 y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora.
+
 

@@ -13,6 +13,11 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
   const [score, setScore] = useState('')
   const [association, setAssociation] = useState<Review['association']>()
 
+  const p = detail.proposal?.priority
+  const hasRange = p ? p.score_min !== p.score_max : false
+  const defaultApproved = p ? Math.round((p.score_min + p.score_max) / 2) : 0
+  const [approvedScore, setApprovedScore] = useState<number>(defaultApproved)
+
   const mutation = useMutation({
     mutationFn: () => api(`/executions/${detail.id}/resume`, {
       method: 'POST',
@@ -20,6 +25,7 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
         decision,
         reason,
         ...(decision === 'CORRECT' ? { corrected_score: Number(score) } : {}),
+        ...(decision === 'APPROVE' && hasRange ? { approved_score: Number(approvedScore) } : {}),
         ...(association ? { association } : {}),
       }),
     }, token),
@@ -39,15 +45,36 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
       <label>
         Decisión
         <select value={decision} onChange={e => setDecision(e.target.value as Review['decision'])}>
-          <option value="APPROVE">Aprobar límite inferior de la prioridad</option>
+          <option value="APPROVE">Aprobar prioridad calculada</option>
           <option value="REJECT">Rechazar propuesta</option>
           <option value="CORRECT">Corregir puntuación</option>
         </select>
       </label>
 
-      {decision === 'APPROVE' && (
+      {decision === 'APPROVE' && hasRange && (
         <div className="callout info">
-          Se validará formalmente la prioridad calculada ({detail.proposal?.priority.score_min} pts). Esta decisión se archivará en la bitácora de auditoría.
+          <p>
+            La propuesta presenta un intervalo de prioridad ({p?.score_min} – {p?.score_max} pts) por incertidumbre en los datos.
+            Define la puntuación formalmente aprobada dentro del intervalo:
+          </p>
+          <label>
+            Puntuación aprobada
+            <input
+              required
+              type="number"
+              min={p?.score_min}
+              max={p?.score_max}
+              step="1"
+              value={approvedScore}
+              onChange={e => setApprovedScore(Number(e.target.value))}
+            />
+          </label>
+        </div>
+      )}
+
+      {decision === 'APPROVE' && !hasRange && (
+        <div className="callout info">
+          Se validará formalmente la prioridad calculada ({p?.score_min} pts). Esta decisión se archivará en la bitácora de auditoría.
         </div>
       )}
 

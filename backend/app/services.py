@@ -96,6 +96,26 @@ async def enqueue_review(db, execution_id: str, body: ReviewInput):
                 raise Conflict("Resuelve la asociación tentativa: CONFIRM o NEW")
         elif body.association is not None:
             raise Conflict("Esta ejecución no tiene una asociación tentativa")
+        proposal = await session.get(Proposal, execution_id)
+        if proposal and body.decision == "APPROVE":
+            score_min = proposal.priority["score_min"]
+            score_max = proposal.priority["score_max"]
+            if score_min != score_max:
+                if body.approved_score is None:
+                    raise Invalid(
+                        f"Propuesta con rango [{score_min}, {score_max}] "
+                        "requiere approved_score explícito"
+                    )
+                if not (score_min <= body.approved_score <= score_max):
+                    raise Invalid(
+                        f"approved_score ({body.approved_score}) fuera del rango "
+                        f"permitido [{score_min}, {score_max}]"
+                    )
+            elif body.approved_score is not None and body.approved_score != score_min:
+                raise Invalid(
+                    f"approved_score ({body.approved_score}) no coincide "
+                    f"con el puntaje fijado ({score_min})"
+                )
         result = await session.execute(
             update(Execution)
             .where(Execution.id == execution_id, Execution.status == "WAITING_APPROVAL")
@@ -211,6 +231,8 @@ async def apply_decision(db, execution_id, body: ReviewInput):
             if body.decision == "REJECT"
             else body.corrected_score
             if body.decision == "CORRECT"
+            else body.approved_score
+            if body.approved_score is not None
             else proposal.priority["score_min"]
         )
         if body.decision != "REJECT":

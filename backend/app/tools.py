@@ -8,6 +8,7 @@ from app.contracts import (
     PlanResult,
     PriorityResult,
 )
+from app.domain import is_critical_location
 from app.models import Association, Community, DistributionPlan, Incident, Proposal, Report, now
 from app.providers import ProviderError
 from app.services import (
@@ -28,6 +29,10 @@ class AgentTools:
         async with self._db.sessions() as session:
             report = await session.get(Report, key)
             community = await session.get(Community, report.community_id)
+            locations = location_catalog()
+            loc = locations.get(report.community_id)
+            in_catalog = loc is not None
+            catalog_critical = is_critical_location(loc) if in_catalog else None
             return {
                 "description": report.description,
                 "community_id": report.community_id,
@@ -36,6 +41,8 @@ class AgentTools:
                 "population": community.population,
                 "vulnerability": community.vulnerability,
                 "is_synthetic": community.is_synthetic,
+                "in_catalog": in_catalog,
+                "catalog_critical": catalog_critical,
             }
 
     async def save_normalized(self, key, normalized: NormalizedReportSchema):

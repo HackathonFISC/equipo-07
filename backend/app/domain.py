@@ -53,3 +53,27 @@ def calculate_priority(
         policy_version=policy.version,
         immediate_review=critical is True,
     )
+
+
+def is_critical_location(props: dict | None) -> bool:
+    """Determina si una entidad geográfica del catálogo es una institución crítica."""
+    if not props:
+        return False
+    return props.get("category") == "institucion_critica"
+
+
+def resolve_criticality(
+    text_critical: bool | None, in_catalog: bool, catalog_critical: bool | None
+) -> tuple[bool | None, list[str]]:
+    """Resuelve la criticidad combinando evidencia textual y catálogo según D-02."""
+    flags: list[str] = []
+    if text_critical is True:
+        flags.append("CRITICIDAD_TEXTO")
+    if in_catalog and catalog_critical:
+        flags.append("CRITICIDAD_CATALOGO")
+
+    if text_critical is True or (in_catalog and catalog_critical):
+        return True, flags
+    if in_catalog and not catalog_critical and text_critical is not True:
+        return False, flags
+    return None, flags

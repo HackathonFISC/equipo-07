@@ -8,9 +8,10 @@ from app.contracts import (
     UnservedDemand,
     plain,
 )
-from app.domain import calculate_priority
+from app.domain import calculate_priority, is_critical_location, resolve_criticality
+from app.grounding import critical_evidence, extract_temporal_grounding
 from app.planner import plan_distribution
-from app.providers import ProviderError, critical_evidence, stated_hours
+from app.providers import ProviderError
 from app.tools import AgentTools, PlannerTools
 
 
@@ -25,12 +26,18 @@ class Agents:
         if report["normalized"] is not None:
             return {"normalized": report["normalized"]}
         normalized = await self.provider.extract_report(report["description"])
-        observed = stated_hours(report["description"])
+        temporal = extract_temporal_grounding(report["description"])
+        observed = temporal.hours
         if (
             normalized.hours_without_water is not None
             and normalized.hours_without_water not in observed
         ):
-            raise ProviderError("UNGROUNDED_HOURS")
+            if temporal.is_imprecise:
+                normalized.hours_without_water = None
+                if "DURACION_IMPRECISA" not in normalized.flags:
+                    normalized.flags.append("DURACION_IMPRECISA")
+            else:
+                raise ProviderError("UNGROUNDED_HOURS")
         critical = critical_evidence(report["description"])
         if normalized.critical_institution is True and critical is not True:
             raise ProviderError("UNGROUNDED_CRITICAL_INSTITUTION")
@@ -79,14 +86,20 @@ class Agents:
             return {"priority": existing}
         context = await self.tools.report_context(key)
         normalized = NormalizedReportSchema.model_validate(state["normalized"])
+        effective_critical, crit_flags = resolve_criticality(
+            normalized.critical_institution,
+            context.get("in_catalog", False),
+            context.get("catalog_critical"),
+        )
         # Snapshot of this report: duplicate volume never contributes to the score.
         priority = calculate_priority(
             normalized.hours_without_water,
-            normalized.critical_institution,
+            effective_critical,
             context["vulnerability"],
             context["population"],
         )
         priority.flags.extend(normalized.flags)
+        priority.flags.extend(crit_flags)
         if context["is_synthetic"]:
             priority.flags.append("DATOS_SECTOR_SINTETICOS")
         if state["association_status"] == "PENDING_REVIEW":
@@ -155,7 +168,7 @@ class PlannerAgent:
                         name=location["name"],
                         incident_ids=[i["id"] for i in needs_water],
                         score=max(i["score"] for i in needs_water),
-                        critical=bool(location.get("is_critical_lifeline")),
+                        critical=is_critical_location(location),
                         lat=location["lat"],
                         lng=location["lng"],
                         gallons=location["estimated_daily_demand_gallons"],

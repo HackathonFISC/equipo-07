@@ -29,5 +29,14 @@
   {"id":"E28","suite":"planner","scenario":"plan_unauthorized","description":"Generar o revisar plan sin token"},
   {"id":"E29","suite":"planner","scenario":"plan_reject","description":"Rechazo deja incidentes priorizados para un nuevo plan"},
   {"id":"E30","suite":"planner","scenario":"plan_single_pending","description":"Un solo plan pendiente y decisión no sobrescribible"},
-  {"id":"E31","suite":"planner","scenario":"plan_privacy","description":"Datos personales de conductores no salen por la API"}
+  {"id":"E31","suite":"planner","scenario":"plan_privacy","description":"Datos personales de conductores no salen por la API"},
+  {"id":"E32","scenario":"negation_positive","description":"No hay agua en el centro de salud marca critical True"},
+  {"id":"E33","scenario":"negation_negative","description":"Corte no afecta al hospital mantiene critical None"},
+  {"id":"E34","scenario":"catalog_critical","description":"Sector de institución crítica en catálogo asigna 30 pts y alerta inmediata"},
+  {"id":"E35","scenario":"catalog_standard","description":"Comunidad no crítica en catálogo asigna critical False y reduce rango"},
+  {"id":"E36","scenario":"duration_days","description":"Duración en 3 días con formulario 72 asigna hours 72 sin contradicción"},
+  {"id":"E37","scenario":"duration_contradiction_days","description":"Duración en 3 días con formulario 24 detecta contradicción"},
+  {"id":"E38","scenario":"duration_imprecise","description":"Duración imprecisa desde ayer no produce error UNGROUNDED_HOURS"},
+  {"id":"E39","scenario":"range_approval","description":"Aprobación con rango exige approved_score explícito respondiendo 422 si falta"},
+  {"id":"E40","scenario":"criticality_coherence","description":"Propuesta y planificador usan la misma criticidad para la misma comunidad"}
 ]

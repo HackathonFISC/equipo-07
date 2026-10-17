@@ -1,5 +1,4 @@
 import json
-import re
 from typing import Protocol, TypeVar
 from uuid import UUID
 
@@ -13,6 +12,7 @@ from app.contracts import (
     NormalizedReportSchema,
     plain,
 )
+from app.grounding import critical_evidence, stated_hours
 
 
 class ProviderError(RuntimeError):
@@ -30,21 +30,6 @@ class LLMProvider(Protocol):
     async def explain_priority_proposal(
         self, incident: dict, priority: dict
     ) -> CoordinationProposalSchema: ...
-
-
-def stated_hours(text: str) -> list[float]:
-    return [
-        float(value.replace(",", "."))
-        for value in re.findall(r"(?<![\d.-])(\d+(?:[.,]\d+)?)\s*horas?\b", plain(text))
-    ]
-
-
-def critical_evidence(text: str) -> bool | None:
-    text = plain(text)
-    if re.search(r"\b(hospital|policlinica|escuela|asilo|centro de salud)\b", text):
-        # shortcut: negación conservadora por frase; ampliar con evals de lenguaje real.
-        return None if re.search(r"\b(no|sin afectar|ningun)\b", text) else True
-    return None
 
 
 class MockLLMProvider:
