@@ -32,11 +32,11 @@ export async function api<T>(path: string, options: RequestInit = {}, token?: st
         .filter(Boolean)
         .join('. ')
     }
-    throw new Error(
-      detailMsg ||
+    const message = detailMsg ||
       (response.status === 422 ? 'Revisa los campos: el reporte o la decisión no es válido.' :
         `El servicio respondió ${response.status}. Intenta de nuevo.`)
-    )
+    // The status lets the coordinator login tell a wrong token (401) from a missing one (503).
+    throw Object.assign(new Error(message), { status: response.status })
   }
   return response.json() as Promise<T>
 }
@@ -54,7 +54,7 @@ export function publicStatusPolling(data?: PublicReportStatus): number | false {
 }
 
 export const statusLabels: Record<Status, string> = {
-  QUEUED: 'En cola', RUNNING: 'En análisis', WAITING_APPROVAL: 'Espera revisión humana',
-  RESUME_QUEUED: 'Decisión en proceso', APPROVED: 'Prioridad aprobada', REJECTED: 'Propuesta rechazada',
-  ERROR: 'Error de procesamiento', NEEDS_INFORMATION: 'Falta información',
+  QUEUED: 'En cola', RUNNING: 'En análisis', WAITING_APPROVAL: 'Pendiente de revisión',
+  RESUME_QUEUED: 'Aplicando decisión', APPROVED: 'Prioridad aprobada', REJECTED: 'Propuesta rechazada',
+  ERROR: 'Error de procesamiento', NEEDS_INFORMATION: 'Información insuficiente',
 }

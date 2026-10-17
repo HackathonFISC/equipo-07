@@ -2,6 +2,7 @@ export type Status = 'QUEUED' | 'RUNNING' | 'WAITING_APPROVAL' | 'RESUME_QUEUED'
   | 'APPROVED' | 'REJECTED' | 'ERROR' | 'NEEDS_INFORMATION'
 export interface Community {
   id: string; name: string; district: string; is_synthetic: boolean
+  population?: number | null; vulnerability?: number | null
 }
 export interface Receipt {
   report_id: string; thread_id: string; status: Status; is_simulated: boolean
