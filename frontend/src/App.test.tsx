@@ -33,11 +33,15 @@ test('validates required fields, submits and shows actual server status', async 
   await user.click(screen.getByRole('button', { name: 'Enviar reporte' }))
   expect(await screen.findByText('Lo revisa el equipo')).toBeInTheDocument()
   const posted = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')!
-  expect(JSON.parse(posted[1]!.body as string).hours_without_water).toBeNull()
+  expect(JSON.parse(posted[1]!.body as string).duration_bucket).toBeNull()
+  expect(JSON.parse(posted[1]!.body as string)).not.toHaveProperty('hours_without_water')
   expect((posted[1]!.headers as Record<string, string>)['Idempotency-Key']).toBeTruthy()
 })
 
-test('duration options in days are sent as hours inside the policy bucket', async () => {
+test.each([
+  ['Menos de medio día', 'LT_12H'], ['Entre medio día y 1 día', 'H12_24'],
+  ['Entre 1 y 2 días', 'H24_48'], ['2 días o más', 'GE_48H'], ['No lo sé', null],
+])('duration option %s preserves its interval without inventing hours', async (option, bucket) => {
   const user = userEvent.setup()
   const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
     if (String(url).endsWith('/communities')) return Response.json([community])
@@ -47,12 +51,14 @@ test('duration options in days are sent as hours inside the policy bucket', asyn
   mount(<CitizenPage />)
   await screen.findByRole('option', { name: community.name }, { timeout: 5000 })
   await user.selectOptions(screen.getByLabelText('Comunidad o corregimiento'), community.id)
-  await user.type(screen.getByLabelText('¿Qué está pasando?'), 'No sale agua desde anteayer')
-  await user.click(screen.getByRole('radio', { name: 'Entre 1 y 2 días' }))
+  await user.type(screen.getByLabelText('¿Qué está pasando?'), 'No sale agua en el sector')
+  await user.click(screen.getByRole('radio', { name: option }))
   await user.click(screen.getByRole('button', { name: 'Enviar reporte' }))
   await screen.findByText('Recibimos tu reporte')
   const posted = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')!
-  expect(JSON.parse(posted[1]!.body as string).hours_without_water).toBe(36)
+  expect(JSON.parse(posted[1]!.body as string)).toEqual({
+    community_id: community.id, description: 'No sale agua en el sector', duration_bucket: bucket,
+  })
 })
 
 test('loading and server failures are visible', async () => {
@@ -288,12 +294,20 @@ test('approving an uncertain range sends a score inside it and resolves the tent
   await user.click(await screen.findByRole('tab', { name: /Reportes/ }))
   await user.click(await screen.findByRole('button', { name: /e2/ }))
   expect(await screen.findByText(/la prioridad real puede estar en cualquier punto entre 26 y 91/)).toBeInTheDocument()
-  expect(screen.getAllByText('Dato sin confirmar')).toHaveLength(1)
+  expect(screen.getByRole('region', { name: 'Información para decidir' })).toHaveTextContent('institución crítica')
   const score = screen.getByLabelText('Puntuación aprobada')
-  await user.clear(score)
-  await user.type(score, '70')
+  expect(score).toHaveValue(null)
   await user.click(screen.getByRole('radio', { name: /Sí, es el mismo incidente/ }))
   await user.type(screen.getByLabelText('Razón de la decisión'), 'Verificado con la junta comunal')
+  await user.click(screen.getByRole('button', { name: 'Registrar decisión' }))
+  expect(screen.queryByRole('button', { name: 'Confirmar decisión' })).not.toBeInTheDocument()
+  expect(posted).toBeUndefined()
+  await user.type(score, '99')
+  await user.click(screen.getByRole('button', { name: 'Registrar decisión' }))
+  expect(screen.queryByRole('button', { name: 'Confirmar decisión' })).not.toBeInTheDocument()
+  expect(posted).toBeUndefined()
+  await user.clear(score)
+  await user.type(score, '70')
   await user.click(screen.getByRole('button', { name: 'Registrar decisión' }))
   expect(screen.getByText('¿Confirmas aprobar con 70 pts?')).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Confirmar decisión' }))

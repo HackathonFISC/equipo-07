@@ -1,5 +1,36 @@
 # Bitácora de uso de IA
 
+## 2026-10-17 — Integración frontend y Coordinación (AG-52)
+
+- Herramienta: Codex en Windows local. Skill Ponytail full leída y aplicada. Trabajo autónomo
+  en `integracion-aguaia`, inicialmente limpia, sin delegación ni acciones Git de escritura.
+- Lectura: AGENTS, README, arquitectura D1–D7, IMPLEMENTATION, REVIEW, UI, REQUIREMENTS,
+  CONTRIBUTING, catálogo, contratos reales, servicios/grafo/worker y consumidores/pruebas TS.
+- Cambios: intervalos y ejemplos ciudadanos; tipos aditivos y lookup directo de report; revisión
+  sin promedio sugerido; operación simplificada y Auditoría principal con índice, trazas, datos,
+  puntos/procedencia, fórmula, evidencia, revisiones y enlaces a planes existentes. Proxy configurable.
+  Identidad, accesibilidad, modo oscuro y movimiento reducido preservados; cabecera móvil ajustada.
+- No se cambiaron agentes, políticas HITL, pesos, solver, MapPanel, PlanPanel, contratos del servidor
+  ni migraciones. No se añadieron dependencias. Históricos sin inputs no se recalculan ni validan.
+- Verificación ejecutada: 30 Vitest, lint/typecheck/build; 196 pytest (88 %), Ruff/formato/mypy,
+  Alembic una cabeza, migraciones vacías/con datos y check en almacenamiento aislado. Evals/impacto
+  publicados no se regeneraron; la suite pytest incluyó sus escenarios.
+- Chrome sin interfaz por DevTools: API/worker/Vite en puertos locales aislados, negocio y
+  checkpoints temporales, mock explícito. Se seleccionó LT_12H, se obtuvo 17–67 y se registró 42;
+  worker detenido para observar pendiente y reiniciado para comprobar una sola aplicación.
+  Segundo reporte sintético para plan con 3 cisternas y un sector sin ubicación; propuesta,
+  aprobación, mapa y aviso público comprobados. 1440/390 px, claro/oscuro, movimiento reducido.
+  Capturas/resultado: evidence/ag52. El arranque inicial de Chrome en sandbox falló por permisos
+  GPU; se autorizó su inicio sin interfaz fuera del sandbox. Se corrigió el desbordamiento observado.
+- Las decisiones fueron automatizadas sobre casos sintéticos; no se atribuye revisión humana ni
+  inferencia NVIDIA. Límites operativos y revisión por otro integrante pendientes en UI/REVIEW.
+  Sin commits, pushes, merges, cambios de rama ni acciones remotas. Datos locales preexistentes intactos.
+- Comprobación final de servicios existentes, solo health/OpenAPI: 8000 respondía con contrato
+  anterior; 8001 tenía duration_bucket y mapa/flota/ejecuciones actualizados. Se creó
+  frontend/.env.local (antes ausente, ignorado por Git) con API_PROXY_TARGET=8001. No se usó
+  token ni se modificaron datos de esos servicios. Se cerraron únicamente los procesos temporales
+  de AG-52; los servicios del usuario se conservaron.
+
 ## 2026-10-17 — Auditoría LangGraph e integridad numérica (AG-41)
 
 - Herramienta: Codex en Windows; skills Ponytail Full y Ponytail Review leídas y aplicadas.

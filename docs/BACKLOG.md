@@ -1,5 +1,22 @@
 # Backlog preparado para GitHub Issues
 
+## AG-52 · Integración AguaIA y Coordinación (RF40, RNF11)
+
+Frontend y pruebas, P0; rama `integracion-aguaia`. Contrato acordado: consumir los campos
+aditivos reales de AG-41, sin modificar Pydantic, políticas HITL, agentes, pesos ni solver.
+Consumidores: CitizenPage, types, lookups, ReportsPanel, CoordinationPage, componentes de
+prioridad, proxy Vite, fixtures y pruebas. Aceptación: enviar cada intervalo/null sin horas
+representativas; idempotencia conservada; duración visible aun sin incidente; instantánea
+separada del catálogo actual; rango sin promedio preseleccionado; decisión registrada/aplicada
+distintas; Auditoría accesible desde navegación y reporte, con eventos reales y JSON; mapa,
+flota y planes conservados; lint/tipos/Vitest/build, backend/migraciones y recorrido aislado
+con mock. Sin tocar bases existentes ni acciones remotas/Git. Resultados al cerrar en UI.md.
+
+Estado: completada localmente el 2026-10-17. Frontend: 30 Vitest, lint/tipos/build;
+backend: 196 pytest, 88 % de cobertura, Ruff/formato/mypy; migraciones en bases temporales.
+Chrome: ciclo ciudadano → LangGraph → revisión pendiente → worker → aplicada → plan/mapa/aviso.
+Evidencia: `docs/evidence/ag52/README.md`. Revisión humana independiente pendiente.
+
 ## AG-41 · Integridad de los agentes (RF34, RF35, RNF10)
 
 Backend y evals, P0. Criterios: reproducir 17–67 con población 2630; conservar intervalos

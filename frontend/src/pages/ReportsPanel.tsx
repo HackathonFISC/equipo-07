@@ -2,16 +2,18 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeftIcon, ArrowsClockwiseIcon, CaretRightIcon, ClockCounterClockwiseIcon, InfoIcon, MagnifyingGlassIcon,
-  SirenIcon, TrayIcon, WarningIcon,
+  SirenIcon, TrayIcon,
 } from '@phosphor-icons/react'
 import { api, polling } from '../api'
-import { EmptyState, ErrorMessage, FactorList, Pill, PriorityRange, Skeleton, StatusBadge } from '../components'
+import { EmptyState, ErrorMessage, PriorityRange, Skeleton, StatusBadge } from '../components'
 import {
-  associationLabels, confidenceLabels, decisionLabels, eventLabels, factorInfo, flagLabels,
-  incidentStatusLabels, kindLabels, label, scoreText, when,
+  durationText, incidentStatusLabels, label, priorityRows, scoreText, when,
 } from '../labels'
-import type { Detail, Execution, IncidentTimelineEvent, Review } from '../types'
+import type { Detail, Execution, Review } from '../types'
 import { placeName, placeOf, type Lookups } from '../lookups'
+import { DecisionRecord, Evidence, ReportAudit } from './ReportAudit'
+
+export type ReportView = 'operation' | 'audit'
 
 export type ReportFilter = 'all' | 'waiting' | 'error' | 'approved'
 
@@ -32,8 +34,7 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
 
   const p = detail.proposal?.priority
   const hasRange = p ? p.score_min !== p.score_max : false
-  const defaultApproved = p ? Math.round((p.score_min + p.score_max) / 2) : 0
-  const [approvedScore, setApprovedScore] = useState<number>(defaultApproved)
+  const [approvedScore, setApprovedScore] = useState('')
   const tentative = detail.association?.status === 'PENDING_REVIEW'
 
   const mutation = useMutation({
@@ -52,8 +53,8 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
 
   const finalScore = decision === 'CORRECT' ? (score || '…') : hasRange ? approvedScore : p?.score_min
   const consequence = decision === 'REJECT'
-    ? `No se fija ninguna prioridad y el incidente no entra al plan de cisternas.${tentative ? ' El reporte no se une al incidente propuesto.' : ''}`
-    : `La prioridad queda fijada en ${finalScore} pts y el incidente pasa a «Prioridad aprobada», listo para el próximo plan de cisternas. Esto no aprueba ningún plan de distribución.`
+    ? `Se rechaza esta propuesta. Las prioridades de otros reportes del incidente se conservan.${tentative ? ' El reporte no se une al incidente propuesto.' : ''}`
+    : `El sistema aplicará ${finalScore === '' || finalScore == null ? '…' : finalScore} pts al incidente. Si ya tiene una cisterna programada, conserva ese estado. Esto no aprueba un plan ni confirma una entrega.`
   const edit = (apply: () => void) => { apply(); setConfirming(false) }
 
   if (mutation.isSuccess) {
@@ -92,7 +93,7 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
             <label htmlFor="approved-score">Puntuación aprobada</label>
             <input id="approved-score" required type="number" min={p?.score_min} max={p?.score_max} step="1"
               value={approvedScore} aria-describedby="approved-help" className="num" style={{ maxWidth: 160 }}
-              onChange={e => edit(() => setApprovedScore(Number(e.target.value)))} />
+              placeholder={`${p?.score_min} a ${p?.score_max}`} onChange={e => edit(() => setApprovedScore(e.target.value))} />
             <span id="approved-help" className="hint">
               La propuesta es un rango ({p?.score_min} a {p?.score_max} pts) porque faltan datos. Elige el valor que respalde tu verificación.
             </span>
@@ -162,41 +163,9 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
   )
 }
 
-function Evidence({ items }: { items: NonNullable<Detail['evidence']> }) {
-  return (
-    <section className="stack-sm" aria-label="Evidencia del ciudadano">
-      <h3>Evidencia enviada por el ciudadano</h3>
-      <ul className="served">
-        {items.map((item, i) => (
-          <li key={i}>
-            <span>
-              <strong>{item.kind === 'image' ? 'Foto' : item.kind === 'voice' || item.kind === 'audio' ? 'Audio (sin transcribir)' : 'Archivo'}</strong>
-              <span className="muted small"> por {item.channel === 'whatsapp' ? 'WhatsApp' : item.channel === 'telegram' ? 'Telegram' : item.channel}</span>
-            </span>
-            <Pill tone={item.status === 'STORED' ? 'ok' : 'warn'}>{item.status === 'STORED' ? 'Guardado' : 'No guardado'}</Pill>
-            <span className="why">
-              {item.analysis?.status === 'DONE' && (
-                <>
-                  {item.analysis.simulated ? 'Simulación' : `Análisis de IA (${item.analysis.model})`}: {item.analysis.description}{' '}
-                  <em>
-                    {item.analysis.relevant === true ? '(relevante para el reporte)'
-                      : item.analysis.relevant === false ? '(no parece relacionada con el agua)' : ''}
-                  </em>
-                </>
-              )}
-              {item.analysis?.status === 'ERROR' && `Análisis no disponible (${item.analysis.error}).`}
-              {item.kind === 'image' && item.status === 'STORED' && !item.analysis && 'Análisis en curso…'}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <p className="hint">El análisis es orientativo: no cambia el tipo, las horas ni el puntaje. Decide la persona coordinadora.</p>
-    </section>
-  )
-}
-
-function ExecutionDetail({ id, token, lookups, onViewTimeline }: {
-  id: string; token: string; lookups: Lookups; onViewTimeline: (incidentId: string) => void
+function ExecutionDetail({ id, token, lookups, view, onViewChange, onViewTimeline, onShowPlan }: {
+  id: string; token: string; lookups: Lookups; view: ReportView; onViewChange: (view: ReportView) => void
+  onViewTimeline: (incidentId: string) => void; onShowPlan: (id: string) => void
 }) {
   const client = useQueryClient()
   const query = useQuery({
@@ -204,17 +173,10 @@ function ExecutionDetail({ id, token, lookups, onViewTimeline }: {
     queryFn: () => api<Detail>(`/admin/executions/${id}`, {}, token),
     refetchInterval: q => polling(q.state.data?.status),
   })
-  const incidentId = query.data?.proposal?.incident_id
-  // The admin API has no report endpoint: the stated hours come from the incident timeline.
-  const timeline = useQuery({
-    queryKey: ['admin', 'incidents', incidentId, 'timeline'], enabled: !!incidentId,
-    queryFn: () => api<IncidentTimelineEvent[]>(`/admin/incidents/${incidentId}/timeline`, {}, token),
-  })
   const retry = useMutation({
     mutationFn: () => api(`/executions/${id}/retry`, { method: 'POST' }, token),
     onSuccess: () => client.invalidateQueries({ queryKey: ['admin'] }),
   })
-
   if (query.isPending) return <div className="panel" role="status" aria-label="Cargando reporte"><Skeleton lines={6} /></div>
   if (!query.data) return <ErrorMessage error={query.error} />
 
@@ -222,172 +184,76 @@ function ExecutionDetail({ id, token, lookups, onViewTimeline }: {
   const proposal = detail.proposal
   const priority = proposal?.priority
   const { incident, community, name } = placeOf(detail, lookups)
-  const reports = timeline.data?.filter(e => e.source === 'report') ?? []
-  const hours = reports.find(e => e.detail.report_id === detail.report_id)?.detail.hours_without_water as number | null | undefined
-  const unknown = priority ? Object.entries(priority.factors).filter(([, [a, b]]) => a !== b).map(([k]) => factorInfo[k]?.label ?? k) : []
+  const rows = priority ? priorityRows(priority) : []
+  const unknown = rows.filter(row => row.points[0] !== row.points[1])
+  const relevant = rows.filter(row => row.points[0] === row.points[1]).sort((a, b) => b.points[0] - a.points[0]).slice(0, 2)
+  const appliedScore = detail.review?.applied_at ? proposal?.final_score : null
 
   return (
     <article className="panel detail" aria-labelledby="detail-title">
       <header className="detail-head">
-        <div className="spread">
-          <span className="kicker">Reporte {detail.id.slice(0, 8)}</span>
-          <StatusBadge status={detail.status} />
-        </div>
-        <h2 id="detail-title">{name ?? (proposal ? 'Ubicación fuera de la vista' : 'Reporte sin propuesta todavía')}</h2>
-        <div className="row small muted">
-          {community && <span>Distrito de {community.district}</span>}
-          {incident && <Pill>{label(kindLabels, incident.kind)}</Pill>}
-          <span>Recibido {when(detail.created_at)}</span>
-        </div>
+        <div className="spread"><span className="kicker">Reporte {detail.report_id.slice(0, 8)}</span><StatusBadge status={detail.status} /></div>
+        <h2 id="detail-title">{name ?? 'Ubicación no disponible en este registro'}</h2>
+        <div className="row small muted">{community && <span>Distrito de {community.district}</span>}<span>Recibido {when(detail.created_at)}</span></div>
       </header>
-
+      <div className="segmented report-views" role="group" aria-label="Vista del reporte">
+        <button type="button" aria-pressed={view === 'operation'} onClick={() => onViewChange('operation')}>Vista operativa</button>
+        <button type="button" aria-pressed={view === 'audit'} onClick={() => onViewChange('audit')}><ClockCounterClockwiseIcon aria-hidden="true" /> Auditoría y trazabilidad</button>
+      </div>
       <ErrorMessage error={query.error} />
-
-      {priority?.immediate_review && (
-        <div className="critical" role="alert">
-          <SirenIcon aria-hidden="true" />
-          <div><strong>Institución crítica: revisar de inmediato.</strong>
-            <p className="small">El reporte afecta a un hospital, centro de salud, escuela o asilo según el texto o el catálogo.</p></div>
-        </div>
-      )}
-
-      {incident && (
-        <dl className="facts">
-          <div><dt>Tiempo sin agua indicado</dt><dd className="num">{hours === undefined ? (timeline.isPending ? 'Cargando…' : 'No disponible') : hours === null ? 'No indicado' : `${hours} h`}</dd></div>
-          <div><dt>Estado del incidente</dt><dd>{label(incidentStatusLabels, incident.status)}</dd></div>
-          <div><dt>Reportes en el incidente</dt><dd className="num">{timeline.data ? reports.length : '…'}</dd></div>
-          <div><dt>Población del sector</dt><dd className="num">{community?.population ? community.population.toLocaleString('es-PA') : 'Sin dato'}</dd></div>
-        </dl>
-      )}
-      {incident && (
-        <div className="stack-sm">
-          <h3 className="small muted">Resumen del incidente</h3>
-          <p className="quote">{incident.summary}</p>
-        </div>
-      )}
-
-      {priority && proposal ? (
-        <>
-          <PriorityRange priority={priority} finalScore={proposal.final_score} />
-          <div className="two-col">
-            <section className="stack-sm" aria-labelledby="factors-title">
-              <h3 id="factors-title">Cómo se calculó</h3>
-              <FactorList factors={priority.factors} />
-              <p className="hint">
-                {unknown.length ? `Sin confirmar: ${unknown.join(', ').toLowerCase()}.` : 'Todos los factores tienen datos confirmados.'} Los
-                puntos no son horas ni personas: cada factor aporta hasta su máximo y la suma llega a 100.
-              </p>
-            </section>
-            <section className="stack-sm" aria-labelledby="why-title">
-              <h3 id="why-title">Motivo de la propuesta</h3>
-              <p className="small">{proposal.explanation}</p>
-              <p className="hint">Texto generado {detail.is_simulated ? 'en modo simulado' : 'por IA'} a partir de los factores; la puntuación la calcula una regla fija.</p>
-              {priority.flags.length > 0 && (
-                <>
-                  <h4 className="small">Alertas sobre los datos</h4>
-                  <ul className="tags">{priority.flags.map(f => <li key={f}><Pill tone="warn">{label(flagLabels, f)}</Pill></li>)}</ul>
-                </>
-              )}
-            </section>
-          </div>
-        </>
-      ) : (
-        <p className="note"><InfoIcon aria-hidden="true" />
-          {detail.status === 'NEEDS_INFORMATION'
-            ? 'El reporte no trae información suficiente para calcular una prioridad. No hay decisión que tomar.'
-            : detail.status === 'ERROR' ? 'El análisis se interrumpió antes de proponer una prioridad.'
-            : 'El análisis sigue en curso. La propuesta aparecerá aquí automáticamente.'}
-        </p>
-      )}
-
-      {detail.association?.status === 'PENDING_REVIEW' && detail.status === 'WAITING_APPROVAL' && (
-        <p className="note warn"><WarningIcon aria-hidden="true" />
-          Posible duplicado: el sistema no está seguro de que este reporte sea el mismo incidente ya abierto. Confírmalo en tu decisión.
-        </p>
-      )}
-
-      {detail.status === 'WAITING_APPROVAL' && <ReviewPanel key={id} detail={detail} token={token} />}
-
-      {detail.status === 'APPROVED' && (
-        <p className="note ok"><InfoIcon aria-hidden="true" />
-          Prioridad aprobada. El incidente queda disponible para el plan de cisternas, donde se propone cisterna, horario y galones para tu revisión.
-        </p>
-      )}
-
-      {detail.status === 'ERROR' && (
-        <div className="note danger" role="alert" style={{ display: 'grid' }}>
-          <span>El procesamiento se interrumpió ({detail.error}). No se cambió de proveedor automáticamente.</span>
-          <button type="button" className="secondary" style={{ justifySelf: 'start' }} disabled={retry.isPending} onClick={() => retry.mutate()}>
-            <ArrowsClockwiseIcon aria-hidden="true" /> Reintentar análisis
-          </button>
-          <ErrorMessage error={retry.error} />
-        </div>
-      )}
-
-      {detail.review && (
-        <section className="record" aria-label="Decisión registrada">
-          <div className="spread">
-            <h3>Decisión registrada: {label(decisionLabels, detail.review.payload.decision)}</h3>
-            <Pill tone={detail.review.applied_at ? 'ok' : 'progress'}>{detail.review.applied_at ? 'Aplicada' : 'Pendiente de aplicar'}</Pill>
-          </div>
-          <p><strong>Razón:</strong> {detail.review.payload.reason}</p>
-          <p>Puntuación final: <strong>{proposal?.final_score ?? 'sin puntuación aprobada'}</strong>{proposal?.final_score != null && ' de 100'}</p>
-          <p className="hint">Registrada {when(detail.review.created_at)} con la credencial compartida de coordinación ({detail.review.actor}).
-            Aprobar la prioridad no despacha cisternas: eso depende del plan aprobado y de la flota.</p>
-        </section>
-      )}
-
-      {!!detail.evidence?.length && <Evidence items={detail.evidence} />}
-
-      <details className="tech">
-        <summary><CaretRightIcon className="chev" aria-hidden="true" /> Detalles técnicos y auditoría <span className="muted small">({detail.traces.length} eventos)</span></summary>
-        <div className="tech-body">
-          <dl className="ids">
-            <div><dt>Ejecución</dt><dd><code>{detail.id}</code></dd></div>
-            <div><dt>Reporte</dt><dd><code>{detail.report_id}</code></dd></div>
-            {proposal && <div><dt>Incidente</dt><dd><code>{proposal.incident_id}</code></dd></div>}
-            {community && <div><dt>Comunidad</dt><dd><code>{community.id}</code></dd></div>}
-            <div><dt>Proveedor</dt><dd>{detail.provider}{detail.is_simulated ? ' (simulado)' : ''}</dd></div>
-            {priority && <div><dt>Política</dt><dd>{priority.policy_version}, confianza {label(confidenceLabels, priority.confidence_level).toLowerCase()}</dd></div>}
-            {detail.association && <div><dt>Asociación</dt><dd>{label(associationLabels, detail.association.status)}, confianza {label(confidenceLabels, detail.association.confidence).toLowerCase()}. {detail.association.reasoning}</dd></div>}
+      <div hidden={view !== 'operation'} className="stack report-operation">
+        <section className="stack-sm" aria-label="Reporte ciudadano">
+          <h3>Problema reportado</h3>
+          <p className="quote">{detail.report?.description ?? 'Descripción original no disponible en este registro histórico. Consulta el resumen del incidente en Auditoría.'}</p>
+          <dl className="facts">
+            <div><dt>Duración declarada</dt><dd>{durationText(detail.report)}</dd></div>
+            <div><dt>Estado del incidente</dt><dd>{incident ? label(incidentStatusLabels, incident.status) : 'Sin estado disponible'}</dd></div>
           </dl>
-          {proposal && (
-            <button type="button" className="secondary small" style={{ justifySelf: 'start' }} onClick={() => onViewTimeline(proposal.incident_id)}>
-              <ClockCounterClockwiseIcon aria-hidden="true" /> Historial del incidente
-            </button>
-          )}
-          <ol className="trace" aria-label="Trazabilidad">
-            {detail.traces.map(t => (
-              <li key={t.id} className={t.category === 'audit' ? 'audit' : ''}>
-                <div className="trace-line">
-                  <span className="agent">{t.agent}</span>
-                  <span>{label(eventLabels, t.event)}</span>
-                  <code>{t.event}{t.tool ? ` · ${t.tool}` : ''}</code>
-                </div>
-                <time>{when(t.created_at)}{t.category === 'audit' ? ', auditoría' : ''}</time>
-                {Object.keys(t.detail).length > 0 && (
-                  <details className="inline">
-                    <summary>Ver datos</summary>
-                    <pre>{JSON.stringify(t.detail, null, 2)}</pre>
-                  </details>
-                )}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </details>
+          <p className="hint">Declaración ciudadana sin verificación independiente.</p>
+        </section>
+        {priority && proposal ? <>
+          <PriorityRange priority={priority} finalScore={appliedScore} />
+          <section className="decision-context stack-sm" aria-label="Información para decidir">
+            {priority.immediate_review && <p className="alert row"><SirenIcon aria-hidden="true" /><strong>Posible institución crítica: revisión inmediata.</strong></p>}
+            <p><strong>Falta confirmar: </strong>{unknown.length ? unknown.map(row => row.label.toLowerCase()).join(', ') : 'No hay factores sin valor. Los datos siguen sujetos a su procedencia.'}</p>
+            {priority.flags.includes('CONTRADICCION_DURACION') && <p>La duración escrita contradice la seleccionada; verifica el dato antes de decidir.</p>}
+            {detail.association?.status === 'PENDING_REVIEW' && <p>Posible duplicado: confirma si pertenece al mismo incidente o crea uno distinto.</p>}
+            <p><strong>Acción requerida: </strong>{detail.status === 'WAITING_APPROVAL' ? `Revisa los datos y aprueba${priority.score_min !== priority.score_max ? ' eligiendo una puntuación dentro del rango' : ''}, corrige o rechaza.`
+              : detail.review && !detail.review.applied_at ? detail.status === 'ERROR' ? 'Reintenta el procesamiento de la decisión registrada.' : 'Esperar a que el sistema aplique la decisión registrada.'
+              : detail.status === 'APPROVED' ? incident?.status === 'SCHEDULED' ? 'Consulta la asignación de cisterna en el plan aprobado. La entrega no está confirmada.' : 'Continúa en Cisternas para revisar un plan de distribución.'
+              : detail.status === 'REJECTED' ? 'Propuesta rechazada; consulta el motivo registrado.' : 'Consulta el estado del procesamiento.'}</p>
+          </section>
+          <details className="tech"><summary>¿Por qué se propone esta prioridad?</summary><div className="tech-body">
+            {priority.inputs ? <ul className="priority-reasons">{relevant.map(row => <li key={row.key}><strong>{row.label}:</strong> {row.value} → {scoreText(row.points[0], row.points[1])}. <span className="muted">{row.source}.</span></li>)}</ul>
+              : <p>La propuesta conserva los puntos por factor, pero no sus entradas originales. No se reconstruye su explicación con el catálogo actual.</p>}
+            {!!unknown.length && <p className="small">Los factores sin confirmar amplían el rango; no restan puntos.</p>}
+            <button type="button" className="ghost" onClick={() => onViewChange('audit')}>Ver factores, procedencia y fórmula en Auditoría <CaretRightIcon aria-hidden="true" /></button>
+          </div></details>
+        </> : <p className="note"><InfoIcon aria-hidden="true" />{detail.status === 'NEEDS_INFORMATION' ? 'Falta información para identificar el problema. No hay propuesta ni decisión que tomar.'
+          : detail.status === 'ERROR' ? 'El procesamiento se interrumpió antes de proponer una prioridad.' : 'Análisis en curso. La propuesta aparecerá automáticamente.'}</p>}
+        {detail.status === 'ERROR' && <div className="note danger stack-sm" role="alert">
+          <p>{detail.review?.applied_at ? 'La decisión está aplicada, pero el procesamiento posterior falló.' : detail.review ? 'Decisión registrada; su aplicación se interrumpió.' : 'El análisis se interrumpió. El reporte sigue guardado.'} Consulta el error y el nodo en Auditoría.</p>
+          <button type="button" className="secondary" disabled={retry.isPending} onClick={() => retry.mutate()}><ArrowsClockwiseIcon aria-hidden="true" /> Reintentar procesamiento</button>
+          <ErrorMessage error={retry.error} />
+        </div>}
+        {detail.status === 'WAITING_APPROVAL' && proposal && !detail.review && <ReviewPanel key={id} detail={detail} token={token} />}
+        <DecisionRecord detail={detail} />
+        {!!detail.evidence?.length && <details className="tech"><summary>Evidencia ciudadana ({detail.evidence.length})</summary><div className="tech-body"><Evidence items={detail.evidence} /></div></details>}
+      </div>
+      {view === 'audit' && <ReportAudit detail={detail} incident={incident} token={token} onViewTimeline={onViewTimeline} onShowPlan={onShowPlan} />}
     </article>
   )
 }
 
-export function ReportsPanel({ token, lookups, executions, details, page, setPage, filter, setFilter, selected, setSelected, onViewTimeline }: {
+export function ReportsPanel({ token, lookups, executions, details, page, setPage, filter, setFilter, selected, setSelected, view, onViewChange, onViewTimeline, onShowPlan }: {
   token: string; lookups: Lookups
   executions: { data?: Execution[]; isPending: boolean; error: Error | null }
   details: Record<string, Detail | undefined>
   page: number; setPage: (page: number) => void
   filter: ReportFilter; setFilter: (filter: ReportFilter) => void
   selected: string | null; setSelected: (id: string | null) => void
-  onViewTimeline: (incidentId: string) => void
+  view: ReportView; onViewChange: (view: ReportView) => void
+  onViewTimeline: (incidentId: string) => void; onShowPlan: (id: string) => void
 }) {
   const [search, setSearch] = useState('')
   const list = (executions.data ?? []).filter(e => matches(filter, e)
@@ -432,7 +298,7 @@ export function ReportsPanel({ token, lookups, executions, details, page, setPag
                   <StatusBadge status={e.status} />
                 </span>
                 <span className="item-meta">
-                  {priority && <span className="num"><strong>{detail?.proposal?.final_score != null ? `${detail.proposal.final_score} pts` : scoreText(priority.score_min, priority.score_max)}</strong></span>}
+                  {priority && <span className="num"><strong>{detail?.review?.applied_at && detail.proposal?.final_score != null ? `${detail.proposal.final_score} pts` : scoreText(priority.score_min, priority.score_max)}</strong></span>}
                   {priority?.immediate_review && <span className="alert"><SirenIcon aria-hidden="true" /> Institución crítica</span>}
                   {priority?.flags.includes('DATOS_INCOMPLETOS') && <span>Información incompleta</span>}
                   <span>{when(e.created_at)}</span>
@@ -456,7 +322,7 @@ export function ReportsPanel({ token, lookups, executions, details, page, setPag
           </button>
         )}
         {selected ? (
-          <ExecutionDetail key={selected} id={selected} token={token} lookups={lookups} onViewTimeline={onViewTimeline} />
+          <ExecutionDetail key={selected} id={selected} token={token} lookups={lookups} view={view} onViewChange={onViewChange} onViewTimeline={onViewTimeline} onShowPlan={onShowPlan} />
         ) : (
           <div className="panel">
             <EmptyState icon={<CaretRightIcon />} title="Elige un reporte de la lista">

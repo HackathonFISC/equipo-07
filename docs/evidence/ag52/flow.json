@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-17T16:08:29.589Z",
+  "provider": "mock-deterministic",
+  "real_nvidia": false,
+  "report_id": "566285ba-b34a-4849-8a20-a48ba40196f4",
+  "duration_bucket": "LT_12H",
+  "hours_without_water": null,
+  "proposed_range": [
+    17,
+    67
+  ],
+  "duration_points": [
+    9,
+    9
+  ],
+  "approved_score": 42,
+  "review_recorded_and_applied": true,
+  "decision_applied_events": 1,
+  "plan_id": "99082f4b-1a58-4d27-9c8e-f1e6c6c3e6c0",
+  "plan_status": "APPROVED",
+  "routes": 3,
+  "unserved": 1,
+  "endpoints_checked": [
+    "/admin/executions?offset=0&limit=25",
+    "/admin/incidents?offset=0&limit=100",
+    "/admin/fleet",
+    "/admin/plans?limit=20",
+    "/admin/map/boundaries",
+    "/admin/map/activity?days=30&status=SCHEDULED",
+    "/admin/map/plans/99082f4b-1a58-4d27-9c8e-f1e6c6c3e6c0",
+    "/admin/incidents/6250b842-c731-491b-9d71-7e05de782e1b/timeline"
+  ],
+  "mobile_tabs": [
+    "Resumen",
+    "Reportes3",
+    "Auditoría",
+    "Incidentes",
+    "Cisternas",
+    "Mapa"
+  ],
+  "browser_errors": [],
+  "http_errors": [],
+  "viewport_desktop": "1440x1100",
+  "viewport_mobile": "390x844",
+  "reduced_motion": true,
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "temporary_database": true
+}

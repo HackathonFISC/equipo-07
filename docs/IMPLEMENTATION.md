@@ -2,6 +2,30 @@
 
 Complementa la especificación aprobada en `ARCHITECTURE.md`; no la reemplaza.
 
+## Integración del frontend · 2026-10-17 (AG-52)
+
+La adopción pendiente de AG-41 descrita abajo está implementada: CitizenPage envía los cuatro
+`duration_bucket` o null, sin horas representativas (también los ejemplos mock). `Detail.report`
+resuelve descripción, duración y comunidad antes de tener propuesta; `Priority.inputs` alimenta
+los datos usados por el motor, sin sustituirlos por el catálogo actual. Los campos nuevos son
+opcionales en TS para históricos. No cambian Pydantic, OpenAPI, migraciones ni contratos HTTP.
+
+Coordinación separa Vista operativa y Auditoría, accesible como pestaña principal y desde cada
+reporte. Conserva formulario al alternar estas dos vistas. Rango sin promedio preseleccionado;
+APPROVE exige elegir el entero admitido, CORRECT y REJECT conservan sus cuerpos y confirmación.
+Una revisión registrada no aparece aplicada hasta que consta `applied_at`; error de procesamiento
+y aplicación se muestran por separado. No se modificaron compuertas HITL ni procesos de agentes.
+
+La auditoría muestra nodos/eventos persistidos, entradas originales/normalizadas, snapshot,
+fórmula de la versión conocida, propuestas, flags, asociación, evidencia, revisión y enlace a
+planes que constan en el timeline. JSON bajo demanda, sin exportar token ni hash del reporte.
+No consulta ni expone razonamiento privado. Las explicaciones históricas sin inputs llevan
+advertencia y no alimentan el resumen operativo. No se inventan nodos/transiciones ausentes.
+
+`API_PROXY_TARGET` configura el proxy Vite; por defecto coincide con el README (8000).
+Producción conserva HTTP del mismo origen `/api`. Mapa y PlanPanel se reutilizan sin cambios.
+Detalle UX, límites del timeline y resultados: [UI](UI.md), [evidencia AG-52](evidence/ag52/README.md).
+
 ## Auditoría de integridad · 2026-10-17 (AG-41)
 
 Alcance: backend, contratos, migración, pruebas y evals en `audit-langgraph`. Sin cambios al

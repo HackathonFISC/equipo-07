@@ -10,19 +10,38 @@ export interface Receipt {
 export interface Execution {
   id: string; report_id: string; status: Status; provider: string; is_simulated: boolean
   created_at: string; error: string | null
+  attempts?: number; updated_at?: string
+}
+export type DurationBucket = 'LT_12H' | 'H12_24' | 'H24_48' | 'GE_48H'
+export interface ReportInput {
+  community_id: string; description: string
+  hours_without_water?: number | null; duration_bucket?: DurationBucket | null
+}
+export interface NormalizedReport {
+  summary: string; kind: 'OUTAGE' | 'LOW_PRESSURE' | 'LEAK' | 'UNKNOWN'
+  hours_without_water?: number | null; duration_bucket?: DurationBucket | null
+  critical_institution: boolean | null; flags: string[]
+}
+export interface PriorityInputs {
+  community_id: string; hours_without_water: number | null; duration_bucket: DurationBucket | null
+  duration_source: 'CITIZEN' | 'TEXT' | 'UNKNOWN' | 'CONFLICT'
+  critical_institution: boolean | null; population: number | null; vulnerability: number | null
+  is_synthetic: boolean
 }
 export interface Priority {
   score_min: number; score_max: number; confidence_level: string
   factors: Record<string, [number, number]>; flags: string[]
   policy_version: string; immediate_review: boolean
+  inputs?: PriorityInputs | null
 }
 export interface Review {
   decision: 'APPROVE' | 'REJECT' | 'CORRECT'; reason: string
   approved_score?: number; corrected_score?: number; association?: 'CONFIRM' | 'NEW'
 }
 export interface Detail extends Execution {
+  report?: (ReportInput & { id: string; normalized: NormalizedReport | null; created_at: string }) | null
   proposal: null | { incident_id: string; priority: Priority; explanation: string; final_score: number | null }
-  association: null | { status: string; reasoning: string; confidence: string }
+  association: null | { status: string; reasoning: string; confidence: string; incident_id?: string }
   review: null | { payload: Review; created_at: string; applied_at: string | null; actor: string }
   traces: { id: number; agent: string; tool: string | null; event: string; category: string
     detail: Record<string, unknown>; created_at: string }[]

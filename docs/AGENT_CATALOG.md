@@ -23,6 +23,13 @@ persiste: `is_simulated` y `provider`. No se permite convertir una ejecución de
 `human_review` es un nodo sin mutaciones antes de `interrupt`, no un agente. `finalize` aplica la
 revisión previamente autorizada. `worker` controla cola/errores/recuperación, no interpretación.
 
+AG-52 presenta estas responsabilidades en la pestaña **Auditoría** de Coordinación. El recorrido
+muestra solo nodos con trazas persistidas; el estado WAITING_APPROVAL identifica la pausa humana,
+sin inventar eventos de human_review. Se separan declaración, normalización, entradas efectivas,
+puntos, propuesta, revisión registrada y aplicación. Proveedor/modelo se muestra solo como consta
+en execution.provider o en el análisis de evidencia. Historial de incidente conecta planes y avisos
+registrados. No se añadieron agentes, herramientas ni llamadas al modelo. Ver UI.md y evidence/ag52.
+
 ## Añadir un agente
 
 1. Registrar requisito y tarea con entrada, salida, datos de origen y casos negativos.

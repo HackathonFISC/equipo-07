@@ -138,6 +138,18 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
+El proxy de desarrollo usa `http://127.0.0.1:8000`, igual que el arranque anterior. Si FastAPI
+escucha en otro puerto, configura el destino antes de iniciar Vite, por ejemplo:
+
+```powershell
+$env:API_PROXY_TARGET = 'http://127.0.0.1:8001'
+npm.cmd run dev
+```
+
+También puedes copiar `frontend/.env.example` a `frontend/.env.local` y ajustar
+`API_PROXY_TARGET`. Reinicia Vite tras cambiarlo. El cliente conserva `/api` en el mismo origen;
+en producción el servidor debe reenviar `/api` a FastAPI. El destino del proxy no contiene tokens.
+
 Opcional, el bot de Telegram (requiere `TELEGRAM_BOT_TOKEN` en `.env`):
 
 ```powershell
@@ -153,6 +165,7 @@ Abre `http://localhost:5173`; API y OpenAPI en `http://127.0.0.1:8000/docs`. En 
 | Variable | Uso |
 |---|---|
 | `LLM_PROVIDER` | `mock` (simulación explícita) o `nvidia` |
+| `API_PROXY_TARGET` | Destino de FastAPI para Vite en desarrollo; se define al iniciar frontend o en `frontend/.env.local` |
 | `COORDINATOR_TOKEN` | Token compartido de mínimo 16 caracteres; sin configurar, la administración falla cerrada |
 | `DATABASE_URL`, `CHECKPOINT_PATH` | DB de negocio y archivo de checkpoints; mantenerlos estables entre reinicios |
 | `CORS_ORIGINS` | Lista JSON explícita de orígenes permitidos |
@@ -202,18 +215,19 @@ Guion completo, recuperación y reinicio seguro de datos: [DEMO](docs/DEMO.md).
 
 Cifras de la última ejecución local (`evals/results.json`, `evals/impact.json`):
 
-- **Backend:** 191 pruebas pytest, cobertura de líneas 87 % (auditoría AG-41).
+- **Backend:** 196 pruebas pytest, cobertura de líneas 88 % (integración AG-52).
 - **Evals:** 64/64 escenarios de [cases.json](evals/cases.json), en siete grupos que se solapan:
   consolidación, guardrails, prioridad, decisión humana, planificador, robustez e integridad. Miden cumplimiento
   de escenarios con el mock, no la calidad de un modelo real.
 - **Impacto:** `scripts/impact_report.py` corre el mismo solver con tres órdenes sobre F2-01. La
   mediana de la primera entrega a las instituciones críticas baja de 292 min (por volumen y por
   llegada) a 143 min con AguaIA; la cobertura crítica es 100 % en las tres.
-- **Frontend:** 11 pruebas Vitest.
+- **Frontend:** 30 pruebas Vitest (integración AG-52).
 
-La auditoría AG-41 ejecutó únicamente backend/evals; las cifras del frontend e impacto
-corresponden a la verificación anterior. Contrato de intervalos, hallazgos y cambios pendientes
-del frontend en [IMPLEMENTATION](docs/IMPLEMENTATION.md). Antes de arrancar sobre una base
+AG-52 verificó backend, frontend y el ciclo real con HTTP, LangGraph y worker en modo mock,
+con almacenamiento aislado: [evidencia y capturas](docs/evidence/ag52/README.md). Las cifras de
+evals e impacto corresponden a sus ejecuciones anteriores. Contrato de intervalos y hallazgos
+en [IMPLEMENTATION](docs/IMPLEMENTATION.md). Antes de arrancar sobre una base
 existente, aplicar la migración nueva con `uv run alembic upgrade head` desde backend.
 
 ```powershell

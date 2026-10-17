@@ -13,7 +13,7 @@ import { PlanPanel } from './PlanPanel'
 import { placeName, type Lookups } from '../lookups'
 import { ReportsPanel, type ReportFilter } from './ReportsPanel'
 
-type Tab = 'overview' | 'reports' | 'incidents' | 'plan' | 'map'
+type Tab = 'overview' | 'reports' | 'audit' | 'incidents' | 'plan' | 'map'
 
 const sourceLabels: Record<string, string> = {
   report: 'Reporte', trace: 'Sistema', review: 'Coordinación', plan: 'Plan de cisternas', notification: 'Aviso',
@@ -273,8 +273,8 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
     refetchInterval: 5000,
   })
   // Lookup only: the admin API returns incident and community ids, the UI shows their names.
-  // shortcut: only the 100 most recent incidents resolve to a place name (API max limit); older
-  // ones show "Ubicación no disponible", see docs/UI.md.
+  // shortcut: incident status resolves only within the 100 most recent incidents (API max limit).
+  // Report location resolves directly from detail.report; see docs/UI.md.
   const incidents = useQuery({
     queryKey: ['admin', 'incidents', 'lookup'],
     queryFn: () => api<Incident[]>('/admin/incidents?offset=0&limit=100', {}, token),
@@ -329,14 +329,16 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
   const tabs: [Tab, string, number][] = [
     ['overview', 'Resumen', 0],
     ['reports', 'Reportes', pending],
+    ['audit', 'Auditoría', 0],
     ['incidents', 'Incidentes', 0],
     ['plan', 'Cisternas', plan.data?.status === 'PROPOSED' ? 1 : 0],
     ['map', 'Mapa', 0],
   ]
   const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!['ArrowRight', 'ArrowLeft'].includes(e.key)) return
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) return
+    e.preventDefault()
     const index = tabs.findIndex(([value]) => value === tab)
-    const next = tabs[(index + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length][0]
+    const next = tabs[e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (index + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length][0]
     setTab(next)
     setMapPlan(null)
     document.getElementById(`tab-${next}`)?.focus()
@@ -359,7 +361,7 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
         ))}
       </div>
 
-      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="tab-panel" key={tab}>
+      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="tab-panel">
         {tab === 'overview' && (
           <>
             <ErrorMessage error={recent.error} />
@@ -367,10 +369,12 @@ export function CoordinationPage({ token, onUnauthorized }: { token: string; onU
               lookups={lookups} go={go} />
           </>
         )}
-        {tab === 'reports' && (
+        {(tab === 'reports' || tab === 'audit') && (
           <ReportsPanel token={token} lookups={lookups} executions={executions} details={details}
             page={page} setPage={p => { setPage(p) }} filter={filter} setFilter={setFilter}
-            selected={selected} setSelected={setSelected} onViewTimeline={setTimelineIncidentId} />
+            selected={selected} setSelected={setSelected} view={tab === 'audit' ? 'audit' : 'operation'}
+            onViewChange={view => setTab(view === 'audit' ? 'audit' : 'reports')}
+            onViewTimeline={setTimelineIncidentId} onShowPlan={id => { setMapPlan(id); setTab('map') }} />
         )}
         {tab === 'incidents' && <IncidentsPanel token={token} lookups={lookups} onViewTimeline={setTimelineIncidentId} />}
         {tab === 'plan' && <PlanPanel token={token} lookups={lookups} onShowMap={id => { setMapPlan(id); setTab('map') }} />}

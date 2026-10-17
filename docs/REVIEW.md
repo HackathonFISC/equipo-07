@@ -1,5 +1,56 @@
 # Ponytail review — 2026-10-16
 
+## Integración AG-52 · 2026-10-17
+
+Revisión asistida local del diff y consumidores conectados; no es aprobación humana independiente.
+CitizenPage conserva intervalos, ReportsPanel consume report/inputs y separa operación de una
+Auditoría principal accesible. Se mantienen decisiones, mapa, flota, planes y evidencia.
+Se revisaron contratos Pydantic reales, OpenAPI servido, fixtures, llamadas y pruebas.
+Sin cambios al servidor ni a políticas, agentes o solver; sin nueva dependencia.
+
+Correcciones verificadas durante integración:
+
+1. No convertir 6/18/36/48 representativos en horas; también adaptar los ejemplos mock.
+2. No consultar timeline para datos originales ni explicar propuestas con el catálogo actual.
+3. No preseleccionar el promedio de un rango; validar entero dentro del intervalo explícito.
+4. No confundir revisión recibida con aplicada; conservar aplicación aunque falle después el grafo.
+5. No certificar datos por tener confianza HIGH; procedencias y datos sintéticos siguen visibles.
+6. No presentar explicaciones históricas como hechos; conservarlas completas con advertencia.
+7. Preservar edición al alternar Operación/Auditoría; mantener historial y relación con planes.
+8. Corregir desbordamiento de cabecera móvil observado con Chrome; seis pestañas visibles.
+
+Validación: 30 Vitest, lint/typecheck/build; 196 pytest (88 %), Ruff/formato/mypy; Alembic único
+head y upgrade/check en aislamiento. Flujo HTTP real con React, FastAPI, LangGraph y worker;
+revisión pendiente/aplicada, propuesta y aprobación de plan, mapa, aviso público. Chrome claro,
+oscuro, movimiento reducido y móvil; sin errores JS/HTTP en el recorrido final. Mock explícito.
+Evidencia y limitaciones en [AG-52](evidence/ag52/README.md) y [UI](UI.md).
+
+### PR preparado localmente · AG-52 (no publicado)
+
+**Título:** fix: integrar intervalos y separar operación de auditoría en Coordinación.
+
+**Problema y comportamiento resultante:** el formulario enviaba horas representativas y el detalle
+buscaba datos originales en otro endpoint. Ahora conserva el intervalo, muestra report/inputs con
+procedencia y mantiene una vista operativa breve junto a Auditoría visible con trazabilidad
+disponible. Revisiones registradas y aplicadas son estados distintos; un rango exige elección humana.
+
+**Requisitos:** RF34, RF40 y RNF11; AG-52 local, sin Issue remoto.
+
+**Validación:** comandos y resultados anteriores; negativos de rango vacío/fuera de límites,
+contrato incompatible 422, acceso 401, históricos sin inputs, fallo del timeline, corrección/rechazo
+y formulario conservado entre vistas. Mapa/planificador conservados y comprobados.
+
+**Contratos y datos:** adopción TS de campos aditivos existentes, sin migración nueva ni cambios de
+Pydantic/OpenAPI; compatibles registros antiguos sin report/inputs. Nuevo API_PROXY_TARGET de Vite;
+8000 predeterminado documentado, prueba con puerto dinámico. Token solo en memoria React.
+
+**Checklist:** alcance y diff revisados; pruebas, docs, catálogo y bitácora actualizados; sin secretos
+ni datos personales en evidencia, decisiones sintéticas identificadas. Revisión por otro integrante
+pendiente. Sin commits, ramas, pushes, merges ni acciones remotas.
+
+No comprobado: NVIDIA real, Linux/PostgreSQL, carga sostenida ni prueba con coordinadores reales.
+El timeline conserva sus límites de 20 planes/50 avisos y el estado del incidente el lookup de 100.
+
 ## Ponytail Review · AG-41 · 2026-10-17
 
 What this change does: preserves declared duration intervals, stores the inputs behind each

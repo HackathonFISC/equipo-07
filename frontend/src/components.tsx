@@ -63,10 +63,10 @@ export function PriorityRange({ priority, finalScore }: { priority: Priority; fi
             {fixed ? `${finalScore} pts` : scoreText(min, max)}
             <span> de 100</span>
           </strong>
-          {fixed && min !== max && <span className="range-note">Propuesta original: {scoreText(min, max)}</span>}
+          {fixed && <span className="range-note">Propuesta original: {scoreText(min, max)}</span>}
         </div>
         <span className={`badge tone-${priority.confidence_level === 'HIGH' ? 'ok' : priority.confidence_level === 'MEDIUM' ? 'warn' : 'danger'}`}>
-          Confianza {(confidenceLabels[priority.confidence_level] ?? priority.confidence_level).toLowerCase()}
+          Datos: confianza {(confidenceLabels[priority.confidence_level] ?? priority.confidence_level).toLowerCase()}
         </span>
       </div>
       <div className="range-track" aria-hidden="true">

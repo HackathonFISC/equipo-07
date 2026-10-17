@@ -9,7 +9,9 @@ Evidencia y límites: `IMPLEMENTATION.md`, `REVIEW.md`, pruebas de integridad y 
 
 | ID | Prioridad | Criterio de aceptación | Estado | Evidencia / requisito oficial |
 |---|---|---|---|---|
-| RF34 | P0 | Intervalos ciudadanos durables sin convertirlos en horas exactas; null no significa cero; compatibilidad con claves existentes | Implementado en backend; adopción UI pendiente | duration_bucket, migración e7a4c2d9b610; E55–58, E60–63 |
+| RF40 | P0 | Frontend conserva duration_bucket y lee report e inputs; separa declaración, normalización, catálogo, puntos y decisión aplicada; históricos sin procedencia no se reconstruyen | Implementado local (AG-52) | Tipos/fixtures TS, 30 Vitest y flujo HTTP aislado; evidence/ag52 |
+| RNF11 | P0 | Coordinación separa operación de Auditoría visible: cronología real, nodos, fórmula, datos originales/normalizados, asociaciones, evidencia, revisiones y planes; JSON bajo demanda, móvil y errores visibles; proxy configurable | Implementado local (AG-52) | UI.md y evidence/ag52; prueba con usuarios pendiente |
+| RF34 | P0 | Intervalos ciudadanos durables sin convertirlos en horas exactas; null no significa cero; compatibilidad con claves existentes | Implementado en backend y UI | duration_bucket, migración e7a4c2d9b610; E55–58, E60–63; Vitest y AG-52 |
 | RF35 | P0 | Explicaciones deterministas distinguen habitantes, horas, índices, puntos y desconocidos; instantánea reproducible por propuesta | Implementado para propuestas nuevas | priority.inputs, explain_priority; E59, E64, test_agent_integrity |
 | RNF10 | P0 | Proveedor inválido falla cerrado; replay, deduplicación y revisión conservan efectos/estado programado; sin aprobar automáticamente | Implementado | test_provider, test_resilience, test_agent_integrity; REVIEW.md |
 | RF01 | P0 | Validar, persistir y aceptar reporte con 202 sin ejecutar grafo | Implementado | API + test_process_e2e; herramienta real |

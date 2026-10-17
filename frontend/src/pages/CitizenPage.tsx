@@ -3,30 +3,26 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { CaretRightIcon, CheckIcon, CopyIcon, InfoIcon, TruckIcon, WarningIcon } from '@phosphor-icons/react'
 import { api, polling, publicStatusPolling } from '../api'
 import { ErrorMessage, ProcessStepper, StatusBadge } from '../components'
-import type { Community, PublicReportStatus, Receipt, Status } from '../types'
+import { durationLabels } from '../labels'
+import type { Community, DurationBucket, PublicReportStatus, Receipt, ReportInput, Status } from '../types'
 
-// Cada opción cae dentro de un tramo de domain.py (<12, 12–24, 24–48, ≥48 h),
-// así la prioridad es la misma que si la persona escribiera las horas exactas.
 const durationOptions = [
-  { value: '6', label: 'Menos de medio día' },
-  { value: '18', label: 'Entre medio día y 1 día' },
-  { value: '36', label: 'Entre 1 y 2 días' },
-  { value: '48', label: '2 días o más' },
+  ...Object.entries(durationLabels).map(([value, label]) => ({ value: value as DurationBucket, label })),
   { value: '', label: 'No lo sé' },
 ]
 
 const demoExamples = [
-  { community: 'crit-hosp-nicolas-solano', hours: '24', label: 'Hospital Nicolás A. Solano',
+  { community: 'crit-hosp-nicolas-solano', duration: 'H24_48', label: 'Hospital Nicolás A. Solano',
     description: 'Emergencia por falta de agua potable en el Hospital Nicolás A. Solano; los tanques de reserva soterrados están por agotarse.' },
-  { community: 'ref-loma-burunga', hours: '48', label: 'Loma de Burunga (parte alta)',
+  { community: 'ref-loma-burunga', duration: 'GE_48H', label: 'Loma de Burunga (parte alta)',
     description: 'Llevamos más de 48 horas sin agua en la Loma de Burunga, la presión no sube a las partes altas.' },
-  { community: 'crit-esc-guillermo-andreve', hours: '36', label: 'Escuela Guillermo Andreve',
+  { community: 'crit-esc-guillermo-andreve', duration: 'H24_48', label: 'Escuela Guillermo Andreve',
     description: 'Falta de agua en la Escuela Guillermo Andreve afectando el comedor y los servicios higiénicos.' },
-  { community: 'crit-cs-nuevo-chorrillo', hours: '24', label: 'Centro de Salud Nuevo Chorrillo',
+  { community: 'crit-cs-nuevo-chorrillo', duration: 'H24_48', label: 'Centro de Salud Nuevo Chorrillo',
     description: 'El centro de salud de Nuevo Chorrillo está sin suministro de agua potable desde hace 24 horas.' },
-  { community: 'ref-rey-vista-alegre', hours: '24', label: 'Corte en Vista Alegre',
+  { community: 'ref-rey-vista-alegre', duration: 'H24_48', label: 'Corte en Vista Alegre',
     description: 'Llevamos más de 24 horas sin agua potable en Vista Alegre, no sale ni una gota de las plumas.' },
-  { community: 'ref-parque-feuillet', hours: '6', label: 'Fuga en Parque Feuillet',
+  { community: 'ref-parque-feuillet', duration: 'LT_12H', label: 'Fuga en Parque Feuillet',
     description: 'Fuga grande de agua potable por rotura de tubería principal en la calle central cerca del parque.' },
 ]
 
@@ -56,7 +52,7 @@ export function CitizenPage() {
   const [district, setDistrict] = useState('')
   const [community, setCommunity] = useState('')
   const [description, setDescription] = useState('')
-  const [hours, setHours] = useState('')
+  const [duration, setDuration] = useState('')
   const [requestId, setRequestId] = useState(() => getUUID())
   const [receipt, setReceipt] = useState<Receipt | null>(null)
   const [lookupCode, setLookupCode] = useState('')
@@ -125,7 +121,7 @@ export function CitizenPage() {
     setCopyState('idle')
     if (!keepText) {
       setDescription('')
-      setHours('')
+      setDuration('')
     }
     submission.reset()
   }
@@ -137,7 +133,7 @@ export function CitizenPage() {
       setCommunity(match.id)
     }
     setDescription(example.description)
-    setHours(example.hours)
+    setDuration(example.duration)
   }
 
   const copyReportId = async (reportId: string) => {
@@ -149,7 +145,7 @@ export function CitizenPage() {
     }
   }
 
-  const durationLabel = durationOptions.find(o => o.value === hours)?.label
+  const durationLabel = durationOptions.find(o => o.value === duration)?.label
   const descriptionReady = description.trim().length >= 8
 
   return (
@@ -229,8 +225,8 @@ export function CitizenPage() {
                 const body = submittedBody || JSON.stringify({
                   community_id: community,
                   description: description.trim(),
-                  hours_without_water: hours === '' ? null : Number(hours),
-                })
+                  duration_bucket: duration === '' ? null : duration as DurationBucket,
+                } satisfies ReportInput)
                 setSubmittedBody(body)
                 submission.mutate(body)
               }}
@@ -302,12 +298,13 @@ export function CitizenPage() {
                     <div className="choices cols">
                       {durationOptions.map(option => (
                         <label key={option.label} className="choice">
-                          <input type="radio" name="hours" value={option.value} checked={hours === option.value}
-                            onChange={() => setHours(option.value)} />
+                          <input type="radio" name="duration" value={option.value} checked={duration === option.value}
+                            onChange={() => setDuration(option.value)} />
                           {option.label}
                         </label>
                       ))}
                     </div>
+                    <p className="hint">Medio día son 12 horas. Si ya cumpliste 1 día (24 h) o 2 días (48 h), elige el intervalo que empieza ahí.</p>
                   </fieldset>
                 </div>
               </div>

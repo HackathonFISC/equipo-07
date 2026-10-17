@@ -8,8 +8,9 @@ export interface Lookups {
 
 export function placeOf(detail: Detail | undefined, lookups: Lookups) {
   const incident = detail?.proposal ? lookups.incident(detail.proposal.incident_id) : undefined
-  const community = incident ? lookups.community(incident.community_id) : undefined
-  return { incident, community, name: community?.name ?? incident?.community_id }
+  const communityId = detail?.report?.community_id ?? detail?.proposal?.priority.inputs?.community_id ?? incident?.community_id
+  const community = communityId ? lookups.community(communityId) : undefined
+  return { incident, community, name: community?.name ?? communityId }
 }
 
 export function placeName(detail: Detail | undefined, lookups: Lookups) {
