@@ -1,5 +1,7 @@
+import json
 import secrets
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
@@ -10,17 +12,28 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 
 from app.config import Settings
-from app.contracts import ExecutionReceipt, ReportInput, ReviewInput
+from app.contracts import (
+    ExecutionReceipt,
+    PlanRequest,
+    PlanReviewInput,
+    ReportInput,
+    ReviewInput,
+)
 from app.db import Database
-from app.models import Community, Execution, Incident
+from app.models import Community, DistributionPlan, Execution, Incident
 from app.services import (
     Conflict,
+    Invalid,
     Missing,
     enqueue_review,
     execution_detail,
+    fleet_catalog,
+    latest_plan,
     rate_limit,
     record_dict,
+    request_plan,
     retry_execution,
+    review_plan,
     submit_report,
 )
 
@@ -63,6 +76,10 @@ def create_app(settings: Settings | None = None):
     async def conflict_handler(request, exc):
         return JSONResponse({"detail": str(exc)}, status_code=409)
 
+    @app.exception_handler(Invalid)
+    async def invalid_handler(request, exc):
+        return JSONResponse({"detail": str(exc)}, status_code=422)
+
     @app.exception_handler(Missing)
     async def missing_handler(request, exc):
         return JSONResponse({"detail": str(exc)}, status_code=404)
@@ -101,6 +118,37 @@ def create_app(settings: Settings | None = None):
                 record_dict(c)
                 for c in (await session.scalars(select(Community).order_by(Community.name))).all()
             ]
+
+    @app.get("/api/geo/locations")
+    def geo_locations():
+        geojson_path = Path(__file__).resolve().parents[2] / "data/panama_oeste_locations.geojson"
+        if not geojson_path.exists():
+            raise HTTPException(404, "Capa GeoJSON no encontrada")
+        return json.loads(geojson_path.read_text(encoding="utf-8"))
+
+    @app.get("/api/admin/fleet", dependencies=protected)
+    def fleet():
+        return fleet_catalog()
+
+    @app.post("/api/admin/plans", dependencies=protected, status_code=202)
+    async def create_plan(body: PlanRequest):
+        return await request_plan(db, body)
+
+    @app.get("/api/admin/plans/latest", dependencies=protected)
+    async def current_plan():
+        return await latest_plan(db)
+
+    @app.get("/api/admin/plans/{plan_id}", dependencies=protected)
+    async def plan_detail(plan_id: UUID):
+        async with db.sessions() as session:
+            plan = await session.get(DistributionPlan, str(plan_id))
+            if not plan:
+                raise Missing("Plan no encontrado")
+            return record_dict(plan)
+
+    @app.post("/api/admin/plans/{plan_id}/review", dependencies=protected)
+    async def plan_review(plan_id: UUID, body: PlanReviewInput):
+        return await review_plan(db, str(plan_id), body)
 
     @app.post("/api/reports", status_code=202, response_model=ExecutionReceipt)
     async def reports(

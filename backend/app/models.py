@@ -115,3 +115,16 @@ class RateLimit(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     window: Mapped[int] = mapped_column(Integer, index=True)
     count: Mapped[int] = mapped_column(Integer)
+
+
+class DistributionPlan(Base):
+    __tablename__ = "distribution_plans"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    status: Mapped[str] = mapped_column(String(24), default="QUEUED", index=True)
+    request: Mapped[dict] = mapped_column(JSON)
+    result: Mapped[dict | None] = mapped_column(JSON)
+    review: Mapped[dict | None] = mapped_column(JSON)
+    error: Mapped[str | None] = mapped_column(String(120))
+    events: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)

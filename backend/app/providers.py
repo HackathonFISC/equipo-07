@@ -96,11 +96,28 @@ class MockLLMProvider:
         )
 
     async def explain_priority_proposal(self, incident, priority):
+        factors = priority.get("factors", {})
+        immediate = priority.get("immediate_review", False)
+        prefix = (
+            "🚨 ALERTA CRÍTICA: Institución vital de salud o educación involucrada. "
+            if immediate
+            else ""
+        )
+        hours_pts = factors.get("hours", [0, 0])[0]
+        crit_pts = factors.get("critical", [0, 0])[0]
+        vuln_pts = factors.get("vulnerability", [0, 0])[0]
+        pop_pts = factors.get("population", [0, 0])[0]
+        score_range = f"{priority['score_min']}–{priority['score_max']}/100 pts"
+        breakdown = (
+            f"Desglose: {hours_pts} pts por duración, {crit_pts} pts por criticidad institucional, "
+            f"{vuln_pts} pts por vulnerabilidad social, {pop_pts} pts por población del sector"
+        )
+        confidence = f"Nivel de confianza en los datos: {priority.get('confidence_level', 'N/D')}."
+        action = "Requiere supervisión y autorización del coordinador para programar asignaciones."
         return CoordinationProposalSchema(
             explanation=(
-                f"Simulación: prioridad {priority['score_min']}–{priority['score_max']}/100. "
-                "Revisar los factores determinísticos y la información faltante antes de decidir. "
-                "Esta propuesta no despacha recursos."
+                f"{prefix}Evaluación determinística: prioridad calculada en rango {score_range} "
+                f"({breakdown}). {confidence} {action}"
             )
         )
 
@@ -151,24 +168,37 @@ class NvidiaLLMProvider:
 
     async def extract_report(self, text):
         return await self.structured(
-            "Extrae tipo y horas explícitas; ausentes=null, desconocido=UNKNOWN. "
-            "No infieras población ni ubicación. critical_institution solo con evidencia explícita",
+            "Actúa como analista de ingesta de incidentes de agua en Panamá Oeste. "
+            "Extrae el tipo de problema (OUTAGE corte/falta de agua, LEAK roturas/fugas, "
+            "LOW_PRESSURE baja presión, UNKNOWN si no está claro) y horas sin suministro. "
+            "Si no se indican horas, asigna null. Identifica instituciones críticas "
+            "(hospitales, policlínicas, escuelas, asilos) solo con evidencia textual explícita. "
+            "No asumas ni infieras ubicación geográfica ni población.",
             {"text": text},
             NormalizedReportSchema,
         )
 
     async def evaluate_duplicate(self, report, candidates):
         return await self.structured(
-            "Compara incidentes. HIGH solo evidencia clara; ambigüedad MEDIUM; sin match LOW. "
-            "matched_incident_id debe pertenecer a candidatos o ser null con LOW",
+            "Actúa como verificador de deduplicación de incidentes de agua en Panamá Oeste. "
+            "Compara el reporte entrante contra incidentes candidatos abiertos en el sector. "
+            "Asigna match_confidence HIGH únicamente con certeza clara de coincidencia geográfica "
+            "y de causa. Asigna MEDIUM ante ambigüedad o dudas razonables. Asigna LOW si describe "
+            "un evento nuevo. matched_incident_id DEBE ser el UUID exacto de un candidato "
+            "si match_confidence es HIGH o MEDIUM, o null si es LOW.",
             {"report": report, "candidates": candidates},
             DuplicateEvaluationSchema,
         )
 
     async def explain_priority_proposal(self, incident, priority):
         return await self.structured(
-            "Explica los factores recibidos; no calcules ni cambies puntuaciones. "
-            "Nunca afirmes que se despachó una cisterna",
+            "Actúa como analista operativo del centro de mando de agua de Panamá Oeste. "
+            "Genera una justificación explicable y concisa (2 a 3 oraciones) para el coordinador, "
+            "detallando por qué se determinó el rango de prioridad calculado (score_min a "
+            "score_max de 100) según los 4 factores determinísticos: duración sin servicio, "
+            "infraestructura crítica afectada, vulnerabilidad comunitaria y población del sector. "
+            "NUNCA calcules ni alteres puntuaciones (el motor determinístico es la única fuente "
+            "de verdad). Esta propuesta requiere autorización del coordinador.",
             {"incident": incident, "priority": priority},
             CoordinationProposalSchema,
         )

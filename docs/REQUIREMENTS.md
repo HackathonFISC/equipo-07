@@ -18,9 +18,10 @@ Estado se refiere a esta implementación local, no a entrega oficial ni desplieg
 | RNF03 | P1 | Migración a PostgreSQL sin reemplazar dominio | Parcial | ORM/SQL portable, saver factory; driver/migración operativa no probados |
 | RNF04 | P0 | Instalación fijada, lint/tipos/tests/build sin claves pagadas | Implementado local | Lockfiles, comandos README; CI remoto pendiente de ejecución |
 | RNF05 | P1 | Windows y Linux | Parcial | Verificado Windows; matriz CI Linux/Windows definida, no ejecutada remotamente |
-| RNF06 | P1 | UI responsive, formularios etiquetados y errores visibles | Implementado | CSS responsive, HTML semántico y pruebas; auditoría visual/manual pendiente |
+| RNF06 | P1 | UI responsive, formularios etiquetados y errores visibles; vista ciudadana en lenguaje llano y WCAG 2.2 AA para todas las edades | Implementado | CSS responsive, HTML semántico y pruebas; auditoría experta en UX_AUDIT_CIUDADANO.md; prueba con usuarios pendiente |
 | RNF07 | P0 | Colaboración GitHub Flow y contrato compartido | Implementado local | CONTRIBUTING, templates, BACKLOG; tableros remotos pendientes |
-| FUT01 | P2 | Planificador de cisternas y nueva aprobación | Pendiente | OR-Tools, flota/rutas/datos reales fuera de alcance |
+| RF10 | P0 | Agente planificador: a partir de incidentes priorizados por un humano, flota y ubicaciones, un solver determinístico asigna cisternas, horarios y galones (capacidad, turnos, acceso vial, recarga en planta) y explica cada asignación y cada demanda no atendida | Implementado | planner.py + PlannerAgent + worker; test_planner y E23–E26; planificador VRP |
+| RF11 | P0 | El coordinador aprueba o rechaza el plan con razón; puede excluir cisternas no disponibles y regenerar; aprobar programa, no confirma entregas | Implementado | API protegida + PlanPanel; E27–E31 y prueba Vitest; HITL del plan |
 | FUT02 | P2 | WhatsApp, Telegram, audio, imagen, predicción | Pendiente | Interfaces futuras documentadas, sin integración ficticia |
 | ENT01 | P0 | Repositorio registrado, historial oficial, tag, video ≤3 min | Pendiente de equipo | DELIVERY_CHECKLIST |
 

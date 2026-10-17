@@ -5,12 +5,16 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import func, select
 
+from app.agents import PlannerAgent
 from app.contracts import DuplicateEvaluationSchema
-from app.models import Association, Incident, Proposal, Report, Review
+from app.models import Association, DistributionPlan, Incident, Proposal, Report, Review
 from app.providers import MockLLMProvider, ProviderError
+from app.worker import process_plan
 from tests.conftest import AUTH
 
-CASES = json.loads((Path(__file__).parents[2] / "evals/cases.json").read_text("utf-8"))
+ALL_CASES = json.loads((Path(__file__).parents[2] / "evals/cases.json").read_text("utf-8"))
+CASES = [c for c in ALL_CASES if c.get("suite") != "planner"]
+PLAN_CASES = [c for c in ALL_CASES if c.get("suite") == "planner"]
 BASE = {
     "community_id": "arraijan-demo",
     "description": "Estamos sin agua desde hace 24 horas",
@@ -172,3 +176,132 @@ async def test_evaluation(system, case):
                 for model in (Report, Incident, Association, Proposal, Review):
                     assert await session.scalar(select(func.count()).select_from(model)) == 1
             assert (await review(system, key, "REJECT")).status_code == 409
+
+
+async def approved(system, community_id, description):
+    key, response = await submit(system, {"community_id": community_id, "description": description})
+    assert response.status_code == 202
+    await system.work()
+    assert (await review(system, key)).status_code == 202
+    await system.work()
+    detail = await details(system, key)
+    assert detail["status"] == "APPROVED"
+    return detail["proposal"]["incident_id"]
+
+
+async def planned(system, **body):
+    response = await system.client.post("/api/admin/plans", headers=AUTH, json=body)
+    assert response.status_code == 202, response.text
+    assert await process_plan(system.db, PlannerAgent(system.db))
+    plan = (await system.client.get("/api/admin/plans/latest", headers=AUTH)).json()
+    assert plan["id"] == response.json()["id"] and plan["status"] == "PROPOSED"
+    return plan
+
+
+async def decide(system, plan, decision="APPROVE", reason="Plan revisado en demo"):
+    return await system.client.post(
+        f"/api/admin/plans/{plan['id']}/review",
+        headers=AUTH,
+        json={"decision": decision, "reason": reason},
+    )
+
+
+def served(plan):
+    return {s["community_id"] for r in plan["result"]["routes"] for s in r["stops"]}
+
+
+def unserved(plan):
+    return {u["community_id"]: u["reason"] for u in plan["result"]["unserved"]}
+
+
+async def incident_status(system, incident_id):
+    async with system.db.sessions() as session:
+        return (await session.get(Incident, incident_id)).status
+
+
+@pytest.mark.parametrize("case", PLAN_CASES, ids=[c["id"] for c in PLAN_CASES])
+async def test_planner_evaluation(system, case):
+    scenario = case["scenario"]
+    hospital = await approved(
+        system, "crit-hosp-nicolas-solano", "El hospital está sin agua desde hace 18 horas"
+    )
+
+    if scenario == "plan_unauthorized":
+        assert (await system.client.post("/api/admin/plans", json={})).status_code == 401
+        plan = await planned(system)
+        response = await system.client.post(
+            f"/api/admin/plans/{plan['id']}/review",
+            json={"decision": "APPROVE", "reason": "Sin token"},
+        )
+        assert response.status_code == 401
+        return
+
+    if scenario == "plan_unknown_truck":
+        response = await system.client.post(
+            "/api/admin/plans", headers=AUTH, json={"unavailable_trucks": ["inventada"]}
+        )
+        assert response.status_code == 422
+        async with system.db.sessions() as session:
+            assert await session.scalar(select(func.count()).select_from(DistributionPlan)) == 0
+        return
+
+    if scenario == "plan_privacy":
+        fleet = (await system.client.get("/api/admin/fleet", headers=AUTH)).text
+        plan = await planned(system)
+        for text in (fleet, json.dumps(plan)):
+            assert "driver" not in text and "cedula" not in text and "+507" not in text
+        assert (await system.client.get("/api/fleet/tankers")).status_code == 404
+        return
+
+    if scenario == "plan_no_location":
+        demo = await approved(system, "arraijan-demo", "Estamos sin agua desde hace 24 horas")
+        plan = await planned(system)
+        assert unserved(plan)["arraijan-demo"] == "SIN_UBICACION"
+        assert "arraijan-demo" not in served(plan) and demo
+        return
+
+    if scenario == "plan_leak":
+        await approved(
+            system, "crit-esc-stella-sierra", "Fuga de agua por tubería rota en la calle"
+        )
+        plan = await planned(system)
+        assert unserved(plan)["crit-esc-stella-sierra"] == "FUGA_REQUIERE_REPARACION"
+        return
+
+    if scenario == "plan_unavailable":
+        excluded = ["cisterna-hospital-01", "cisterna-troncal-02"]
+        plan = await planned(system, unavailable_trucks=excluded)
+        trucks = {r["truck_id"] for r in plan["result"]["routes"]}
+        assert trucks and not trucks & set(excluded)
+        assert any("excluidas" in line for line in plan["result"]["explanation"])
+        return
+
+    plan = await planned(system)
+    assert "crit-hosp-nicolas-solano" in served(plan)
+    assert any(e["agent"] == "planner" and e["event"] == "PLAN_PROPOSED" for e in plan["events"])
+
+    if scenario == "plan_approve":
+        response = await decide(system, plan)
+        assert response.status_code == 200 and response.json()["status"] == "APPROVED"
+        assert await incident_status(system, hospital) == "SCHEDULED"
+        # A scheduled incident is not planned twice.
+        second = await planned(system)
+        assert not second["result"]["routes"]
+        return
+
+    if scenario == "plan_reject":
+        response = await decide(system, plan, "REJECT", "Falta confirmar cisternas")
+        assert response.json()["status"] == "REJECTED"
+        assert await incident_status(system, hospital) == "PRIORITIZED"
+        assert "crit-hosp-nicolas-solano" in served(await planned(system))
+        return
+
+    if scenario == "plan_single_pending":
+        again = await system.client.post("/api/admin/plans", headers=AUTH, json={})
+        assert again.status_code == 409
+        assert (await decide(system, plan)).status_code == 200
+        assert (await decide(system, plan)).status_code == 200
+        assert (await decide(system, plan, "REJECT", "Cambio de opinión")).status_code == 409
+        return
+
+    raise AssertionError(f"Escenario sin implementar: {scenario}")

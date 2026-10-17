@@ -1,0 +1,1124 @@
+
+# AGUAIA — FUNDACIÓN ARQUITECTÓNICA Y VERTICAL SLICE FUNCIONAL
+
+
+## REPOSITORIO EXISTENTE — INSTRUCCIONES OBLIGATORIAS
+
+El repositorio oficial del hackathon **ya existe** y contiene un `README.md` proporcionado por los organizadores.
+
+Antes de implementar cualquier cambio:
+
+1. Inspecciona el repositorio y su estructura actual.
+2. Trabaja directamente sobre este repositorio.
+3. No ejecutes `git init` si ya existe `.git`.
+4. No reemplaces ni elimines archivos existentes sin analizar su propósito.
+5. **No crees otro README.md. Actualiza el existente**, respetando su estructura oficial.
+6. Conserva la información del equipo, el reto seleccionado y las instrucciones obligatorias de los organizadores.
+7. Completa progresivamente las secciones existentes del README con información real del proyecto: problema, arquitectura, tecnologías, instalación, evaluaciones y bitácora de IA.
+8. Puedes añadir subsecciones o enlaces hacia documentos especializados dentro de `docs/`, sin eliminar las secciones originales.
+9. Si necesitas documentación adicional, créala en archivos independientes como `ARCHITECTURE.md`, `ROADMAP.md`, `CONTRIBUTING.md`, `AGENTS.md`, etc.
+10. No realices commits, pushes, merges, cambios de rama ni crees el tag `final-24h` sin autorización explícita.
+11. Respeta cualquier archivo, configuración o requisito existente del repositorio oficial.
+
+El objetivo es **evolucionar el repositorio oficial**, no sustituirlo por uno nuevo.
+
+
+## 1. ROL Y FORMA DE TRABAJO
+
+Actúa como un arquitecto de software senior, ingeniero de sistemas multiagente y responsable técnico de un proyecto colaborativo de tres desarrolladores.
+
+Tu responsabilidad no es únicamente proponer una arquitectura: debes DISEÑARLA, IMPLEMENTAR LA BASE EJECUTABLE, PROBARLA y DOCUMENTARLA en el repositorio actual.
+
+Tienes libertad para tomar decisiones técnicas justificadas dentro de los requisitos de este documento. No quiero que reproduzcas ciegamente una estructura de carpetas predefinida ni que introduzcas patrones de diseño por apariencia. Prioriza simplicidad, modularidad, mantenibilidad, escalabilidad progresiva, verificabilidad y una experiencia de desarrollo clara para un equipo pequeño.
+
+Trabaja de forma autónoma, sin interrumpir continuamente para pedir confirmaciones sobre decisiones técnicas ordinarias. Documenta las decisiones relevantes. Pregunta únicamente si existe un bloqueo real o una acción irreversible que requiere autorización.
+
+No entregues solamente documentación, pseudocódigo, una propuesta teórica ni un conjunto de archivos vacíos. Debes dejar un sistema inicial ejecutable y demostrar mediante pruebas que el flujo principal funciona.
+
+## 2. CONTEXTO DEL PROYECTO
+
+Nombre provisional: AguaIA.
+
+Es un proyecto del Hackathon FISC AI Agents 2026, orientado a resolver problemas sociales reales de Panamá.
+
+Reto elegido: Agua — Centro de coordinación agéntico para la crisis del agua en Panamá Oeste, especialmente Arraiján y La Chorrera.
+
+Problema:
+- Los ciudadanos reportan interrupciones de agua mediante mensajes, llamadas, imágenes o audios.
+- Muchos reportes corresponden al mismo incidente.
+- Algunas comunidades tienen mayor visibilidad que otras.
+- Existen poblaciones vulnerables e instituciones críticas.
+- Los recursos de distribución de agua son limitados.
+- La coordinación debe ser justa, explicable y verificable.
+- La solución futura debe poder planificar carros cisterna según capacidad, disponibilidad, rutas y horarios.
+- El sistema debe permitir supervisión humana antes de ejecutar decisiones relevantes.
+
+La aplicación debe evolucionar hacia un centro de operaciones con reportes ciudadanos, incidentes consolidados, priorización, planificación de recursos, mapas, notificaciones y auditoría.
+
+IMPORTANTE: esta primera ejecución NO pretende implementar toda la solución final.
+
+Se busca establecer una arquitectura sólida, una base funcional y un vertical slice que permita añadir requisitos y funcionalidades posteriores sin rehacer el proyecto.
+
+El sistema NO debe reducirse a un chatbot.
+
+## 3. REQUISITOS OFICIALES DEL HACKATHON
+
+La arquitectura debe contemplar desde el inicio los siguientes requisitos obligatorios:
+
+1. Al menos tres agentes con responsabilidades distintas que se comuniquen entre sí.
+2. Al menos una herramienta que ejecute una acción real, como persistir información en una base de datos.
+3. Componente determinístico para cálculos, puntuaciones, verificaciones, asignaciones o rutas.
+4. Humano en el ciclo para aprobar o corregir decisiones importantes.
+5. Trazabilidad de las decisiones y acciones de los agentes.
+6. Al menos quince casos de evaluación con métricas y resultados.
+7. Guardrails frente a entradas maliciosas, inconsistentes, absurdas o fuera de alcance.
+
+Entregables oficiales que deben contemplarse:
+- Repositorio GitHub creado y registrado al inicio del periodo oficial.
+- Historial de commits durante el desarrollo.
+- Tag final-24h al congelar el código.
+- README con instalación, ejecución, fuentes de datos y credenciales de demostración no sensibles.
+- Diagrama de arquitectura.
+- Evaluaciones con al menos 15 casos.
+- Bitácora de utilización de IA.
+- Documento de metodología, despliegue y funcionamiento.
+- Video demostrativo de máximo 3 minutos.
+
+No crees anticipadamente el tag final-24h. Documenta cómo hacerlo cuando corresponda.
+
+No afirmes que un entregable está completado cuando solamente existe su estructura.
+
+Las fechas, el registro oficial del repositorio, el video final y el congelamiento son responsabilidades que se cumplirán en el momento correspondiente. No simules su realización.
+
+## 4. ALCANCE DE ESTA PRIMERA EJECUCIÓN
+
+Implementa:
+
+A. Arquitectura y estructura inicial del repositorio.
+B. Configuración del backend y frontend.
+C. Sistema multiagente básico funcional con LangGraph.
+D. Contratos y modelos de datos.
+E. Persistencia de datos.
+F. Un flujo real de extremo a extremo.
+G. Cálculo determinístico inicial de prioridades.
+H. Punto real de aprobación humana.
+I. Trazabilidad básica.
+J. Guardrails iniciales.
+K. Pruebas automatizadas y evaluaciones.
+L. Documentación técnica y operativa.
+M. Preparación del trabajo colaborativo en GitHub.
+N. CI y controles de calidad.
+O. Backlog inicial de tareas futuras.
+
+NO implementes todavía, salvo que resulte indispensable para el flujo:
+- Optimización completa de rutas de cisternas.
+- Integraciones reales con WhatsApp o Telegram.
+- Reconocimiento avanzado de imágenes.
+- Procesamiento completo de audios.
+- Predicción de demanda de agua.
+- Infraestructura distribuida.
+- Sistema avanzado de autenticación empresarial.
+- Despliegue cloud complejo.
+
+Estos módulos deben poder añadirse después mediante interfaces claras.
+
+Evita tanto la sobreingeniería como una estructura improvisada difícil de ampliar.
+
+## 5. STACK TECNOLÓGICO
+
+Preferencias iniciales:
+
+Backend:
+- Python.
+- FastAPI.
+- Pydantic.
+- SQLAlchemy y Alembic.
+- LangGraph.
+
+Frontend:
+- React.
+- TypeScript.
+- Vite.
+- Tailwind CSS.
+
+Persistencia:
+- SQLite para desarrollo local y demostración inicial.
+- Diseño compatible con una futura migración a PostgreSQL.
+
+Pruebas y calidad:
+- pytest.
+- pytest-cov.
+- Ruff.
+- Verificación estática de tipos cuando aporte valor.
+- Vitest para frontend.
+- GitHub Actions para integración continua.
+
+Planificación futura:
+- Google OR-Tools.
+
+Observabilidad:
+- Logs estructurados.
+- Identificadores de correlación.
+- Trazas por ejecución, agente y herramienta.
+- Posibilidad de integrar LangSmith, Langfuse u OpenTelemetry posteriormente.
+
+Modelos de IA:
+- Proveedor configurable mediante variables de entorno.
+- Interfaz desacoplada del proveedor concreto.
+- Salidas estructuradas y validadas.
+- Pruebas sin dependencia de llamadas pagadas.
+
+Puedes ajustar tecnologías, librerías, versiones o detalles de integración si encuentras razones técnicas justificadas.
+
+Antes de utilizarlas, comprueba compatibilidad y API real de las versiones instaladas. No inventes APIs de LangGraph ni dependencias que no existen.
+
+No añadas Redis, Kafka, Celery, Kubernetes, microservicios o múltiples bases de datos por anticipación si no existe una necesidad concreta.
+
+La arquitectura debe poder crecer, no fingir que ya necesita infraestructura de gran escala.
+
+## 6. PRINCIPIOS DE ARQUITECTURA
+
+Conserva los nombres de los integrantes, sus usuarios de GitHub y la línea identificadora del reto. Respeta el formato exigido por los organizadores (Reto: 1).
+
+Adopta un monolito modular dentro de un monorepo, con separación clara de responsabilidades.
+
+Separa conceptualmente:
+
+1. Presentación y endpoints.
+2. Casos de uso y aplicación.
+3. Dominio y reglas de negocio.
+4. Agentes y orquestación.
+5. Herramientas y servicios determinísticos.
+6. Persistencia e integraciones externas.
+7. Seguridad, validación y observabilidad.
+
+No permitas que:
+- Los endpoints contengan toda la lógica del negocio.
+- Los agentes accedan arbitrariamente a cualquier tabla o servicio.
+- Las reglas de priorización dependan de respuestas generadas libremente por un LLM.
+- Los componentes frontend dependan de implementaciones internas del backend.
+- El estado de los agentes dependa exclusivamente de memoria temporal.
+- Una modificación en un agente exija reescribir todos los demás.
+
+Prioriza interfaces y contratos explícitos en los límites relevantes.
+
+No crees una abstracción por cada función. Aplica principios SOLID, separación de responsabilidades e inversión de dependencias cuando exista una razón práctica.
+
+Diseña el sistema para poder modificar requisitos, añadir nuevos campos, reemplazar herramientas y ampliar workflows.
+
+Las dependencias deben apuntar hacia capas estables del sistema.
+
+Si eliges una organización por módulos de negocio en lugar de capas puras, documenta cómo se mantienen estos principios.
+
+## 7. ESTRUCTURA DEL MONOREPO
+
+Diseña una estructura profesional y comprensible, aproximadamente con estas áreas:
+
+aguaia/
+- backend/
+- frontend/
+- evals/
+- data/
+- docs/
+- scripts/
+- .github/
+- AGENTS.md
+- CLAUDE.md
+- CONTRIBUTING.md
+- README.md
+- .env.example
+- .gitignore
+
+Dentro del backend, organiza adecuadamente:
+- API.
+- Modelos y contratos.
+- Casos de uso.
+- Agentes.
+- Grafos de LangGraph.
+- Dominio.
+- Herramientas.
+- Servicios determinísticos.
+- Repositorios y persistencia.
+- Guardrails.
+- Observabilidad.
+- Configuración.
+- Pruebas.
+
+El frontend debe tener componentes, páginas, clientes de API y tipos organizados de forma consistente.
+
+NO copies literalmente la estructura sugerida si puedes diseñar una mejor. Justifica las diferencias importantes.
+
+Evita paquetes innecesarios, estructuras redundantes y directorios sin propósito.
+
+## 8. ARQUITECTURA MULTIAGENTE
+
+Implementa al menos tres agentes funcionales desde el inicio.
+
+### Agente 1 — Ingesta y normalización
+
+Responsabilidades:
+- Procesar reportes ciudadanos en español.
+- Extraer datos estructurados.
+- Detectar información insuficiente.
+- Normalizar descripciones.
+- Identificar comunidad, duración y tipo de incidencia cuando la información lo permita.
+- Transferir datos validados al siguiente agente.
+
+Debe producir una salida estrictamente tipada.
+
+No puede inventar ubicaciones, horarios, población afectada ni valores ausentes.
+
+Cuando exista un modelo de IA configurado, utiliza el adaptador correspondiente para la interpretación semántica.
+
+### Agente 2 — Verificación y consolidación
+
+Responsabilidades:
+- Revisar la información del reporte.
+- Consultar incidentes existentes mediante herramientas controladas.
+- Detectar posibles duplicados.
+- Asociar reportes a incidentes existentes cuando exista evidencia suficiente.
+- Crear un incidente nuevo cuando corresponda.
+- Marcar incertidumbre y casos que requieren revisión humana.
+- Registrar las razones de sus decisiones.
+
+La deduplicación debe combinar reglas verificables con interpretación semántica cuando sea útil.
+
+No permitas que la IA modifique libremente la base de datos.
+
+### Agente 3 — Priorización y coordinación
+
+Responsabilidades:
+- Consultar incidentes verificados.
+- Utilizar el motor determinístico de prioridades.
+- Elaborar una propuesta explicable.
+- Identificar los factores que justifican la prioridad.
+- Solicitar aprobación humana.
+- Registrar la decisión final.
+- Preparar el resultado para futuras etapas de planificación.
+
+El LLM no debe calcular puntuaciones arbitrarias.
+
+Este agente debe consumir el resultado del algoritmo determinístico.
+
+### Extensibilidad
+
+Diseña el sistema para incorporar posteriormente:
+- Agente de geolocalización avanzada.
+- Agente planificador de cisternas.
+- Agente de comunicación.
+- Agente de análisis de imágenes.
+- Agente de transcripción de audio.
+- Agente de predicción o análisis histórico.
+- Agente de auditoría.
+
+Para cada agente implementado define:
+- Responsabilidad.
+- Entradas.
+- Salidas.
+- Estado que consume o modifica.
+- Herramientas autorizadas.
+- Condiciones de ejecución.
+- Errores posibles.
+- Estrategia de pruebas.
+
+Los agentes deben representar responsabilidades operativas reales, no simplemente funciones rebautizadas como agentes.
+
+Distingue claramente agentes, nodos de LangGraph, herramientas y servicios.
+
+Implementa comunicación mediante el estado y las transiciones del grafo, sin acoplamientos innecesarios entre agentes.
+
+Permite introducir agentes adicionales mediante composición de nodos o subgrafos.
+
+Evita construir un registro dinámico de plugins complejo si no aporta utilidad inmediata.
+
+## 9. ORQUESTACIÓN CON LANGGRAPH
+
+Implementa un grafo funcional y verificable.
+
+El flujo inicial debe ser aproximadamente:
+
+Reporte recibido
+→ Validación de entrada
+→ Agente de ingesta
+→ Agente de verificación
+→ Consolidación de incidente
+→ Agente de coordinación
+→ Herramienta determinística de prioridades
+→ Propuesta de decisión
+→ Interrupción para revisión humana
+→ Aprobación, rechazo o corrección
+→ Persistencia de decisión
+→ Finalización y trazabilidad.
+
+Incluye transiciones condicionales para:
+- Entrada inválida.
+- Datos insuficientes.
+- Incidente duplicado.
+- Incidente nuevo.
+- Errores recuperables.
+- Revisión humana.
+- Finalización.
+
+La arquitectura debe contemplar estado tipado y persistencia de checkpoints.
+
+Implementa el mecanismo necesario para que una ejecución pueda interrumpirse esperando aprobación humana y reanudarse sin comenzar todo el proceso nuevamente.
+
+Utiliza identificadores estables de ejecución o thread_id y una estrategia de persistencia adecuada.
+
+No mantengas una petición HTTP abierta indefinidamente mientras esperas una aprobación.
+
+Evita ejecutar dos veces acciones con efectos secundarios durante reintentos o reanudaciones. Diseña operaciones idempotentes donde sea necesario.
+
+No pretendas que un grafo dibujado equivale a un grafo realmente ejecutable.
+
+## 10. MODELOS DE IA Y MODO LOCAL
+
+Puedes consultar el estado, las ramas y el historial de Git. No realices commits, pushes, merges, cambios de rama ni crees tags sin autorización explícita.
+
+Diseña una interfaz configurable de proveedor LLM.
+
+Debe ser posible cambiar de proveedor sin reescribir los agentes.
+
+El sistema debe soportar:
+- Configuración externa de modelo.
+- Claves desde variables de entorno.
+- Timeouts.
+- Manejo de errores.
+- Salidas estructuradas.
+- Validación mediante Pydantic.
+- Mocking para pruebas automatizadas.
+
+Implementa un modo demo determinístico para poder ejecutar el vertical slice sin claves de API.
+
+Este modo debe utilizar los mismos contratos que los adaptadores reales, pero estar claramente identificado como simulación.
+
+No presentes las decisiones de un mock como inferencias reales de IA.
+
+La integración con un proveedor real debe existir o estar implementada de manera comprobable, y su funcionamiento debe distinguirse de la ejecución simulada.
+
+No incluyas credenciales reales ni dependas de servicios de pago durante CI.
+
+## 11. MODELO DE DATOS
+
+Diseña los modelos mínimos necesarios para representar:
+
+- Reporte ciudadano.
+- Sector o comunidad.
+- Incidente consolidado.
+- Relación entre reportes e incidentes.
+- Propuesta de prioridad.
+- Revisión o aprobación humana.
+- Ejecución del grafo.
+- Eventos de trazabilidad.
+
+Puedes añadir otras entidades justificadas.
+
+Incluye:
+- Identificadores estables.
+- Timestamps.
+- Estados explícitos.
+- Relaciones adecuadas.
+- Restricciones de integridad.
+- Migraciones de base de datos.
+- Manejo de información faltante.
+- Separación entre datos confirmados, estimados y sintéticos.
+
+Prepara una capa de persistencia reemplazable.
+
+Utiliza SQLAlchemy y Alembic para evitar una migración improvisada en el futuro.
+
+No mezcles directamente modelos ORM, contratos de API y estado de agentes como si fueran la misma entidad.
+
+No recopiles datos personales innecesarios.
+
+Incluye datos sintéticos reproducibles de comunidades de Panamá Oeste. Deben estar identificados como sintéticos y no presentarse como datos oficiales.
+
+## 12. MOTOR DETERMINÍSTICO DE PRIORIZACIÓN
+
+Implementa una primera versión simple, transparente y comprobable.
+
+Debe considerar factores como:
+- Horas sin agua.
+- Población afectada cuando exista información confiable.
+- Instituciones críticas.
+- Condiciones de vulnerabilidad.
+- Calidad o incertidumbre de los datos.
+
+Define una política de ponderación configurable y documenta sus supuestos.
+
+Las ponderaciones iniciales son criterios de demostración, NO políticas oficiales del IDAAN.
+
+No aumentes automáticamente la urgencia solo porque un incidente tenga muchos reportes duplicados.
+
+No asumas valores que el usuario no proporcionó.
+
+Cuando falten datos importantes, utiliza una política conservadora explícita o deriva el caso a revisión.
+
+La salida debe incluir:
+- Puntuación calculada.
+- Factores utilizados.
+- Justificación.
+- Advertencias.
+- Versión de la política aplicada.
+
+Escribe pruebas unitarias para sus reglas, empates, límites y casos excepcionales.
+
+Separa este motor del LLM.
+
+Define interfaces que permitan incorporar posteriormente un solver de asignación y optimización de rutas mediante OR-Tools, sin implementarlo prematuramente.
+
+## 13. VERTICAL SLICE OBLIGATORIO
+
+El resultado debe permitir ejecutar una demostración completa.
+
+Escenario:
+
+1. Un ciudadano abre el frontend.
+2. Envía un reporte de falta de agua.
+3. El backend valida y guarda el reporte.
+4. LangGraph inicia una ejecución.
+5. El agente de ingesta normaliza la información.
+6. El agente de verificación consulta incidentes existentes y determina si corresponde consolidar el reporte.
+7. El agente de coordinación consulta el motor de prioridades.
+8. Se genera una propuesta explicable.
+9. La ejecución queda esperando una decisión humana.
+10. Un coordinador revisa la propuesta desde el frontend.
+11. El coordinador aprueba, rechaza o corrige con una razón.
+12. LangGraph reanuda y registra la decisión.
+13. Los estados actualizados se muestran en la interfaz.
+14. Las trazas permiten revisar qué agentes y herramientas participaron.
+
+Debe existir una acción real sobre la base de datos.
+
+La revisión humana debe ser efectiva y persistida, no un botón visual que simplemente cambie texto en pantalla.
+
+La aprobación debe estar protegida mediante un mecanismo de autorización proporcional al MVP. No expongas una operación administrativa completamente abierta.
+
+No simules el despacho real de una cisterna ni confirmes una entrega de agua que no ha ocurrido.
+
+Este vertical slice termina en una decisión de priorización aprobada y registrada. La planificación de rutas y distribución real queda para una fase posterior.
+
+El flujo debe funcionar con datos de demostración reproducibles.
+
+## 14. FRONTEND INICIAL
+
+Construye una interfaz limpia y funcional usando React, TypeScript y Tailwind.
+
+No dediques la mayor parte del esfuerzo a efectos visuales.
+
+Prioriza usabilidad, claridad y estados reales.
+
+Vistas mínimas:
+
+A. Reporte ciudadano:
+- Formulario.
+- Selección de comunidad entre sectores conocidos.
+- Descripción del problema.
+- Duración estimada.
+- Validaciones.
+- Confirmación con identificador de reporte.
+- Estado de procesamiento.
+
+B. Centro de coordinación:
+- Incidentes registrados.
+- Estado.
+- Prioridad calculada.
+- Justificación.
+- Propuestas pendientes de aprobación.
+- Acciones para aprobar, rechazar o corregir.
+- Historial básico de decisiones.
+
+C. Vista de trazabilidad:
+- Ejecuciones.
+- Agentes participantes.
+- Herramientas utilizadas.
+- Resultado y errores cuando corresponda.
+
+Utiliza datos provenientes del backend. Evita pantallas que parezcan funcionales pero solo utilicen datos hardcodeados.
+
+Permite utilizar un modo demo claramente identificado.
+
+La estructura visual debe facilitar incorporar después:
+- Dashboard geográfico.
+- Flota de cisternas.
+- Rutas.
+- Notificaciones.
+- Estadísticas.
+- Roles adicionales.
+
+Utiliza componentes reutilizables, estados de carga, vacíos y error, y diseño responsive.
+
+## 15. GUARDRAILS Y SEGURIDAD
+
+Implementa controles en varias capas.
+
+Entrada:
+- Validación Pydantic.
+- Límites de longitud.
+- Tipos permitidos.
+- Campos opcionales y obligatorios definidos.
+- Normalización segura.
+- Detección de entradas fuera de alcance.
+
+Agentes:
+- Instrucciones específicas por responsabilidad.
+- Contratos de salida.
+- Validación posterior.
+- Restricción de herramientas disponibles.
+- Manejo de prompt injection.
+- Prohibición de inventar datos.
+- Manejo de ambigüedad e incertidumbre.
+
+Herramientas:
+- Autorización de operaciones.
+- Validación de parámetros.
+- Separación entre operaciones de lectura y escritura.
+- Evitar ejecución arbitraria de comandos o consultas.
+- Operaciones idempotentes donde corresponda.
+
+Aplicación:
+- Manejo de errores.
+- Configuración segura de CORS.
+- Protección de acciones de coordinación.
+- Secretos fuera del repositorio.
+- Datos personales minimizados.
+- Logs sin credenciales ni información sensible innecesaria.
+
+Incluye pruebas negativas.
+
+No consideres suficiente un prompt que diga "ignora instrucciones maliciosas".
+
+## 16. OBSERVABILIDAD Y TRAZABILIDAD
+
+Cada ejecución debe tener un identificador único.
+
+Registra al menos:
+- Reporte e incidente relacionados.
+- Agente que intervino.
+- Herramienta utilizada.
+- Inicio y finalización.
+- Resultado.
+- Estado.
+- Errores.
+- Decisión humana.
+- Versión de la política determinística cuando corresponda.
+
+Utiliza logs estructurados.
+
+Distingue trazas técnicas de eventos de auditoría del negocio.
+
+Prepara una interfaz o adaptador para observabilidad avanzada futura sin convertir LangSmith o Langfuse en dependencias obligatorias del MVP.
+
+No almacenes secretos, prompts con datos personales innecesarios ni cadenas de razonamiento privadas.
+
+Registra explicaciones operativas resumidas, entradas/salidas permitidas y decisiones verificables.
+
+## 17. PRUEBAS AUTOMATIZADAS
+
+Configura una estrategia de pruebas reproducible.
+
+Backend:
+- pytest.
+- Pruebas unitarias.
+- Pruebas de integración.
+- Pruebas del workflow LangGraph.
+- Pruebas de API.
+- Pruebas de persistencia.
+- Pruebas de aprobación y reanudación.
+
+Frontend:
+- Pruebas de componentes relevantes.
+- Validación de formularios.
+- Estados de carga y errores.
+- Pruebas de interacción crítica.
+
+Evaluaciones de agentes:
+- Al menos quince casos concretos.
+- Entradas reproducibles.
+- Salidas esperadas.
+- Métricas definidas.
+- Resultados obtenidos.
+- Identificación de modo real o simulado.
+
+Incluye casos como:
+- Reporte válido.
+- Reporte incompleto.
+- Comunidad desconocida.
+- Ubicación ambigua.
+- Duplicado exacto.
+- Duplicado semántico.
+- Reportes diferentes de una misma zona.
+- Institución crítica.
+- Información contradictoria.
+- Tiempo sin agua inválido.
+- Intento de prompt injection.
+- Entrada fuera de alcance.
+- Error de proveedor LLM.
+- Rechazo humano.
+- Reanudación de una ejecución.
+- Intento de aprobación sin autorización.
+- Reintento de una operación ya procesada.
+
+Puedes añadir más casos.
+
+Utiliza métricas adecuadas a cada prueba, como tasa de cumplimiento de contrato, detección de duplicados, exactitud de decisiones determinísticas, porcentaje de flujos completos y resistencia a entradas inválidas.
+
+No fabriques puntuaciones ni resultados.
+
+Si las pruebas no pueden ejecutarse en el entorno actual, explica qué está bloqueado y por qué.
+
+No exijas claves de proveedores reales para ejecutar CI.
+
+## 18. GITHUB Y COLABORACIÓN PARA TRES PERSONAS
+
+Este es el primer proyecto colaborativo del equipo.
+
+Prepara el repositorio para que tres desarrolladores puedan trabajar simultáneamente sin depender excesivamente unos de otros.
+
+Adopta un flujo sencillo basado en GitHub Flow.
+
+Reglas propuestas:
+- main debe permanecer funcional.
+- Una rama corta por tarea.
+- Commits pequeños y descriptivos.
+- Pull Requests para integrar cambios.
+- Revisión por otro integrante cuando sea posible.
+- Pruebas automáticas antes de integrar.
+- Prohibir introducir secretos.
+- Evitar cambios no relacionados en un mismo PR.
+- Mantener sincronizadas las ramas con main.
+- Resolver conflictos mediante comunicación, no sobrescribiendo trabajo ajeno.
+
+Convenciones de ramas:
+- feat/numero-descripcion
+- fix/numero-descripcion
+- docs/numero-descripcion
+- test/numero-descripcion
+- chore/numero-descripcion
+
+Las convenciones pueden ajustarse si justificas una alternativa más sencilla.
+
+Prepara:
+- CONTRIBUTING.md.
+- Plantilla de Pull Request.
+- Plantilla de Issue para funcionalidades.
+- Plantilla de Issue para bugs.
+- Plantilla de tareas técnicas si aporta valor.
+- Etiquetas recomendadas.
+- Criterios de aceptación.
+- Definición de terminado (Definition of Done).
+- Instrucciones de revisión.
+- Backlog inicial.
+
+Sugiere organizar GitHub Projects con:
+- Backlog.
+- Todo.
+- In Progress.
+- In Review.
+- Done.
+
+Prepara una lista de tareas para los tres integrantes, indicando:
+- Objetivo.
+- Responsable sugerido por rol, no usuario de GitHub.
+- Dependencias.
+- Prioridad.
+- Criterios de aceptación.
+- Tamaño aproximado.
+
+Diseña las tareas para minimizar conflictos de edición.
+
+Presta especial atención a los contratos compartidos: cuando una API o modelo cambie, debe quedar claro cómo se comunica y coordina ese cambio.
+
+NO crees Issues remotos.
+NO crees tableros remotos.
+NO realices push.
+NO modifiques configuraciones remotas de protección de ramas.
+
+Deja archivos, plantillas e instrucciones para configurar esos elementos posteriormente.
+
+## 19. AUTOMATIZACIÓN Y CI
+
+Crea GitHub Actions para ejecutar, cuando aplique:
+
+Backend:
+- Instalación reproducible.
+- Lint.
+- Comprobaciones de tipos razonables.
+- Pruebas.
+- Validación de migraciones.
+
+Frontend:
+- Instalación reproducible.
+- Lint.
+- Typecheck.
+- Build.
+- Pruebas.
+
+El workflow debe funcionar sin claves secretas de modelos de IA.
+
+No configures despliegues automáticos innecesarios.
+
+Incluye archivos de lock y versiones de herramientas adecuadamente fijadas.
+
+Procura que los comandos de CI coincidan con los documentados para desarrollo local.
+
+## 20. DOCUMENTACIÓN OBLIGATORIA DEL REPOSITORIO
+
+Crea documentación útil, sin relleno ni secciones ficticiamente completadas.
+
+README.md:
+- Propósito.
+- Requisitos.
+- Tecnologías.
+- Instalación.
+- Ejecución.
+- Variables de entorno.
+- Migraciones y seed.
+- Pruebas.
+- Modo demo y modo LLM.
+- Arquitectura breve.
+- Fuentes y naturaleza sintética de los datos.
+- Guía para ejecutar el vertical slice.
+- Estado real del proyecto.
+
+AGENTS.md:
+Instrucciones para asistentes de programación:
+- Arquitectura y convenciones.
+- Comandos de pruebas.
+- Organización del código.
+- Cómo añadir funcionalidades.
+- Cómo incorporar agentes.
+- Cómo modificar contratos.
+- Restricciones de seguridad.
+- No usar comandos destructivos sin autorización.
+- No sobrescribir trabajo existente.
+- No realizar push ni acciones remotas sin autorización.
+- Ejecutar pruebas pertinentes.
+- Actualizar documentación.
+- No atribuir capacidades inexistentes al sistema.
+
+CLAUDE.md:
+Guía breve compatible con Claude Code que remita a AGENTS.md y evite duplicar reglas.
+
+CONTRIBUTING.md:
+Guía clara y práctica de colaboración, especialmente para personas sin experiencia previa en proyectos grupales con Git.
+
+docs/ARCHITECTURE.md:
+- Arquitectura general.
+- Diagramas Mermaid.
+- Flujo de datos.
+- Límites de módulos.
+- Dependencias.
+- Grafo LangGraph.
+- Persistencia.
+- Puntos de intervención humana.
+- Decisiones de diseño.
+
+docs/REQUIREMENTS.md:
+- Requisitos funcionales.
+- Requisitos no funcionales.
+- Identificadores estables.
+- Prioridad.
+- Criterios de aceptación.
+- Estado: pendiente, parcial o implementado.
+- Trazabilidad hacia los requisitos del hackathon.
+
+docs/AGENT_CATALOG.md:
+- Agentes existentes.
+- Responsabilidades.
+- Herramientas.
+- Entradas y salidas.
+- Dependencias.
+- Cómo añadir un agente nuevo.
+
+docs/ROADMAP.md:
+- Fundación.
+- Vertical slice.
+- MVP del hackathon.
+- Funcionalidades ampliadas.
+- Dependencias.
+- Riesgos.
+
+docs/METHODOLOGY.md:
+- Metodología de desarrollo.
+- Flujo colaborativo.
+- Decisiones técnicas.
+- Estrategia de despliegue.
+- Arquitectura y funcionamiento.
+
+docs/EVALUATION.md:
+- Estrategia de pruebas y evals.
+- Métricas.
+- Casos.
+- Resultados verificados.
+- Limitaciones.
+
+docs/AI_LOG.md:
+- Registro del uso de IA en el desarrollo.
+- Herramienta y modelo cuando sean conocidos.
+- Tareas realizadas.
+- Archivos o componentes afectados.
+- Revisión humana.
+- Cambios manuales.
+
+No inventes actividades, modelos o revisiones humanas que no puedas verificar. Deja una plantilla utilizable para registros posteriores.
+
+docs/GUARDRAILS.md:
+- Amenazas consideradas.
+- Validaciones.
+- Restricciones de herramientas.
+- Comportamiento ante incertidumbre.
+- Pruebas de seguridad.
+- Limitaciones.
+
+docs/DEMO.md:
+- Preparación del entorno.
+- Datos de prueba.
+- Guion de máximo tres minutos.
+- Secuencia exacta del flujo funcional.
+- Qué verificar antes de grabar.
+
+docs/DELIVERY_CHECKLIST.md:
+- Todos los entregables oficiales.
+- Estado real.
+- Evidencia.
+- Pendientes.
+- Procedimiento para crear final-24h cuando corresponda.
+
+docs/BACKLOG.md:
+- Issues sugeridos.
+- Prioridades.
+- División de tareas entre tres personas.
+- Dependencias y criterios de aceptación.
+
+docs/adr/:
+Registros cortos de decisiones arquitectónicas significativas.
+
+Puedes consolidar documentos cuando exista duplicación clara, pero no elimines información requerida por el hackathon.
+
+La documentación debe coincidir con el código real.
+
+## 21. PREPARACIÓN PARA NUEVOS REQUISITOS
+
+El proyecto recibirá requisitos adicionales después de esta primera ejecución.
+
+Diseña una forma clara de evolucionarlo.
+
+El procedimiento documentado para añadir una funcionalidad debe incluir:
+
+1. Registrar requisito.
+2. Identificar módulos afectados.
+3. Definir o actualizar contratos.
+4. Crear una tarea independiente.
+5. Implementar el cambio.
+6. Añadir pruebas.
+7. Verificar regresiones.
+8. Actualizar documentación.
+9. Enviar Pull Request.
+
+Documenta también el procedimiento específico para añadir un nuevo agente LangGraph:
+- Crear su contrato.
+- Implementar su lógica y herramientas.
+- Añadir nodo o subgrafo.
+- Integrar transiciones.
+- Configurar persistencia cuando sea relevante.
+- Definir guardrails.
+- Añadir evaluaciones.
+- Actualizar catálogo y diagrama.
+
+Evita dependencias circulares y acoplamiento excesivo.
+
+Mantén compatibilidad de contratos cuando sea posible.
+
+Los cambios incompatibles deben ser explícitos y comprobables.
+
+## 22. EXPERIENCIA DE DESARROLLO LOCAL
+
+El equipo trabaja principalmente en Windows con PowerShell, aunque el proyecto debe poder funcionar también en Linux.
+
+Incluye comandos claros para:
+- Instalar dependencias.
+- Crear y configurar entorno virtual.
+- Preparar .env.
+- Inicializar o migrar la base de datos.
+- Cargar datos de demostración.
+- Iniciar backend.
+- Iniciar frontend.
+- Ejecutar pruebas.
+- Ejecutar lint y typecheck.
+- Reiniciar datos de demo de manera segura.
+
+No hagas obligatorio Docker si no es necesario.
+
+Si preparas Docker Compose como opción, mantén también una vía de desarrollo local sencilla.
+
+No presupongas que todas las herramientas están instaladas.
+
+Proporciona mensajes útiles cuando falte una dependencia.
+
+No incluyas valores secretos reales en .env.example.
+
+## 23. CALIDAD, MANTENIBILIDAD Y RESTRICCIONES
+
+Aplica estas reglas durante toda la implementación:
+
+- Evita duplicación de lógica.
+- Utiliza nombres descriptivos.
+- Prefiere código explícito frente a abstracciones innecesarias.
+- Valida las entradas y salidas relevantes.
+- No ocultes errores.
+- No captures excepciones indiscriminadamente.
+- No introduzcas dependencias innecesarias.
+- No acoples todo al proveedor LLM.
+- No guardes credenciales en Git.
+- No uses datos reales sensibles para las demos.
+- No inventes información geográfica.
+- No presentes estimaciones como datos oficiales.
+- No simules una integración real sin indicarlo.
+- No marques pruebas como exitosas si no se ejecutaron.
+- No crees sistemas de agentes artificialmente complejos.
+- No sacrifiques funcionalidad por una arquitectura excesivamente elaborada.
+- No implementes características fuera del alcance acordado.
+
+Prefiere que cada módulo tenga una responsabilidad clara y una razón de existir.
+
+La base debe ser suficientemente sencilla para que un nuevo integrante pueda comprenderla y comenzar a contribuir rápidamente.
+
+## 24. ORDEN DE EJECUCIÓN
+
+Trabaja de manera incremental, pero completa el encargo dentro de esta ejecución.
+
+Fase 1 — Inspección y diseño:
+- Revisa el repositorio actual.
+- Identifica archivos existentes.
+- No sobrescribas código útil.
+- Establece decisiones arquitectónicas.
+- Define modelos y contratos.
+- Detecta dependencias críticas.
+
+Fase 2 — Fundación:
+- Estructura del monorepo.
+- Backend.
+- Frontend.
+- Configuración.
+- Persistencia.
+- Calidad.
+- Herramientas de desarrollo.
+
+Fase 3 — Vertical slice:
+- Reportes.
+- Agentes.
+- LangGraph.
+- Herramientas reales.
+- Priorización.
+- Revisión humana.
+- Reanudación.
+- Trazabilidad.
+- Interfaz funcional.
+
+Fase 4 — Pruebas:
+- Unitarias.
+- Integración.
+- Evals.
+- Guardrails.
+- Verificación del flujo completo.
+
+Fase 5 — Colaboración y documentación:
+- GitHub templates.
+- CI.
+- AGENTS.md y CLAUDE.md.
+- Guías de colaboración.
+- Diagramas.
+- Backlog.
+- Entregables del hackathon.
+
+Fase 6 — Verificación final:
+- Instala dependencias si el entorno lo permite.
+- Ejecuta migraciones y pruebas.
+- Comprueba el build del frontend.
+- Verifica el grafo.
+- Ejecuta la demostración de extremo a extremo.
+- Corrige errores detectados.
+- Actualiza documentación para reflejar el estado real.
+
+No consideres una fase terminada por haber creado solamente carpetas o interfaces vacías.
+
+Si existe una limitación real de entorno, registra qué no pudo verificarse.
+
+## 25. CRITERIOS DE ACEPTACIÓN
+
+La primera ejecución estará terminada cuando:
+
+[ ] El monorepo tenga una estructura coherente.
+[ ] El backend pueda iniciarse.
+[ ] El frontend pueda iniciarse.
+[ ] Existan instrucciones reproducibles de instalación.
+[ ] La base de datos tenga migraciones.
+[ ] Existan al menos tres agentes con responsabilidades distintas.
+[ ] LangGraph ejecute un flujo real.
+[ ] Los agentes intercambien información mediante contratos claros.
+[ ] Un reporte pueda almacenarse.
+[ ] Exista consolidación básica de incidentes.
+[ ] Se calcule una prioridad mediante código determinístico.
+[ ] Una propuesta pueda esperar aprobación humana.
+[ ] El flujo pueda reanudarse y registrar la decisión.
+[ ] Se registre trazabilidad relevante.
+[ ] Existan guardrails iniciales comprobables.
+[ ] Existan al menos 15 casos de evaluación definidos y ejecutables.
+[ ] Las métricas reflejen resultados reales.
+[ ] Las pruebas pertinentes se ejecuten o se documente el bloqueo.
+[ ] Exista CI.
+[ ] Existan plantillas de Issues y Pull Requests.
+[ ] Exista documentación de colaboración.
+[ ] Exista documentación para agregar nuevos agentes.
+[ ] Exista documentación de requisitos y arquitectura.
+[ ] Exista una guía de demostración.
+[ ] Exista una matriz de cumplimiento del hackathon.
+[ ] Se distingan funciones reales de simulaciones y trabajo pendiente.
+[ ] No se hayan realizado cambios remotos sin autorización.
+
+No marques como completado aquello que no esté implementado o verificado.
+
+## 26. RESULTADO FINAL ESPERADO
+
+Al terminar, entrega un informe breve pero preciso con:
+
+1. Arquitectura elegida y principales decisiones.
+2. Estructura final del repositorio.
+3. Agentes implementados y cómo se comunican.
+4. Descripción del vertical slice funcional.
+5. Tecnologías y dependencias utilizadas.
+6. Comandos exactos para instalar, ejecutar y probar.
+7. Pruebas ejecutadas y resultados.
+8. Limitaciones conocidas.
+9. Documentación creada.
+10. Estado de cumplimiento de requisitos oficiales.
+11. Propuesta de primeras tareas para los tres integrantes.
+12. Próximos pasos recomendados, en orden de prioridad.
+
+Distingue claramente:
+- Implementado.
+- Probado.
+- Parcialmente implementado.
+- Pendiente.
+- Simulado.
+
+No sustituyas resultados por afirmaciones genéricas.
+
+## 27. INSTRUCCIÓN FINAL
+
+Toma las decisiones técnicas ordinarias por tu cuenta y justifica aquellas que afecten de forma importante la evolución del proyecto.
+
+El objetivo principal no es construir la mayor cantidad posible de código, sino una BASE REAL, FUNCIONAL, EXTENSIBLE Y MANTENIBLE para continuar desarrollando AguaIA en equipo.
+
+Prioriza un vertical slice funcional sobre múltiples módulos incompletos.
+
+Diseña el sistema para que después pueda pedirte, por ejemplo:
+
+"Agrega el agente planificador de cisternas utilizando OR-Tools".
+
+Y puedas hacerlo aprovechando la arquitectura existente, sin necesidad de reorganizar todo el repositorio.
+
+No te detengas después de presentar un plan. Implementa, prueba, documenta y reporta lo realizado.
+
+Comienza inspeccionando el repositorio y continúa con la implementación.

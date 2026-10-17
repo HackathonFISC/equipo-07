@@ -1,5 +1,186 @@
 [
-  {"id":"arraijan-demo","name":"Sector demostrativo de Arraiján","district":"Arraiján","population":1800,"vulnerability":0.7,"is_synthetic":true},
-  {"id":"chorrera-demo","name":"Sector demostrativo de La Chorrera","district":"La Chorrera","population":2500,"vulnerability":0.5,"is_synthetic":true},
-  {"id":"sector-sin-censo","name":"Sector demostrativo sin censo","district":"Arraiján","population":null,"vulnerability":null,"is_synthetic":true}
+  {
+    "id": "arraijan-demo",
+    "name": "Sector demostrativo de Arraiján",
+    "district": "Arraiján",
+    "population": 1800,
+    "vulnerability": 0.7,
+    "is_synthetic": true
+  },
+  {
+    "id": "chorrera-demo",
+    "name": "Sector demostrativo de La Chorrera",
+    "district": "La Chorrera",
+    "population": 2500,
+    "vulnerability": 0.5,
+    "is_synthetic": true
+  },
+  {
+    "id": "sector-sin-censo",
+    "name": "Sector demostrativo sin censo",
+    "district": "Arraiján",
+    "population": null,
+    "vulnerability": null,
+    "is_synthetic": true
+  },
+  {
+    "id": "crit-hosp-nicolas-solano",
+    "name": "Hospital Regional Nicolás A. Solano",
+    "district": "La Chorrera",
+    "population": 350,
+    "vulnerability": 0.95,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-poli-blas-gomez",
+    "name": "Policlínica Dr. Blas Gómez Chetro (CSS)",
+    "district": "Arraiján",
+    "population": 400,
+    "vulnerability": 0.9,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-poli-santiago-barraza",
+    "name": "Policlínica Dr. Santiago Barraza (CSS)",
+    "district": "La Chorrera",
+    "population": 500,
+    "vulnerability": 0.9,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-cs-vista-alegre",
+    "name": "Centro de Salud / ULAPS de Vista Alegre",
+    "district": "Arraiján",
+    "population": 250,
+    "vulnerability": 0.85,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-cs-nuevo-chorrillo",
+    "name": "Centro de Salud de Nuevo Chorrillo",
+    "district": "Arraiján",
+    "population": 180,
+    "vulnerability": 0.85,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-cs-magaly-ruiz",
+    "name": "Centro de Salud Magaly Ruiz",
+    "district": "La Chorrera",
+    "population": 220,
+    "vulnerability": 0.8,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-esc-guillermo-andreve",
+    "name": "C.E.B.G. Guillermo Andreve",
+    "district": "Arraiján",
+    "population": 2200,
+    "vulnerability": 0.75,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-esc-republica-costa-rica",
+    "name": "C.E.B.G. Bilingüe República de Costa Rica",
+    "district": "La Chorrera",
+    "population": 2800,
+    "vulnerability": 0.75,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-esc-stella-sierra",
+    "name": "C.E.B.G. Stella Sierra",
+    "district": "Arraiján",
+    "population": 1400,
+    "vulnerability": 0.7,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-asilo-pasos-felices",
+    "name": "Casa Hogar Pasos Felices (Asilo El Coco)",
+    "district": "La Chorrera",
+    "population": 45,
+    "vulnerability": 0.95,
+    "is_synthetic": false
+  },
+  {
+    "id": "crit-asilo-san-vicente",
+    "name": "Hogar de Ancianos San Vicente de Paúl",
+    "district": "La Chorrera",
+    "population": 60,
+    "vulnerability": 0.95,
+    "is_synthetic": false
+  },
+  {
+    "id": "pot-mendoza",
+    "name": "Planta Potabilizadora de Mendoza (ACP / IDAAN)",
+    "district": "La Chorrera",
+    "population": 100,
+    "vulnerability": 0.3,
+    "is_synthetic": false
+  },
+  {
+    "id": "pot-trapichito",
+    "name": "Planta Jaime Díaz Quintero (El Trapichito)",
+    "district": "La Chorrera",
+    "population": 100,
+    "vulnerability": 0.3,
+    "is_synthetic": false
+  },
+  {
+    "id": "pot-laguna-alta",
+    "name": "Planta Potabilizadora Laguna Alta",
+    "district": "Arraiján",
+    "population": 100,
+    "vulnerability": 0.3,
+    "is_synthetic": false
+  },
+  {
+    "id": "ref-super99-brisas-arraijan",
+    "name": "Super 99 Brisas del Golf Arraiján",
+    "district": "Arraiján",
+    "population": 600,
+    "vulnerability": 0.65,
+    "is_synthetic": false
+  },
+  {
+    "id": "ref-rey-vista-alegre",
+    "name": "Supermercados Rey Vista Alegre",
+    "district": "Arraiján",
+    "population": 800,
+    "vulnerability": 0.6,
+    "is_synthetic": false
+  },
+  {
+    "id": "ref-westland-mall",
+    "name": "Westland Premium Outlets (Westland Mall)",
+    "district": "Arraiján",
+    "population": 1500,
+    "vulnerability": 0.5,
+    "is_synthetic": false
+  },
+  {
+    "id": "ref-parque-feuillet",
+    "name": "Parque Feuillet",
+    "district": "La Chorrera",
+    "population": 500,
+    "vulnerability": 0.55,
+    "is_synthetic": false
+  },
+  {
+    "id": "ref-feria-chorrera",
+    "name": "Terrenos de la Feria Internacional de La Chorrera",
+    "district": "La Chorrera",
+    "population": 700,
+    "vulnerability": 0.6,
+    "is_synthetic": false
+  },
+  {
+    "id": "ref-loma-burunga",
+    "name": "Loma de Burunga (Sector Loma Center / El Chorrillo)",
+    "district": "Arraiján",
+    "population": 1800,
+    "vulnerability": 0.9,
+    "is_synthetic": false
+  }
 ]
