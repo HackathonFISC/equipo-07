@@ -20,5 +20,14 @@
   {"id":"E19","scenario":"correction","description":"Corrección humana explícita"},
   {"id":"E20","scenario":"candidate_injection","description":"UUID inventado por modelo rechazado"},
   {"id":"E21","scenario":"ungrounded","description":"Datos inventados por modelo rechazados"},
-  {"id":"E22","scenario":"cross_sector","description":"No consolidar sectores distintos"}
+  {"id":"E22","scenario":"cross_sector","description":"No consolidar sectores distintos"},
+  {"id":"E23","suite":"planner","scenario":"plan_approve","description":"Plan propuesto por el agente planificador y aprobado programa incidentes"},
+  {"id":"E24","suite":"planner","scenario":"plan_no_location","description":"Sector sin coordenadas no recibe ruta inventada"},
+  {"id":"E25","suite":"planner","scenario":"plan_leak","description":"Fuga se deriva a reparación, no a cisterna"},
+  {"id":"E26","suite":"planner","scenario":"plan_unavailable","description":"Cisternas excluidas por el coordinador no se asignan"},
+  {"id":"E27","suite":"planner","scenario":"plan_unknown_truck","description":"Cisterna desconocida rechazada sin crear plan"},
+  {"id":"E28","suite":"planner","scenario":"plan_unauthorized","description":"Generar o revisar plan sin token"},
+  {"id":"E29","suite":"planner","scenario":"plan_reject","description":"Rechazo deja incidentes priorizados para un nuevo plan"},
+  {"id":"E30","suite":"planner","scenario":"plan_single_pending","description":"Un solo plan pendiente y decisión no sobrescribible"},
+  {"id":"E31","suite":"planner","scenario":"plan_privacy","description":"Datos personales de conductores no salen por la API"}
 ]

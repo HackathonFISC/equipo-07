@@ -1,0 +1,139 @@
+{
+  "fleet_version": "2.0.0",
+  "organization": "Coordinación Operativa de Distribución de Agua de Panamá Oeste (AguaIA / IDAAN Demo)",
+  "region": "Panamá Oeste (Arraiján y La Chorrera)",
+  "total_trucks": 4,
+  "total_capacity_gallons": 26000,
+  "notes": "Flota modelada para optimización logística de rutas (VRP con ventanas de tiempo). Incorpora tiempos de servicio descompuestos en acople/desacople, tasa de flujo de bombeo y tiempo de recarga en planta potabilizadora base.",
+  "trucks": [
+    {
+      "id": "cisterna-burunga-01",
+      "license_plate": "PA-3001",
+      "name": "Cisterna Ágil Burunga 01",
+      "chassis_type": "4x2 Rígido Especial Terreno Quebrado",
+      "capacity_gallons": 3000,
+      "capacity_liters": 11356,
+      "suitable_terrains": [
+        "lomas_empinadas",
+        "calles_estrechas",
+        "caminos_sin_asfalto",
+        "sectores_perifericos"
+      ],
+      "max_climb_gradient_pct": 25,
+      "base_plant_id": "pot-laguna-alta",
+      "current_status": "disponible",
+      "fuel_consumption_km_per_gal": 6.2,
+      "discharge_flow_rate_gpm": 150,
+      "refill_time_minutes": 20,
+      "setup_and_coupling_time_minutes": 10,
+      "hose_length_meters": 60,
+      "pump_spec": "Bomba centrífuga autocebante con salida de 2 pulgadas Camlock",
+      "driver": {
+        "license_category": "Tipo F Comercial",
+        "shift": "matutino",
+        "shift_hours": {
+          "start": "06:00",
+          "end": "14:00"
+        }
+      },
+      "operational_role": "Despacho exclusivo para sectores de alta cota y accesos complicados en Arraiján (Loma de Burunga, Nuevo Chorrillo, Cerro Silvestre y Valle del Sol)."
+    },
+    {
+      "id": "cisterna-chorrera-02",
+      "license_plate": "PA-3002",
+      "name": "Cisterna Ágil Chorrera 02",
+      "chassis_type": "4x2 Rígido Especial Calles Angostas",
+      "capacity_gallons": 3000,
+      "capacity_liters": 11356,
+      "suitable_terrains": [
+        "calles_angostas",
+        "caminos_vecinales",
+        "zonas_semiurbanas",
+        "asilos_barriales"
+      ],
+      "max_climb_gradient_pct": 20,
+      "base_plant_id": "pot-trapichito",
+      "current_status": "disponible",
+      "fuel_consumption_km_per_gal": 6.0,
+      "discharge_flow_rate_gpm": 150,
+      "refill_time_minutes": 20,
+      "setup_and_coupling_time_minutes": 10,
+      "hose_length_meters": 50,
+      "pump_spec": "Bomba centrífuga de alta presión de 2 pulgadas",
+      "driver": {
+        "license_category": "Tipo F Comercial",
+        "shift": "vespertino",
+        "shift_hours": {
+          "start": "14:00",
+          "end": "22:00"
+        }
+      },
+      "operational_role": "Atención rápida en La Chorrera periférica (El Coco, Casa Hogar Pasos Felices, Potrero Grande y La Tulihueca)."
+    },
+    {
+      "id": "cisterna-hospital-01",
+      "license_plate": "PA-10001",
+      "name": "Mega Cisterna Hospitalaria 01",
+      "chassis_type": "6x4 Articulado Cabezal + Tanque Acero Inoxidable Grado Alimenticio",
+      "capacity_gallons": 10000,
+      "capacity_liters": 37854,
+      "suitable_terrains": [
+        "avenidas_principales",
+        "autopistas",
+        "hospitales",
+        "centros_salud_urbanos",
+        "tanques_soterrados"
+      ],
+      "max_climb_gradient_pct": 10,
+      "base_plant_id": "pot-mendoza",
+      "current_status": "disponible",
+      "fuel_consumption_km_per_gal": 3.8,
+      "discharge_flow_rate_gpm": 300,
+      "refill_time_minutes": 35,
+      "setup_and_coupling_time_minutes": 15,
+      "hose_length_meters": 35,
+      "pump_spec": "Motobomba diésel de alto caudal con conexiones Camlock de 3 y 4 pulgadas",
+      "driver": {
+        "license_category": "Tipo I Articulados y Cargas Pesadas",
+        "shift": "matutino_temprano",
+        "shift_hours": {
+          "start": "05:00",
+          "end": "13:00"
+        }
+      },
+      "operational_role": "Suministro masivo para instituciones críticas de alta prioridad (Hospital Nicolás A. Solano, Policlínica Blas Gómez Chetro y Policlínica Santiago Barraza)."
+    },
+    {
+      "id": "cisterna-troncal-02",
+      "license_plate": "PA-10002",
+      "name": "Mega Cisterna Troncal 02",
+      "chassis_type": "6x4 Articulado con Manifold Distribuidor de 4 Vías",
+      "capacity_gallons": 10000,
+      "capacity_liters": 37854,
+      "suitable_terrains": [
+        "avenidas_principales",
+        "carretera_panamericana",
+        "escuelas_grandes",
+        "puntos_de_acopio_comunitarios"
+      ],
+      "max_climb_gradient_pct": 12,
+      "base_plant_id": "pot-trapichito",
+      "current_status": "disponible",
+      "fuel_consumption_km_per_gal": 3.7,
+      "discharge_flow_rate_gpm": 300,
+      "refill_time_minutes": 35,
+      "setup_and_coupling_time_minutes": 15,
+      "hose_length_meters": 40,
+      "pump_spec": "Bomba de descarga rápida de 3 pulgadas con flauta de reparto simultáneo para recipientes comunitarios",
+      "driver": {
+        "license_category": "Tipo I Articulados y Cargas Pesadas",
+        "shift": "diurno_central",
+        "shift_hours": {
+          "start": "08:00",
+          "end": "16:00"
+        }
+      },
+      "operational_role": "Abastecimiento masivo comunitario y escolar sobre ejes troncales (Escuela República de Costa Rica, Vista Alegre centro y Parque Feuillet)."
+    }
+  ]
+}

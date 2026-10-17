@@ -119,6 +119,99 @@ class PriorityPolicyConfig(Contract):
         return self
 
 
+class PlannerPolicyConfig(Contract):
+    version: str = "v1.0.0-demo"
+    # Supuestos explícitos: velocidad urbana media y tortuosidad del dataset de referencia.
+    speed_kmh: float = Field(default=30, gt=0, le=90)
+    tortuosity: float = Field(default=1.4, ge=1, le=3)
+
+
+class PlanDemand(Contract):
+    community_id: str
+    name: str
+    incident_ids: list[str]
+    score: int = Field(ge=0, le=100)
+    critical: bool
+    lat: float
+    lng: float
+    gallons: int = Field(gt=0)
+    max_truck_capacity: int = Field(gt=0)
+
+
+class PlanTruck(Contract):
+    id: str
+    name: str
+    capacity: int = Field(gt=0)
+    base_id: str
+    base_name: str
+    base_lat: float
+    base_lng: float
+    shift_start: str = Field(pattern=r"^\d{2}:\d{2}$")
+    shift_end: str = Field(pattern=r"^\d{2}:\d{2}$")
+    flow_gpm: float = Field(gt=0)
+    refill_minutes: int = Field(ge=0)
+    setup_minutes: int = Field(ge=0)
+    km_per_gallon: float = Field(gt=0)
+
+
+class PlanStop(Contract):
+    community_id: str
+    name: str
+    incident_ids: list[str]
+    trip: int
+    arrival: str
+    gallons: int
+    reason: str
+
+
+class TruckRoute(Contract):
+    truck_id: str
+    truck_name: str
+    capacity: int
+    base_name: str
+    shift: str
+    trips: int
+    km: float
+    fuel_gallons: float
+    gallons: int
+    ends_at: str | None
+    stops: list[PlanStop]
+
+
+class UnservedDemand(Contract):
+    community_id: str
+    name: str
+    incident_ids: list[str]
+    reason: Literal[
+        "COBERTURA_PARCIAL",
+        "SIN_CISTERNA_COMPATIBLE",
+        "SIN_TIEMPO_EN_TURNO",
+        "SIN_UBICACION",
+        "SIN_DEMANDA_ESTIMADA",
+        "FUGA_REQUIERE_REPARACION",
+    ]
+    gallons_missing: int | None
+    detail: str
+
+
+class PlanResult(Contract):
+    policy_version: str
+    routes: list[TruckRoute]
+    unserved: list[UnservedDemand]
+    demand_gallons: int
+    planned_gallons: int
+    explanation: list[str]
+
+
+class PlanRequest(Contract):
+    unavailable_trucks: list[str] = Field(default_factory=list, max_length=20)
+
+
+class PlanReviewInput(Contract):
+    decision: Literal["APPROVE", "REJECT"]
+    reason: str = Field(min_length=5, max_length=600)
+
+
 class PriorityResult(Contract):
     score_min: int = Field(ge=0, le=100)
     score_max: int = Field(ge=0, le=100)

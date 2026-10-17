@@ -29,3 +29,31 @@ export interface Detail extends Execution {
 export interface Incident {
   id: string; community_id: string; summary: string; kind: string; status: string
 }
+export type PlanStatus = 'QUEUED' | 'RUNNING' | 'PROPOSED' | 'APPROVED' | 'REJECTED' | 'ERROR'
+export interface PlanStop {
+  community_id: string; name: string; incident_ids: string[]; trip: number
+  arrival: string; gallons: number; reason: string
+}
+export interface TruckRoute {
+  truck_id: string; truck_name: string; capacity: number; base_name: string; shift: string
+  trips: number; km: number; fuel_gallons: number; gallons: number; ends_at: string | null
+  stops: PlanStop[]
+}
+export interface UnservedDemand {
+  community_id: string; name: string; incident_ids: string[]; reason: string
+  gallons_missing: number | null; detail: string
+}
+export interface DistributionPlan {
+  id: string; status: PlanStatus; error: string | null; created_at: string
+  request: { unavailable_trucks: string[] }
+  review: null | { decision: 'APPROVE' | 'REJECT'; reason: string }
+  result: null | {
+    policy_version: string; routes: TruckRoute[]; unserved: UnservedDemand[]
+    demand_gallons: number; planned_gallons: number; explanation: string[]
+  }
+  events: { agent: string; tool: string | null; event: string; detail: Record<string, unknown>; at: string }[]
+}
+export interface FleetTruck {
+  id: string; name: string; capacity_gallons: number; base_plant_id: string; status: string
+  shift_start: string; shift_end: string; operational_role: string
+}

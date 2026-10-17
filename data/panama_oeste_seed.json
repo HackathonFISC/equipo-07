@@ -1,0 +1,751 @@
+{
+  "dataset_version": "2.0.0",
+  "region": "Panamá Oeste, República de Panamá",
+  "districts": [
+    "Arraiján",
+    "La Chorrera"
+  ],
+  "bounding_box": {
+    "min_lat": 8.8500,
+    "max_lat": 9.0500,
+    "min_lng": -79.8600,
+    "max_lng": -79.6300
+  },
+  "tortuosity_factor_average": 1.40,
+  "notes": "Dataset dorado de referencia para el Reto 1 (Agua - Hackathon FISC AI Agents 2026). Integra topología hidráulica, restricciones viales reales y referencias vernáculas panameñas para geocodificación de reportes ciudadanos.",
+  "locations": [
+    {
+      "id": "crit-hosp-nicolas-solano",
+      "name": "Hospital Regional Nicolás A. Solano",
+      "aliases": [
+        "El Nicolás Solano",
+        "Hospital de La Chorrera",
+        "El Regional",
+        "Vía Puerto Caimito"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "hospital",
+      "district": "La Chorrera",
+      "corregimiento": "Playa Leona",
+      "coordinates": {
+        "lat": 8.8730,
+        "lng": -79.7162
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 45000,
+      "estimated_daily_demand_gallons": 15000,
+      "vulnerable_population_count": 350,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.0,
+        "recovery_latency_hours": 12,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Entrada amplia por Avenida Mariano Rivera. Conexión Camlock directa de 3 y 4 pulgadas a cisterna soterrada."
+      },
+      "vernacular_context": "Los reportes ciudadanos suelen decir 'cerca del Nicolás Solano', 'en la entrada del hospital' o 'por la vía a Puerto Caimito'."
+    },
+    {
+      "id": "crit-poli-blas-gomez",
+      "name": "Policlínica Dr. Blas Gómez Chetro (CSS)",
+      "aliases": [
+        "Policlínica de Arraiján",
+        "El Seguro de Arraiján",
+        "La Blas Gómez",
+        "La Policlínica del Chorrillo"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "policlinica",
+      "district": "Arraiján",
+      "corregimiento": "Arraiján Cabecera",
+      "coordinates": {
+        "lat": 8.9530,
+        "lng": -79.6561
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 25000,
+      "estimated_daily_demand_gallons": 9000,
+      "vulnerable_population_count": 400,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.15,
+        "recovery_latency_hours": 18,
+        "historical_loss_frequency": "alta"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Ubicada en la Vía Principal de Arraiján. Acceso directo pavimentado con rampa para cisternas pesadas."
+      },
+      "vernacular_context": "Referencias típicas en denuncias: 'frente a la policlínica de Arraiján', 'subiendo por el Seguro' o 'atrás de la Blas Gómez'."
+    },
+    {
+      "id": "crit-poli-santiago-barraza",
+      "name": "Policlínica Dr. Santiago Barraza (CSS)",
+      "aliases": [
+        "El Seguro de La Chorrera",
+        "Policlínica Santiago Barraza",
+        "El Seguro de la 8va",
+        "La Policlínica de Balboa"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "policlinica",
+      "district": "La Chorrera",
+      "corregimiento": "Barrio Balboa",
+      "coordinates": {
+        "lat": 8.8815,
+        "lng": -79.7820
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 30000,
+      "estimated_daily_demand_gallons": 11000,
+      "vulnerable_population_count": 500,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.1,
+        "recovery_latency_hours": 14,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Acceso por Calle 8va y Avenida Las Américas. Calle urbana céntrica de doble vía."
+      },
+      "vernacular_context": "Punto neurálgico de salud. Denuncias frecuentes: 'a dos cuadras del Seguro', 'por la 8va de La Chorrera' o 'frente a la Barraza'."
+    },
+    {
+      "id": "crit-cs-vista-alegre",
+      "name": "Centro de Salud / ULAPS de Vista Alegre",
+      "aliases": [
+        "Centro de Salud de Vista Alegre",
+        "La ULAPS de Vista Alegre",
+        "El Centro de Salud de la calle principal"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "centro_salud",
+      "district": "Arraiján",
+      "corregimiento": "Vista Alegre",
+      "coordinates": {
+        "lat": 8.9253,
+        "lng": -79.6989
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 12000,
+      "estimated_daily_demand_gallons": 4500,
+      "vulnerable_population_count": 250,
+      "hydraulic_topology": {
+        "zone_type": "cola_de_linea",
+        "vulnerability_multiplier": 1.35,
+        "recovery_latency_hours": 32,
+        "historical_loss_frequency": "muy_alta"
+      },
+      "road_access": {
+        "road_type": "calle_urbana_media",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "media",
+        "access_notes": "Vía interna de Vista Alegre con tráfico moderado. Admite camiones de 3,000 y 10,000 galones con maniobra."
+      },
+      "vernacular_context": "Vista Alegre es uno de los sectores con más afectaciones por roturas. Reportes: 'por el centro de salud de Vista Alegre', 'entrando por el Rey hacia el centro de salud'."
+    },
+    {
+      "id": "crit-cs-nuevo-chorrillo",
+      "name": "Centro de Salud de Nuevo Chorrillo",
+      "aliases": [
+        "El Centro de Salud de Nuevo Chorrillo",
+        "Puesto de Salud de Cerro Silvestre",
+        "La Salita de Nuevo Chorrillo"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "centro_salud",
+      "district": "Arraiján",
+      "corregimiento": "Cerro Silvestre",
+      "coordinates": {
+        "lat": 8.9501,
+        "lng": -79.6913
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 6000,
+      "estimated_daily_demand_gallons": 2500,
+      "vulnerable_population_count": 180,
+      "hydraulic_topology": {
+        "zone_type": "punto_alto",
+        "vulnerability_multiplier": 1.4,
+        "recovery_latency_hours": 36,
+        "historical_loss_frequency": "muy_alta"
+      },
+      "road_access": {
+        "road_type": "calle_angosta_loma",
+        "max_tanker_capacity_gallons": 3000,
+        "terrain_difficulty": "alta",
+        "access_notes": "Ubicado en cota alta de Cerro Silvestre. Pendiente pronunciada y calzada estrecha; solo se recomienda cisterna 4x2 de 3,000 gal."
+      },
+      "vernacular_context": "En reportes vecinales: 'arriba en Nuevo Chorrillo por el centro de salud', 'por la loma del puesto de salud'."
+    },
+    {
+      "id": "crit-cs-magaly-ruiz",
+      "name": "Centro de Salud Magaly Ruiz",
+      "aliases": [
+        "Centro de Salud Magaly Ruiz",
+        "El Centro de Salud de Colón",
+        "El Dispensario de La Chorrera"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "centro_salud",
+      "district": "La Chorrera",
+      "corregimiento": "Barrio Colón",
+      "coordinates": {
+        "lat": 8.8785,
+        "lng": -79.7892
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 8000,
+      "estimated_daily_demand_gallons": 3000,
+      "vulnerable_population_count": 220,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.1,
+        "recovery_latency_hours": 16,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "calle_urbana_media",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Calle asfaltada céntrica con espacio lateral para estacionamiento del cisterna."
+      },
+      "vernacular_context": "Frecuente en Barrio Colón: 'cerca de la Magaly Ruiz', 'por el centro de salud de Barrio Colón'."
+    },
+    {
+      "id": "crit-esc-guillermo-andreve",
+      "name": "C.E.B.G. Guillermo Andreve",
+      "aliases": [
+        "Escuela Guillermo Andreve",
+        "La Andreve",
+        "La Escuela Central de Arraiján"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "escuela",
+      "district": "Arraiján",
+      "corregimiento": "Arraiján Cabecera",
+      "coordinates": {
+        "lat": 8.9482,
+        "lng": -79.6557
+      },
+      "priority_level": 2,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": 5000,
+      "estimated_daily_demand_gallons": 3500,
+      "vulnerable_population_count": 2200,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.2,
+        "recovery_latency_hours": 20,
+        "historical_loss_frequency": "alta"
+      },
+      "road_access": {
+        "road_type": "calle_urbana_media",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "media",
+        "access_notes": "Acceso por calle secundaria de Arraiján cabecera. Horario escolar requiere coordinación matutina."
+      },
+      "vernacular_context": "Plantel histórico con matrícula de más de 2,000 niños. La falta de agua paraliza las clases provocando cierres de calle de padres de familia."
+    },
+    {
+      "id": "crit-esc-republica-costa-rica",
+      "name": "C.E.B.G. Bilingüe República de Costa Rica",
+      "aliases": [
+        "Escuela República de Costa Rica",
+        "La Costa Rica de La Chorrera",
+        "La Escuela Modelo de La Chorrera"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "escuela",
+      "district": "La Chorrera",
+      "corregimiento": "Barrio Balboa",
+      "coordinates": {
+        "lat": 8.8806,
+        "lng": -79.7834
+      },
+      "priority_level": 2,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": 6000,
+      "estimated_daily_demand_gallons": 4000,
+      "vulnerable_population_count": 2800,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.1,
+        "recovery_latency_hours": 14,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Frente a Parque Feuillet / Calle Balboa. Acceso muy amplio y cómodo para camiones pesados."
+      },
+      "vernacular_context": "La escuela más grande de La Chorrera (~2,800 estudiantes). Referencia emblemática en protestas y llamados a paro."
+    },
+    {
+      "id": "crit-esc-stella-sierra",
+      "name": "C.E.B.G. Stella Sierra",
+      "aliases": [
+        "Escuela Stella Sierra",
+        "Colegio Stella Sierra",
+        "La Stella Sierra de Arraiján"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "escuela",
+      "district": "Arraiján",
+      "corregimiento": "Arraiján Cabecera",
+      "coordinates": {
+        "lat": 8.9413,
+        "lng": -79.6399
+      },
+      "priority_level": 2,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": 4000,
+      "estimated_daily_demand_gallons": 2800,
+      "vulnerable_population_count": 1400,
+      "hydraulic_topology": {
+        "zone_type": "punto_alto",
+        "vulnerability_multiplier": 1.3,
+        "recovery_latency_hours": 24,
+        "historical_loss_frequency": "alta"
+      },
+      "road_access": {
+        "road_type": "calle_angosta_loma",
+        "max_tanker_capacity_gallons": 3000,
+        "terrain_difficulty": "media",
+        "access_notes": "Pendiente moderada en sector periférico de Arraiján. Recomendado cisterna de 3,000 galones."
+      },
+      "vernacular_context": "Frecuente en reportes de comunidades altas: 'al lado de la Stella Sierra', 'en la subida del colegio'."
+    },
+    {
+      "id": "crit-asilo-pasos-felices",
+      "name": "Casa Hogar Pasos Felices (Asilo El Coco)",
+      "aliases": [
+        "Asilo de El Coco",
+        "Hogar Pasos Felices",
+        "El Hogar de Ancianos de La Chorrera"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "hogar_ancianos",
+      "district": "La Chorrera",
+      "corregimiento": "El Coco",
+      "coordinates": {
+        "lat": 8.8681,
+        "lng": -79.8086
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 3500,
+      "estimated_daily_demand_gallons": 1200,
+      "vulnerable_population_count": 45,
+      "hydraulic_topology": {
+        "zone_type": "cola_de_linea",
+        "vulnerability_multiplier": 1.45,
+        "recovery_latency_hours": 40,
+        "historical_loss_frequency": "muy_alta"
+      },
+      "road_access": {
+        "road_type": "calle_angosta_loma",
+        "max_tanker_capacity_gallons": 3000,
+        "terrain_difficulty": "media",
+        "access_notes": "Calle Principal de El Coco, al costado del Mini Super San José. Calle estrecha con zanja lateral."
+      },
+      "vernacular_context": "Albergue de adultos mayores de escasos recursos. Situación crítica: cuando El Coco pasa 4 días sin agua, este asilo queda sin reservas."
+    },
+    {
+      "id": "crit-asilo-san-vicente",
+      "name": "Hogar de Ancianos San Vicente de Paúl",
+      "aliases": [
+        "Hogar San Vicente",
+        "Asilo San Vicente de Paúl",
+        "El Asilo de Balboa"
+      ],
+      "category": "institucion_critica",
+      "subcategory": "hogar_ancianos",
+      "district": "La Chorrera",
+      "corregimiento": "Barrio Balboa",
+      "coordinates": {
+        "lat": 8.8845,
+        "lng": -79.7758
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": true,
+      "storage_capacity_gallons": 4000,
+      "estimated_daily_demand_gallons": 1500,
+      "vulnerable_population_count": 60,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.2,
+        "recovery_latency_hours": 20,
+        "historical_loss_frequency": "alta"
+      },
+      "road_access": {
+        "road_type": "calle_urbana_media",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Acceso pavimentado plano con portón metálico de descarga para manguera de 2 pulgadas."
+      },
+      "vernacular_context": "Hogar de ancianos asistidos. Clasificado como prioridad humana indispensable en el plan de contingencia."
+    },
+    {
+      "id": "pot-mendoza",
+      "name": "Planta Potabilizadora de Mendoza (ACP / IDAAN)",
+      "aliases": [
+        "Planta de Mendoza",
+        "Potabilizadora Mendoza",
+        "La Potabilizadora del Canal"
+      ],
+      "category": "planta_potabilizadora",
+      "subcategory": "planta_agua",
+      "district": "La Chorrera",
+      "corregimiento": "Mendoza",
+      "coordinates": {
+        "lat": 9.0161,
+        "lng": -79.8481
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": 5000000,
+      "estimated_daily_demand_gallons": null,
+      "vulnerable_population_count": 0,
+      "hydraulic_topology": {
+        "zone_type": "fuente_produccion",
+        "vulnerability_multiplier": 1.0,
+        "recovery_latency_hours": 0,
+        "historical_loss_frequency": "baja"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Rampa de llenado industrial de alto caudal para cisternas de 10,000 galones (tiempo de llenado ~35 min). Conexión rápida a la Autopista."
+      },
+      "vernacular_context": "La principal planta de la provincia (produce 40 millones de galones diarios). Si Mendoza falla por turbiedad o corte eléctrico, todo Panamá Oeste colapsa."
+    },
+    {
+      "id": "pot-trapichito",
+      "name": "Planta Jaime Díaz Quintero (El Trapichito)",
+      "aliases": [
+        "Planta El Trapichito",
+        "El Trapichito",
+        "Potabilizadora Jaime Díaz Quintero",
+        "La Planta del Río Caimito"
+      ],
+      "category": "planta_potabilizadora",
+      "subcategory": "planta_agua",
+      "district": "La Chorrera",
+      "corregimiento": "Barrio Balboa",
+      "coordinates": {
+        "lat": 8.8917,
+        "lng": -79.7875
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": 2000000,
+      "estimated_daily_demand_gallons": null,
+      "vulnerable_population_count": 0,
+      "hydraulic_topology": {
+        "zone_type": "fuente_produccion",
+        "vulnerability_multiplier": 1.0,
+        "recovery_latency_hours": 0,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Doble bahía de carga simultánea. Base operativa central del IDAAN en La Chorrera."
+      },
+      "vernacular_context": "Planta histórica ubicada a orillas del Río Caimito. Afectada con frecuencia por crecidas que tapan las tomas de agua cruda."
+    },
+    {
+      "id": "pot-laguna-alta",
+      "name": "Planta Potabilizadora Laguna Alta",
+      "aliases": [
+        "Planta de Laguna Alta",
+        "Laguna Alta",
+        "Aguas de Panamá Laguna Alta",
+        "Potabilizadora de Nuevo Emperador"
+      ],
+      "category": "planta_potabilizadora",
+      "subcategory": "planta_agua",
+      "district": "Arraiján",
+      "corregimiento": "Nuevo Emperador",
+      "coordinates": {
+        "lat": 9.0345,
+        "lng": -79.7780
+      },
+      "priority_level": 1,
+      "is_critical_lifeline": true,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": 3000000,
+      "estimated_daily_demand_gallons": null,
+      "vulnerable_population_count": 0,
+      "hydraulic_topology": {
+        "zone_type": "fuente_produccion",
+        "vulnerability_multiplier": 1.0,
+        "recovery_latency_hours": 0,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "carretera_intermedia",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "media",
+        "access_notes": "Acceso por Vía Nuevo Emperador. Rampa de carga ideal para despachar hacia Arraiján Cabecera, Burunga y Brisas del Golf."
+      },
+      "vernacular_context": "Suministra agua al 60% del distrito de Arraiján. Cada mantenimiento en Laguna Alta deja secos a Nuevo Chorrillo, Burunga y Vista Alegre."
+    },
+    {
+      "id": "ref-super99-brisas-arraijan",
+      "name": "Super 99 Brisas del Golf Arraiján",
+      "aliases": [
+        "El 99 de Brisas del Golf Arraiján",
+        "El 99 nuevo de Arraiján",
+        "Super 99 Plaza Paseo Arraiján",
+        "La rotonda del 99 de Brisas"
+      ],
+      "category": "referencia_vernacula",
+      "subcategory": "comercial",
+      "district": "Arraiján",
+      "corregimiento": "Nuevo Emperador",
+      "coordinates": {
+        "lat": 8.9723,
+        "lng": -79.7131
+      },
+      "priority_level": 3,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": null,
+      "estimated_daily_demand_gallons": 5000,
+      "vulnerable_population_count": 600,
+      "hydraulic_topology": {
+        "zone_type": "cola_de_linea",
+        "vulnerability_multiplier": 1.35,
+        "recovery_latency_hours": 36,
+        "historical_loss_frequency": "alta"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Plaza comercial con amplios estacionamientos. Excelente punto de acopio vecinal."
+      },
+      "vernacular_context": "Punto de referencia clave para los reportes de las barriadas Brisas del Golf Arraiján, Mirador del Bosque y Ciudad del Futuro etapa norte."
+    },
+    {
+      "id": "ref-rey-vista-alegre",
+      "name": "Supermercados Rey Vista Alegre",
+      "aliases": [
+        "El Rey de Vista Alegre",
+        "Plaza Vista Alegre",
+        "El Rey de la Interamericana",
+        "El Rey frente al Tecal"
+      ],
+      "category": "referencia_vernacula",
+      "subcategory": "comercial",
+      "district": "Arraiján",
+      "corregimiento": "Vista Alegre",
+      "coordinates": {
+        "lat": 8.9265,
+        "lng": -79.7112
+      },
+      "priority_level": 3,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": null,
+      "estimated_daily_demand_gallons": 6000,
+      "vulnerable_population_count": 800,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.2,
+        "recovery_latency_hours": 24,
+        "historical_loss_frequency": "alta"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Frente directo a la Carretera Panamericana. Entrada asfaltada y amplia."
+      },
+      "vernacular_context": "Denominador común para ubicar comunidades como El Tecal, Residencial Vista Alegre y Altos de Vista Alegre: 'viviendo atrás del Rey' o 'entrando por el Rey'."
+    },
+    {
+      "id": "ref-westland-mall",
+      "name": "Westland Premium Outlets (Westland Mall)",
+      "aliases": [
+        "Westland Mall",
+        "El Mall de Arraiján",
+        "Westland",
+        "La parada de Westland"
+      ],
+      "category": "referencia_vernacula",
+      "subcategory": "comercial",
+      "district": "Arraiján",
+      "corregimiento": "Vista Alegre",
+      "coordinates": {
+        "lat": 8.9220,
+        "lng": -79.7050
+      },
+      "priority_level": 3,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": null,
+      "estimated_daily_demand_gallons": 10000,
+      "vulnerable_population_count": 1500,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.1,
+        "recovery_latency_hours": 16,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Conexión directa a Autopista Arraiján - La Chorrera y Vía Panamericana. Boulevard de 4 carriles."
+      },
+      "vernacular_context": "El landmark más reconocido de Panamá Oeste. Utilizado en cientos de reportes: 'por la entrada de Westland', 'cerca del puente de Westland' o 'atrás del mall'."
+    },
+    {
+      "id": "ref-parque-feuillet",
+      "name": "Parque Feuillet",
+      "aliases": [
+        "Parque Feuillet",
+        "La parada del Feuillet",
+        "El Parque de los buses del interior",
+        "Feuillet Centro"
+      ],
+      "category": "referencia_vernacula",
+      "subcategory": "recreativo",
+      "district": "La Chorrera",
+      "corregimiento": "Barrio Balboa",
+      "coordinates": {
+        "lat": 8.8803,
+        "lng": -79.7811
+      },
+      "priority_level": 3,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": null,
+      "estimated_daily_demand_gallons": 4000,
+      "vulnerable_population_count": 500,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.1,
+        "recovery_latency_hours": 14,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Centro neurálgico del transporte en La Chorrera. Tráfico denso en horas pico."
+      },
+      "vernacular_context": "Punto de encuentro y orientación principal del distrito. Los vecinos describen: 'subiendo del Feuillet', 'frente al Feuillet' o 'en la piquera del Feuillet'."
+    },
+    {
+      "id": "ref-feria-chorrera",
+      "name": "Terrenos de la Feria Internacional de La Chorrera",
+      "aliases": [
+        "La Feria de La Chorrera",
+        "Los terrenos de la feria",
+        "La Feria",
+        "Camino a la feria"
+      ],
+      "category": "referencia_vernacula",
+      "subcategory": "recreativo",
+      "district": "La Chorrera",
+      "corregimiento": "Barrio Colón",
+      "coordinates": {
+        "lat": 8.8692,
+        "lng": -79.7809
+      },
+      "priority_level": 3,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": null,
+      "estimated_daily_demand_gallons": 3000,
+      "vulnerable_population_count": 700,
+      "hydraulic_topology": {
+        "zone_type": "troncal_media",
+        "vulnerability_multiplier": 1.2,
+        "recovery_latency_hours": 18,
+        "historical_loss_frequency": "media"
+      },
+      "road_access": {
+        "road_type": "avenida_principal",
+        "max_tanker_capacity_gallons": 10000,
+        "terrain_difficulty": "baja",
+        "access_notes": "Grandes explanadas y calles asfaltadas perimetrales. Punto de acopio masivo."
+      },
+      "vernacular_context": "Referencia cardinal del sur de La Chorrera. Orienta reportes de Barrio Colón, La Mitra y rutas hacia Puerto Caimito y Mendoza."
+    },
+    {
+      "id": "ref-loma-burunga",
+      "name": "Loma de Burunga (Sector Loma Center / El Chorrillo)",
+      "aliases": [
+        "Loma de Burunga",
+        "Loma Center",
+        "El Chorrillo de Burunga",
+        "La Loma",
+        "La Subida de Burunga",
+        "Burunga sector alto"
+      ],
+      "category": "referencia_vernacula",
+      "subcategory": "sector_residencial_critico",
+      "district": "Arraiján",
+      "corregimiento": "Burunga",
+      "coordinates": {
+        "lat": 8.9703,
+        "lng": -79.6725
+      },
+      "priority_level": 2,
+      "is_critical_lifeline": false,
+      "fast_track_priority": false,
+      "storage_capacity_gallons": null,
+      "estimated_daily_demand_gallons": 8000,
+      "vulnerable_population_count": 1800,
+      "hydraulic_topology": {
+        "zone_type": "punto_alto",
+        "vulnerability_multiplier": 1.45,
+        "recovery_latency_hours": 48,
+        "historical_loss_frequency": "muy_alta"
+      },
+      "road_access": {
+        "road_type": "calle_angosta_loma",
+        "max_tanker_capacity_gallons": 3000,
+        "terrain_difficulty": "alta",
+        "access_notes": "Pendiente superior al 18% con curvas pronunciadas y tendido eléctrico bajo. PROHIBIDO camiones articulados o cisternas mayores a 3,000 galones."
+      },
+      "vernacular_context": "Foco histórico de protestas vecinales por falta de agua en Panamá Oeste. Frases comunes: 'en la mera loma de Burunga no sube ni gota', 'acá en Loma Center llevamos 6 días secos'."
+    }
+  ]
+}

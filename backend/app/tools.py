@@ -1,9 +1,23 @@
 """Finite, transactional operations available to agents; never exposed as LLM tools."""
 
-from app.contracts import DuplicateEvaluationSchema, NormalizedReportSchema, PriorityResult
-from app.models import Association, Community, Incident, Proposal, Report, now
+from sqlalchemy import select
+
+from app.contracts import (
+    DuplicateEvaluationSchema,
+    NormalizedReportSchema,
+    PlanResult,
+    PriorityResult,
+)
+from app.models import Association, Community, DistributionPlan, Incident, Proposal, Report, now
 from app.providers import ProviderError
-from app.services import candidate_incidents, trace
+from app.services import (
+    candidate_incidents,
+    fleet_catalog,
+    location_catalog,
+    plan_event,
+    record_dict,
+    trace,
+)
 
 
 class AgentTools:
@@ -134,3 +148,53 @@ class AgentTools:
                     **priority.model_dump(),
                 )
             return proposal.priority
+
+
+class PlannerTools:
+    def __init__(self, db):
+        self._db = db
+
+    async def planning_inputs(self, plan_id):
+        """Incidents a coordinator already prioritized, with their approved score."""
+        async with self._db.sessions() as session:
+            plan = await session.get(DistributionPlan, plan_id)
+            rows = (
+                await session.execute(
+                    select(Incident, Proposal.final_score, Community.name)
+                    .join(Proposal, Proposal.incident_id == Incident.id)
+                    .join(Community, Community.id == Incident.community_id)
+                    .where(Incident.status == "PRIORITIZED", Proposal.final_score.is_not(None))
+                    .order_by(Incident.id)
+                )
+            ).all()
+            incidents: dict[str, dict] = {}
+            for incident, score, name in rows:
+                item = incidents.setdefault(
+                    incident.id,
+                    {**record_dict(incident), "community_name": name, "score": score},
+                )
+                item["score"] = max(item["score"], score)
+            return {
+                "request": plan.request,
+                "incidents": list(incidents.values()),
+                "fleet": fleet_catalog(),
+                "locations": location_catalog(),
+            }
+
+    async def save_plan(self, plan_id, result: PlanResult):
+        async with self._db.sessions.begin() as session:
+            plan = await session.get(DistributionPlan, plan_id)
+            if plan.result is None:
+                plan.result = result.model_dump()
+                plan_event(
+                    plan,
+                    "planner",
+                    "PLAN_PROPOSED",
+                    tool="plan_distribution",
+                    policy_version=result.policy_version,
+                    routes=len(result.routes),
+                    unserved=len(result.unserved),
+                    planned_gallons=result.planned_gallons,
+                    demand_gallons=result.demand_gallons,
+                )
+            return plan.result

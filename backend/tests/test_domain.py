@@ -3,6 +3,7 @@ from pydantic import ValidationError
 
 from app.contracts import PriorityPolicyConfig
 from app.domain import calculate_priority
+from tests.conftest import AUTH
 
 
 @pytest.mark.parametrize(
@@ -43,3 +44,24 @@ def test_max_tie_and_custom_policy():
 def test_invalid_priority_data(args):
     with pytest.raises(ValueError):
         calculate_priority(*args)
+
+
+async def test_geo_and_fleet_endpoints(system):
+    geo_res = await system.client.get("/api/geo/locations")
+    assert geo_res.status_code == 200
+    geo_data = geo_res.json()
+    assert geo_data["type"] == "FeatureCollection"
+    assert len(geo_data["features"]) == 20
+
+    # La flota es dato de coordinación: requiere token y nunca incluye datos de conductores.
+    assert (await system.client.get("/api/admin/fleet")).status_code == 401
+    fleet_res = await system.client.get("/api/admin/fleet", headers=AUTH)
+    assert fleet_res.status_code == 200
+    fleet_data = fleet_res.json()
+    assert len(fleet_data) == 4
+    assert all("driver" not in truck for truck in fleet_data)
+
+    comm_res = await system.client.get("/api/communities")
+    assert comm_res.status_code == 200
+    communities = comm_res.json()
+    assert len(communities) == 23

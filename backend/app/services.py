@@ -2,14 +2,16 @@ import hashlib
 import json
 import time
 from datetime import timedelta
+from pathlib import Path
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 
-from app.contracts import ReportInput, ReviewInput
+from app.contracts import PlanRequest, PlanReviewInput, ReportInput, ReviewInput
 from app.models import (
     Association,
     Community,
+    DistributionPlan,
     Execution,
     Incident,
     Proposal,
@@ -27,6 +29,13 @@ class Conflict(ValueError):
 
 class Missing(ValueError):
     pass
+
+
+class Invalid(ValueError):
+    pass
+
+
+DATA = Path(__file__).resolve().parents[2] / "data"
 
 
 def trace(session, execution_id, agent, event, *, tool=None, category="technical", **detail):
@@ -156,7 +165,7 @@ async def candidate_incidents(session, report, window_hours):
             select(Incident)
             .where(
                 Incident.community_id == report.community_id,
-                Incident.status.in_(["OPEN", "PRIORITIZED"]),
+                Incident.status.in_(["OPEN", "PRIORITIZED", "SCHEDULED"]),
                 Incident.last_activity >= now() - timedelta(hours=window_hours),
             )
             .order_by(Incident.last_activity.desc(), Incident.id)
@@ -251,3 +260,111 @@ async def execution_detail(db, execution_id):
 
 def log_event(**data):
     print(json.dumps({"timestamp": now().isoformat() + "Z", **data}), flush=True)
+
+
+def fleet_catalog():
+    """Operational fields only: driver identity and contact data never leave the data file."""
+    fleet = json.loads((DATA / "tanker_fleet.json").read_text("utf-8"))
+    return [
+        {
+            "id": t["id"],
+            "name": t["name"],
+            "capacity_gallons": t["capacity_gallons"],
+            "base_plant_id": t["base_plant_id"],
+            "status": t["current_status"],
+            "shift_start": t["driver"]["shift_hours"]["start"],
+            "shift_end": t["driver"]["shift_hours"]["end"],
+            "discharge_flow_rate_gpm": t["discharge_flow_rate_gpm"],
+            "refill_time_minutes": t["refill_time_minutes"],
+            "setup_and_coupling_time_minutes": t["setup_and_coupling_time_minutes"],
+            "fuel_consumption_km_per_gal": t["fuel_consumption_km_per_gal"],
+            "operational_role": t["operational_role"],
+        }
+        for t in fleet["trucks"]
+    ]
+
+
+def location_catalog():
+    features = json.loads((DATA / "panama_oeste_locations.geojson").read_text("utf-8"))
+    return {
+        f["properties"]["id"]: {
+            **f["properties"],
+            "lng": f["geometry"]["coordinates"][0],
+            "lat": f["geometry"]["coordinates"][1],
+        }
+        for f in features["features"]
+    }
+
+
+def plan_event(plan, agent, event, *, tool=None, **detail):
+    plan.events = [
+        *plan.events,
+        {"agent": agent, "tool": tool, "event": event, "detail": detail, "at": now().isoformat()},
+    ]
+
+
+async def request_plan(db, body: PlanRequest):
+    known = {t["id"] for t in fleet_catalog()}
+    unknown = sorted(set(body.unavailable_trucks) - known)
+    if unknown:
+        raise Invalid(f"Cisternas desconocidas: {', '.join(unknown)}")
+    async with db.sessions.begin() as session:
+        pending = await session.scalar(
+            select(DistributionPlan).where(
+                DistributionPlan.status.in_(["QUEUED", "RUNNING", "PROPOSED"])
+            )
+        )
+        if pending:
+            raise Conflict("Ya hay un plan en preparación o esperando revisión")
+        plan = DistributionPlan(
+            request={"unavailable_trucks": sorted(set(body.unavailable_trucks))}, events=[]
+        )
+        plan_event(plan, "human", "PLAN_REQUESTED", **plan.request)
+        session.add(plan)
+        await session.flush()
+        return record_dict(plan)
+
+
+async def review_plan(db, plan_id, body: PlanReviewInput):
+    async with db.sessions.begin() as session:
+        plan = await session.get(DistributionPlan, plan_id)
+        if not plan:
+            raise Missing("Plan no encontrado")
+        if plan.review is not None:
+            if plan.review != body.model_dump():
+                raise Conflict("El plan ya fue revisado y la decisión no puede sobrescribirse")
+            return record_dict(plan)
+        if plan.status != "PROPOSED":
+            raise Conflict("El plan todavía no espera revisión")
+        plan.review = body.model_dump()
+        plan.status = "APPROVED" if body.decision == "APPROVE" else "REJECTED"
+        scheduled = []
+        if body.decision == "APPROVE":
+            ids = {i for r in plan.result["routes"] for s in r["stops"] for i in s["incident_ids"]}
+            for incident in (
+                await session.scalars(select(Incident).where(Incident.id.in_(ids)))
+            ).all():
+                # Programado no significa entregado: la entrega real se confirma fuera del sistema.
+                incident.status = "SCHEDULED"
+                incident.last_activity = now()
+                scheduled.append(incident.id)
+        plan_event(
+            plan,
+            "human",
+            "PLAN_REVIEWED",
+            tool="save_plan_decision",
+            decision=body.decision,
+            reason=body.reason,
+            scheduled_incidents=len(scheduled),
+        )
+        return record_dict(plan)
+
+
+async def latest_plan(db):
+    async with db.sessions() as session:
+        plan = await session.scalar(
+            select(DistributionPlan)
+            .order_by(DistributionPlan.created_at.desc(), DistributionPlan.id)
+            .limit(1)
+        )
+        return record_dict(plan) if plan else None

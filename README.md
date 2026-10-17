@@ -17,9 +17,10 @@ Los reportes dispersos de falta de agua dificultan coordinar la atención de com
 y La Chorrera. AguaIA consolida incidentes y propone prioridades explicables que debe revisar una
 persona. Es un centro de coordinación, no un chatbot ni un sistema de despacho automático.
 
-**Estado:** fundación y vertical slice local implementados. Mock offline por defecto, tres agentes,
-persistencia real, aprobación protegida y trazabilidad. Catálogo de sectores sintético; no son datos
-oficiales del IDAAN. Rutas, integraciones de mensajería y despliegue público quedan pendientes.
+**Estado:** vertical slice local implementado. Mock offline por defecto, cuatro agentes,
+persistencia real, dos aprobaciones humanas protegidas (prioridad y plan de cisternas) y
+trazabilidad. Catálogo de sectores de referencia; no son datos oficiales del IDAAN. Integraciones de
+mensajería, tráfico real y despliegue público quedan pendientes.
 
 ## Arquitectura de agentes
 
@@ -27,6 +28,10 @@ oficiales del IDAAN. Rutas, integraciones de mensajería y despliegue público q
 2. **Verificación:** consulta candidatos del mismo sector y consolida mediante reglas + evaluación
    semántica tipada. MEDIUM exige resolver la asociación humana.
 3. **Coordinación:** utiliza el motor determinístico 0–100 y propone una decisión explicable.
+4. **Planificador:** toma los incidentes cuya prioridad aprobó el coordinador y, con un solver
+   determinístico (sin LLM), asigna cisternas, horarios y galones respetando capacidad, acceso vial,
+   turnos y recarga en planta. Explica cada parada y cada demanda no atendida; el coordinador
+   aprueba o rechaza el plan y puede excluir cisternas no disponibles.
 
 ```mermaid
 flowchart LR
@@ -40,6 +45,9 @@ flowchart LR
   H -->|Revisión con token y Command resume| D[Decisión persistida]
   W <--> CP[(Checkpoints SQLite)]
   D --> DB
+  DB -->|Incidentes priorizados| P[Planificador + solver]
+  P --> PR[Plan propuesto]
+  PR -->|Revisión con token| PA[Rutas programadas]
 ```
 
 El 202 no ejecuta el grafo dentro de la petición: reporte y cola se confirman en una transacción.
@@ -132,7 +140,10 @@ Los trabajos existentes conservan su proveedor: finalizar antes de cambiarlo o u
 2. Observa el identificador y la transición de cola a revisión humana.
 3. En Coordinación ingresa el token, selecciona la ejecución y revisa factores, intervalo y trazas.
 4. Aprueba, rechaza o corrige con una razón. Espera el estado terminal y verifica la decisión guardada.
-5. Repite el reporte para comprobar la consolidación. No se despacha ninguna cisterna.
+5. Repite el reporte para comprobar la consolidación.
+6. En «Plan de distribución de cisternas» marca las cisternas no disponibles, genera el plan, revisa
+   paradas, horarios y demanda no atendida, y apruébalo o recházalo con una razón. Aprobar programa
+   rutas; no confirma entregas de agua.
 
 Guion completo, recuperación y reinicio seguro de datos: [DEMO](docs/DEMO.md).
 

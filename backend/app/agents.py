@@ -1,9 +1,17 @@
 from uuid import UUID
 
-from app.contracts import DuplicateEvaluationSchema, NormalizedReportSchema, plain
+from app.contracts import (
+    DuplicateEvaluationSchema,
+    NormalizedReportSchema,
+    PlanDemand,
+    PlanTruck,
+    UnservedDemand,
+    plain,
+)
 from app.domain import calculate_priority
+from app.planner import plan_distribution
 from app.providers import ProviderError, critical_evidence, stated_hours
-from app.tools import AgentTools
+from app.tools import AgentTools, PlannerTools
 
 
 class Agents:
@@ -87,3 +95,88 @@ class Agents:
             {"id": state["incident_id"], "kind": normalized.kind}, priority.model_dump()
         )
         return {"priority": await self.tools.save_proposal(key, priority, result.explanation)}
+
+
+SKIP_DETAIL = {
+    "FUGA_REQUIERE_REPARACION": "Una fuga se resuelve con una cuadrilla de reparación, "
+    "no con una cisterna.",
+    "SIN_UBICACION": "El sector no tiene coordenadas en el catálogo geográfico; "
+    "no se inventa una ubicación.",
+    "SIN_DEMANDA_ESTIMADA": "El catálogo no estima la demanda diaria de este punto.",
+}
+
+
+class PlannerAgent:
+    """Turns human-approved priorities into a tanker plan; the solver is pure code, not an LLM."""
+
+    def __init__(self, db):
+        self.tools = PlannerTools(db)
+
+    async def plan(self, plan_id):
+        context = await self.tools.planning_inputs(plan_id)
+        locations = context["locations"]
+        unavailable = set(context["request"]["unavailable_trucks"])
+        trucks = [
+            PlanTruck(
+                id=t["id"],
+                name=t["name"],
+                capacity=t["capacity_gallons"],
+                base_id=t["base_plant_id"],
+                base_name=locations[t["base_plant_id"]]["name"],
+                base_lat=locations[t["base_plant_id"]]["lat"],
+                base_lng=locations[t["base_plant_id"]]["lng"],
+                shift_start=t["shift_start"],
+                shift_end=t["shift_end"],
+                flow_gpm=t["discharge_flow_rate_gpm"],
+                refill_minutes=t["refill_time_minutes"],
+                setup_minutes=t["setup_and_coupling_time_minutes"],
+                km_per_gallon=t["fuel_consumption_km_per_gal"],
+            )
+            for t in context["fleet"]
+            if t["id"] not in unavailable and t["status"] == "disponible"
+        ]
+        by_community: dict[str, list[dict]] = {}
+        for incident in context["incidents"]:
+            by_community.setdefault(incident["community_id"], []).append(incident)
+        demands, skipped = [], []
+        for community_id, incidents in sorted(by_community.items()):
+            needs_water = [i for i in incidents if i["kind"] != "LEAK"]
+            location = locations.get(community_id)
+            if not needs_water:
+                reason = "FUGA_REQUIERE_REPARACION"
+            elif location is None:
+                reason = "SIN_UBICACION"
+            elif not location.get("estimated_daily_demand_gallons"):
+                reason = "SIN_DEMANDA_ESTIMADA"
+            else:
+                demands.append(
+                    PlanDemand(
+                        community_id=community_id,
+                        name=location["name"],
+                        incident_ids=[i["id"] for i in needs_water],
+                        score=max(i["score"] for i in needs_water),
+                        critical=bool(location.get("is_critical_lifeline")),
+                        lat=location["lat"],
+                        lng=location["lng"],
+                        gallons=location["estimated_daily_demand_gallons"],
+                        max_truck_capacity=location["road_access"]["max_tanker_capacity_gallons"],
+                    )
+                )
+                continue
+            skipped.append(
+                UnservedDemand(
+                    community_id=community_id,
+                    name=incidents[0]["community_name"],
+                    incident_ids=[i["id"] for i in incidents],
+                    reason=reason,
+                    gallons_missing=None,
+                    detail=SKIP_DETAIL[reason],
+                )
+            )
+        result = plan_distribution(demands, trucks)
+        result.unserved.extend(skipped)
+        if unavailable:
+            result.explanation.append(
+                "Cisternas excluidas por el coordinador: " + ", ".join(sorted(unavailable)) + "."
+            )
+        return await self.tools.save_plan(plan_id, result)

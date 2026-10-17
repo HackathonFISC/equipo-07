@@ -5,12 +5,13 @@ from contextlib import contextmanager
 from langgraph.types import Command
 from sqlalchemy import select, update
 
+from app.agents import PlannerAgent
 from app.config import Settings
 from app.db import Database, checkpoints
 from app.graph import build_graph
-from app.models import Execution, Review
+from app.models import DistributionPlan, Execution, Review
 from app.providers import make_provider
-from app.services import log_event, trace
+from app.services import log_event, plan_event, trace
 
 
 @contextmanager
@@ -45,6 +46,11 @@ async def recover(db):
     async with db.sessions.begin() as session:
         await session.execute(
             update(Execution).where(Execution.status == "RUNNING").values(status="QUEUED")
+        )
+        await session.execute(
+            update(DistributionPlan)
+            .where(DistributionPlan.status == "RUNNING")
+            .values(status="QUEUED")
         )
 
 
@@ -95,6 +101,33 @@ async def process_one(db, graph, provider):
     return True
 
 
+async def process_plan(db, planner):
+    async with db.sessions.begin() as session:
+        plan = await session.scalar(
+            select(DistributionPlan)
+            .where(DistributionPlan.status == "QUEUED")
+            .order_by(DistributionPlan.created_at, DistributionPlan.id)
+            .limit(1)
+        )
+        if plan is None:
+            return False
+        key = plan.id
+        plan.status = "RUNNING"
+        plan_event(plan, "worker", "START")
+    try:
+        await planner.plan(key)
+        status, error = "PROPOSED", None
+    except Exception as exc:
+        # Job boundary: a failed plan is visible to the coordinator, never replaced by a guess.
+        status, error = "ERROR", type(exc).__name__
+    async with db.sessions.begin() as session:
+        plan = await session.get(DistributionPlan, key)
+        plan.status, plan.error = status, error
+        plan_event(plan, "worker", "END", status=status, error=error)
+    log_event(plan_id=key, event="plan", status=status, error=error)
+    return True
+
+
 async def run():
     settings = Settings()
     db = Database(settings)
@@ -105,9 +138,12 @@ async def run():
             await recover(db)
             async with checkpoints(settings) as saver:
                 graph = build_graph(db, provider, settings, saver)
+                planner = PlannerAgent(db)
                 log_event(event="worker_started", provider=provider.name)
                 while True:
-                    if not await process_one(db, graph, provider):
+                    if not await process_one(db, graph, provider) and not await process_plan(
+                        db, planner
+                    ):
                         await asyncio.sleep(0.5)
     finally:
         await db.engine.dispose()

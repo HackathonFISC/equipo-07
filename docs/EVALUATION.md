@@ -8,7 +8,9 @@ de las métricas offline. No se ejecutó CI remoto.
 | Verificación | Resultado observado |
 |---|---|
 | Backend: `pytest -q -p no:cacheprovider --cov=app --cov-report=term-missing` | **53 passed**, 19.69 s; cobertura de líneas **86 %** |
-| Evals: `python ../scripts/evaluate.py` | **22/22**, 2.91 s de pytest; resultados JSON/XML guardados |
+| Evals: `python ../scripts/evaluate.py` | **31/31** (2026-10-16, incluye 9 del planificador); resultados JSON/XML guardados |
+| Backend tras el planificador | **69 passed**, cobertura de líneas **87 %**; `planner.py` 100 % |
+| Frontend tras el planificador | **8/8** en Vitest |
 | Frontend: `npm test` (Vitest 5.0.5) | **6/6** componentes/interacciones aprobados |
 | Ruff lint y formato | Aprobados, incluidos app, tests y migraciones |
 | mypy | Sin errores en contracts, domain y config; no se afirma tipado estricto de todo el backend |
@@ -30,12 +32,15 @@ La cobertura no incluye necesariamente toda ejecución de procesos hijos; no equ
 [results.json](../evals/results.json) conserva timestamp, modo, resultados por caso, duración y
 conteos; [results.xml](../evals/results.xml) es la evidencia JUnit producida por pytest.
 
-Métrica principal: escenarios con todas sus aserciones aprobadas / escenarios ejecutados = **22/22**.
+Métrica principal: escenarios con todas sus aserciones aprobadas / escenarios ejecutados = **31/31**.
 Métricas por grupo calculadas por el runner:
 
 - Consolidación: E05/E06/E07/E18/E20/E22 = **6/6**.
-- Guardrails: E03/E10/E11/E12/E16/E20/E21 = **7/7**.
-- Decisión humana: E01/E14/E15/E17/E18/E19 = **6/6**.
+- Guardrails: E03/E10/E11/E12/E16/E20/E21/E27/E28/E31 = **10/10**.
+- Planificador: E23–E31 = **9/9** (plan propuesto y aprobado, sin ubicación inventada, fuga derivada a
+  reparación, cisternas excluidas, cisterna desconocida, sin token, rechazo, plan único pendiente,
+  privacidad de conductores). El solver tiene además pruebas unitarias en `test_planner.py`.
+- Decisión humana: E01/E14/E15/E17/E18/E19/E23/E29/E30 = **9/9**.
 
 Los grupos se solapan. Son cumplimiento de escenarios, no precision/recall de un modelo real.
 La prueba semántica usa reglas del mock, por lo que no valida comprensión semántica de DeepSeek/Kimi.
