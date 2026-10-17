@@ -100,7 +100,12 @@ A continuación se detallan las siete decisiones fundamentales aprobadas durante
 - **Interfaz Abstracta:** Protocolo `LLMProvider` con métodos tipados:
   - `extract_report(text: str) -> NormalizedReportSchema`
   - `evaluate_duplicate(report, candidates) -> DuplicateEvaluationSchema`
-  - `explain_priority_proposal(incident, priority) -> CoordinationProposalSchema`
+  - `describe_image(data, mime_type) -> ImageEvidenceSchema` (evidencia orientativa, fuera del grafo)
+  - Auditoría 2026-10-17: la explicación usa `domain.explain_priority` y la instantánea del motor.
+    Contradicción demostrada: el texto libre de NIM reinterpretaba puntos como unidades físicas y
+    recibía factores sin población/vulnerabilidad. Resolución mínima de D6: retirar solo el método
+    de explicación del proveedor; mantener Mock/NIM, contratos estrictos y errores visibles.
+    D5 conserva pesos, tramos, versión y aprobación humana. No se crea un agente adicional.
 - **Proveedores Implementados:**
   1. `MockLLMProvider` (Por defecto): Motor determinístico offline con fixtures reproducibles para los 15 casos de evaluación de CI. Marca todas las respuestas con `is_simulated=True` y `provider="mock-deterministic"`.
   2. `NvidiaLLMProvider`: Adaptador asíncrono para la API de NVIDIA NIM (`https://integrate.api.nvidia.com/v1`) utilizando el cliente `AsyncOpenAI`, soportando modelos como `deepseek-ai/deepseek-v4.1-flash` y `moonshotai/kimi-k3`.
@@ -184,7 +189,7 @@ flowchart TD
     API_Protected -->|decisiones y solicitudes de plan| Queue
     Queue --> Worker_Runtime
     Grafo <--> Checkpoints
-    A1 & A2 & A3 <--> Modelos
+    A1 & A2 <--> Modelos
     Vision <--> Modelos
     A1 & A2 & A3 --> T_Agent
     A4 --> T_Plan
@@ -215,13 +220,13 @@ sequenceDiagram
     LG->>DB: Agente 2: candidatos del mismo sector en 72 h
     LG->>LLM: Agente 2: ¿mismo problema? (HIGH, MEDIUM, LOW)
     LG->>LG: Motor 0-100 con intervalo
-    LG->>LLM: Agente 3: redacta la explicación
+    LG->>LG: Agente 3: plantilla con entradas y puntos del motor
     LG->>LG: interrupt() → WAITING_APPROVAL
 
     Note over Coordinador,API: Aprobación humana 1
     Coordinador->>API: POST /api/executions/{thread_id}/resume (token)
     API->>DB: Guarda la decisión y encola la reanudación
-    Worker->>LG: Command(resume) → APPROVED, CORRECTED o REJECTED
+    Worker->>LG: Command(resume) → APPROVED o REJECTED (CORRECT es decisión)
 
     Note over Coordinador,API: Aprobación humana 2
     Coordinador->>API: POST /api/admin/plans (cisternas excluidas)
@@ -257,7 +262,7 @@ Durante el proceso de diseño se identificaron y resolvieron formalmente las sig
    - *Resolución:* Se eliminó la penalización directa de puntos. Los datos faltantes generan un rango `score_min` / `score_max` y una bandera de auditoría que prioriza la revisión humana sin perjudicar el puntaje base.
 2. **Determinismo vs. Capacidades del LLM:**
    - *Tensión:* Dejar que el LLM pondere la urgencia introduce alucinaciones e incoherencias numéricas entre reportes similares.
-   - *Resolución:* El motor determinístico calcula de forma exclusiva la puntuación (0 a 100). El LLM únicamente aporta extracción sintáctica en la ingesta, evaluación semántica de similitud de textos, y redacción de la justificación comprensible para el operador humano.
+   - *Resolución:* El motor determinístico calcula de forma exclusiva la puntuación (0 a 100). El LLM aporta extracción en la ingesta y evaluación semántica de similitud. La auditoría de 2026-10-17 retira la redacción libre de cifras y usa una plantilla con los datos originales y puntos del motor.
 3. **Persistencia HITL vs. Latencia HTTP:**
    - *Tensión:* Una petición HTTP tradicional se agotaría por timeout esperando la respuesta del coordinador.
    - *Resolución:* Se desacopló completamente mediante el patrón de interrupción asíncrona de LangGraph con `thread_id`, respondiendo un `202 Accepted` y consultando el estado mediante polling hasta la resolución manual.

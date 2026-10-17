@@ -8,13 +8,16 @@ controlada de servicio. El motor es código puro: no es un cuarto agente ni un L
 |---|---|---|---|---|
 | Ingesta | Texto + horas declaradas → NormalizedReportSchema | normalized | extract_report, save_normalized_report | Reporte aceptado; UNKNOWN termina NEEDS_INFORMATION. Horas no sustentadas fallan. E01–04, E09–12, E21 |
 | Verificación | Normalized + sector → incidente/asociación | incident_id, association_status | candidate_incidents, evaluate_duplicate, consolidate_incident | Ingesta suficiente; candidatos inválidos fallan. E05–07, E18, E20, E22 |
-| Coordinación | Reporte normalizado + catálogo → PriorityResult + explicación | priority | calculate_priority, explain_priority_proposal, persistir Proposal | Asociación definida; error de proveedor no genera aprobación. E08, E13–19 |
+| Coordinación | Reporte normalizado + catálogo → PriorityResult con inputs + explicación determinista | priority | calculate_priority, explain_priority, persistir Proposal | Sin llamada LLM; asociación definida, intervalos y datos no confirmados explícitos. E08, E13–19, E55–64 |
 | Planificador | Incidentes PRIORITIZED + puntaje aprobado + flota + GeoJSON → PlanResult | DistributionPlan (fuera del grafo de reportes) | planning_inputs, plan_distribution (solver puro), save_plan | Solicitud del coordinador; sin LLM. Fugas, sectores sin coordenadas o sin demanda se explican como no atendidos. E23–31 |
 | Comunicación | Plan aprobado (`PLAN_APPROVED`) → Notificaciones ciudadanas por comunidad (`SCHEDULED` / `UNSERVED`) | Notificaciones emitidas e incidentes notificados | save_notifications | Proceso determinístico sin LLM; agrega paradas por `community_id` eligiendo hora mínima de llegada y sumando galones; unicidad `(plan_id, community_id)`. test_communication.py |
 
 
 Los agentes se comunican por `WorkflowState`; no se llaman unos a otros. `LLMProvider` tiene tres
-métodos tipados. Mock y NVIDIA usan los mismos contratos, pero el origen de cada ejecución se
+métodos tipados: extracción, evaluación de duplicados y descripción de fotos (fuera del grafo).
+Cinco responsabilidades operativas, dos utilizan LLM en el grafo; Coordinación, Planificador y
+Comunicación usan código determinista. La visión ya existe como tarea, no como sexto agente.
+Mock y NVIDIA usan los mismos contratos, pero el origen de cada ejecución se
 persiste: `is_simulated` y `provider`. No se permite convertir una ejecución de NIM en mock al reintentar.
 
 `human_review` es un nodo sin mutaciones antes de `interrupt`, no un agente. `finalize` aplica la
@@ -35,5 +38,6 @@ revisión previamente autorizada. `worker` controla cola/errores/recuperación, 
 El planificador corre en el mismo worker, después de la cola de reportes. `review_plan` es la
 segunda intervención humana: aprobar marca incidentes SCHEDULED (programado, no entregado).
 
-Futuros agentes (no implementados): geolocalización, imágenes,
-audio, predicción y auditoría avanzada. No necesitan un registro dinámico de plugins para añadirse.
+Posibles capacidades futuras: geolocalización, audio, predicción y auditoría avanzada.
+La descripción orientativa de imágenes ya existe en `integrations/evidence.py`; no requiere
+otro agente. Validación numérica y explicaciones pertenecen a funciones/contratos deterministas.

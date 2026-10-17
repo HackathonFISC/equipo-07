@@ -20,6 +20,7 @@ def main():
                 "-m",
                 "pytest",
                 "tests/test_evaluations.py",
+                "tests/test_agent_integrity.py::test_integrity_evaluation",
                 "-q",
                 "-p",
                 "no:cacheprovider",
@@ -92,6 +93,7 @@ def main():
             "E40",
         ],
         "robustness_scenarios": [f"E{n}" for n in range(41, 55)],
+        "integrity_scenarios": [f"E{n}" for n in range(55, 65)],
     }
     metrics = {
         name: {

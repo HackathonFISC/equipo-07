@@ -46,6 +46,7 @@ class AgentTools:
                 "description": report.description,
                 "community_id": report.community_id,
                 "hours_without_water": report.hours_without_water,
+                "duration_bucket": report.duration_bucket,
                 "normalized": report.normalized,
                 "population": community.population,
                 "vulnerability": community.vulnerability,
@@ -82,10 +83,7 @@ class AgentTools:
     async def candidates(self, key):
         async with self._db.sessions() as session:
             report = await session.get(Report, key)
-            candidates = await candidate_incidents(session, report, self._window_hours)
-            # consolidate() rejects a different kind, so the model must not be offered one:
-            # a HIGH match on it turned «presión en cero» into a repeatable ERROR.
-            return [c for c in candidates if c["kind"] == report.normalized["kind"]]
+            return await candidate_incidents(session, report, self._window_hours)
 
     async def consolidate(self, key, assessment: DuplicateEvaluationSchema):
         async with self._db.sessions.begin() as session:
@@ -112,6 +110,16 @@ class AgentTools:
                 session.add(incident)
                 await session.flush()
                 matched = incident.id
+            if (
+                assessment.match_confidence == "HIGH"
+                and "CONTRADICCION_DURACION" in report.normalized["flags"]
+            ):
+                assessment = assessment.model_copy(
+                    update={
+                        "match_confidence": "MEDIUM",
+                        "reasoning": "Duración contradictoria; requiere confirmar la asociación",
+                    }
+                )
             status = "PENDING_REVIEW" if assessment.match_confidence == "MEDIUM" else "CONFIRMED"
             session.add(
                 Association(

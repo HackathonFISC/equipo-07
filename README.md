@@ -40,7 +40,8 @@ Cinco agentes y dos aprobaciones humanas protegidas con token:
    problema (`HIGH`, `MEDIUM`, `LOW`). `MEDIUM` exige confirmación humana.
 3. **Coordinación:** un motor determinístico calcula un puntaje 0–100 con intervalo
    `score_min`–`score_max` (horas 35, institución crítica 30, vulnerabilidad 20, población 15) y el
-   modelo solo redacta la explicación. **Aprobación humana 1:** el coordinador aprueba, corrige o rechaza.
+   explicación es una plantilla determinista con los datos de origen, sin llamada al modelo.
+   **Aprobación humana 1:** el coordinador aprueba, corrige o rechaza.
 4. **Planificador:** con las prioridades aprobadas, un solver determinístico voraz (sin LLM) asigna
    cisternas, horarios y galones respetando capacidad, acceso vial, turnos y recarga en planta, y
    explica cada parada y cada demanda no atendida. Compara su plan con dos estrategias de referencia
@@ -201,14 +202,19 @@ Guion completo, recuperación y reinicio seguro de datos: [DEMO](docs/DEMO.md).
 
 Cifras de la última ejecución local (`evals/results.json`, `evals/impact.json`):
 
-- **Backend:** 162 pruebas pytest, cobertura de líneas 87 %.
-- **Evals:** 54/54 escenarios de [cases.json](evals/cases.json), en seis grupos que se solapan:
-  consolidación, guardrails, prioridad, decisión humana, planificador y robustez. Miden cumplimiento
+- **Backend:** 191 pruebas pytest, cobertura de líneas 87 % (auditoría AG-41).
+- **Evals:** 64/64 escenarios de [cases.json](evals/cases.json), en siete grupos que se solapan:
+  consolidación, guardrails, prioridad, decisión humana, planificador, robustez e integridad. Miden cumplimiento
   de escenarios con el mock, no la calidad de un modelo real.
 - **Impacto:** `scripts/impact_report.py` corre el mismo solver con tres órdenes sobre F2-01. La
   mediana de la primera entrega a las instituciones críticas baja de 292 min (por volumen y por
   llegada) a 143 min con AguaIA; la cobertura crítica es 100 % en las tres.
 - **Frontend:** 11 pruebas Vitest.
+
+La auditoría AG-41 ejecutó únicamente backend/evals; las cifras del frontend e impacto
+corresponden a la verificación anterior. Contrato de intervalos, hallazgos y cambios pendientes
+del frontend en [IMPLEMENTATION](docs/IMPLEMENTATION.md). Antes de arrancar sobre una base
+existente, aplicar la migración nueva con `uv run alembic upgrade head` desde backend.
 
 ```powershell
 # Desde backend

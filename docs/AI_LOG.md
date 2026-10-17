@@ -1,5 +1,34 @@
 # Bitácora de uso de IA
 
+## 2026-10-17 — Auditoría LangGraph e integridad numérica (AG-41)
+
+- Herramienta: Codex en Windows; skills Ponytail Full y Ponytail Review leídas y aplicadas.
+  Revisión local asistida, sin revisión humana independiente ni aprobaciones reales inventadas.
+- Rama observada: audit-langgraph; Git inicialmente limpio. Sin commits, cambios de rama,
+  pushes, merges, Issues ni acciones remotas; frontend y worktree del mapa no se tocaron.
+- Arquitectura comprobada: cinco responsabilidades, tres dentro de LangGraph; Planificador
+  y Comunicación fuera del grafo. La visión ya existe como tarea orientativa. Revisión de
+  contratos/implementación y documentación oficial de interrupts y persistencia de LangGraph.
+- Línea base ejecutada: 163 tests (87 %), 54/54 evals. El primer intento en sandbox encontró
+  permisos de Temp de Windows; se repitió con la escalación requerida, sin cambiar la aplicación
+  para ocultar el fallo del entorno.
+- Antes del arreglo fallaron las 10 regresiones de explicación/intervalos/extracción nula;
+  también se reprodujo que aprobar un duplicado reabría SCHEDULED como PRIORITIZED.
+- Cambios: duration_bucket opcional y migración nueva, snapshot de entradas, plantilla
+  determinista en vez de redacción LLM, grounding conservador de intervalos, recuperación de
+  horas explícitas ante extracción nula, flags de auditoría controladas, filtro SQL previo al
+  límite, mock no exacto tentativo, trazas de error por nodo y rechazo de respuestas incompletas.
+  Se conservan revisión humana, políticas, solver y propuestas/explicaciones históricas.
+- Verificación: 191 tests y cobertura 87 %, 64/64 escenarios reales del runner en modo mock,
+  Ruff lint/formato, mypy en los tres módulos configurados; migración upgrade/check/downgrade
+  y conservación de datos anteriores. Se detectaron y cerraron las conexiones SQLite del test
+  nuevo de migración. Resultados/alcance en EVALUATION.md; revisión y PR local en REVIEW.md.
+- Sin llamadas NIM reales, costos externos, exposición de secretos, ejecución del frontend,
+  verificación remota ni cambios a datos operativos. Contrato TS/UI pendiente documentado:
+  enviar buckets, leer report administrativo y usar priority.inputs para los valores calculados.
+- No se añadieron agentes ni automatización de aprobaciones. Propuesta de modo sombra y
+  límites de deduplicación/geografía detallados en IMPLEMENTATION.md.
+
 ## 2026-10-16 — Fundación y vertical slice
 
 - Herramienta: Codex en entorno local Windows; instrucciones del entorno lo identifican como

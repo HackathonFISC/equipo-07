@@ -97,7 +97,10 @@ async def approved_report(system, item):
     score = (
         round((p["score_min"] + p["score_max"]) / 2) if p["score_min"] != p["score_max"] else None
     )
-    assert (await review(system, key, approved_score=score)).status_code == 202
+    association = "CONFIRM" if d["association"]["status"] == "PENDING_REVIEW" else None
+    assert (
+        await review(system, key, approved_score=score, association=association)
+    ).status_code == 202
     await system.work()
     detail = await details(system, key)
     assert detail["status"] == "APPROVED"

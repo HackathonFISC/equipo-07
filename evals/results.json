@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-17T11:32:55.663956+00:00",
+  "generated_at": "2026-10-17T15:10:53.425017+00:00",
   "mode": "mock-deterministic",
-  "passed": 54,
-  "total": 54,
+  "passed": 64,
+  "total": 64,
   "scenario_pass_rate": 1.0,
   "metrics": {
     "consolidation_scenarios": {
@@ -28,6 +28,10 @@
     "robustness_scenarios": {
       "passed": 14,
       "total": 14
+    },
+    "integrity_scenarios": {
+      "passed": 10,
+      "total": 10
     }
   },
   "pytest_exit_code": 0,
@@ -35,272 +39,322 @@
     {
       "id": "E01",
       "passed": true,
-      "seconds": 1.61
+      "seconds": 0.323
     },
     {
       "id": "E02",
       "passed": true,
-      "seconds": 1.054
+      "seconds": 0.21
     },
     {
       "id": "E03",
       "passed": true,
-      "seconds": 0.893
+      "seconds": 0.178
     },
     {
       "id": "E04",
       "passed": true,
-      "seconds": 1.211
+      "seconds": 0.307
     },
     {
       "id": "E05",
       "passed": true,
-      "seconds": 1.636
+      "seconds": 0.323
     },
     {
       "id": "E06",
       "passed": true,
-      "seconds": 1.477
+      "seconds": 0.368
     },
     {
       "id": "E07",
       "passed": true,
-      "seconds": 1.471
+      "seconds": 0.363
     },
     {
       "id": "E08",
       "passed": true,
-      "seconds": 1.202
+      "seconds": 0.206
     },
     {
       "id": "E09",
       "passed": true,
-      "seconds": 1.183
+      "seconds": 0.207
     },
     {
       "id": "E10",
       "passed": true,
-      "seconds": 0.768
+      "seconds": 0.126
     },
     {
       "id": "E11",
       "passed": true,
-      "seconds": 0.72
+      "seconds": 0.129
     },
     {
       "id": "E12",
       "passed": true,
-      "seconds": 0.679
+      "seconds": 0.129
     },
     {
       "id": "E13",
       "passed": true,
-      "seconds": 1.588
+      "seconds": 0.231
     },
     {
       "id": "E14",
       "passed": true,
-      "seconds": 1.855
+      "seconds": 0.22
     },
     {
       "id": "E15",
       "passed": true,
-      "seconds": 1.894
+      "seconds": 0.246
     },
     {
       "id": "E16",
       "passed": true,
-      "seconds": 3.493
+      "seconds": 0.2
     },
     {
       "id": "E17",
       "passed": true,
-      "seconds": 2.526
+      "seconds": 0.261
     },
     {
       "id": "E18",
       "passed": true,
-      "seconds": 3.091
+      "seconds": 0.283
     },
     {
       "id": "E19",
       "passed": true,
-      "seconds": 4.062
+      "seconds": 0.286
     },
     {
       "id": "E20",
       "passed": true,
-      "seconds": 1.325
+      "seconds": 0.361
     },
     {
       "id": "E21",
       "passed": true,
-      "seconds": 1.22
+      "seconds": 0.171
     },
     {
       "id": "E22",
       "passed": true,
-      "seconds": 3.077
+      "seconds": 0.264
     },
     {
       "id": "E32",
       "passed": true,
-      "seconds": 1.298
+      "seconds": 0.208
     },
     {
       "id": "E33",
       "passed": true,
-      "seconds": 1.865
+      "seconds": 0.237
     },
     {
       "id": "E34",
       "passed": true,
-      "seconds": 2.035
+      "seconds": 0.219
     },
     {
       "id": "E35",
       "passed": true,
-      "seconds": 2.221
+      "seconds": 0.203
     },
     {
       "id": "E36",
       "passed": true,
-      "seconds": 10.686
+      "seconds": 0.253
     },
     {
       "id": "E37",
       "passed": true,
-      "seconds": 3.674
+      "seconds": 0.21
     },
     {
       "id": "E38",
       "passed": true,
-      "seconds": 4.677
+      "seconds": 0.194
     },
     {
       "id": "E39",
       "passed": true,
-      "seconds": 3.305
+      "seconds": 0.244
     },
     {
       "id": "E40",
       "passed": true,
-      "seconds": 4.776
+      "seconds": 0.298
     },
     {
       "id": "E23",
       "passed": true,
-      "seconds": 3.662
+      "seconds": 0.314
     },
     {
       "id": "E24",
       "passed": true,
-      "seconds": 2.347
+      "seconds": 0.391
     },
     {
       "id": "E25",
       "passed": true,
-      "seconds": 2.187
+      "seconds": 0.363
     },
     {
       "id": "E26",
       "passed": true,
-      "seconds": 1.559
+      "seconds": 0.288
     },
     {
       "id": "E27",
       "passed": true,
-      "seconds": 1.611
+      "seconds": 0.24
     },
     {
       "id": "E28",
       "passed": true,
-      "seconds": 1.893
+      "seconds": 0.298
     },
     {
       "id": "E29",
       "passed": true,
-      "seconds": 3.233
+      "seconds": 0.305
     },
     {
       "id": "E30",
       "passed": true,
-      "seconds": 1.629
+      "seconds": 0.285
     },
     {
       "id": "E31",
       "passed": true,
-      "seconds": 1.683
+      "seconds": 0.28
     },
     {
       "id": "E41",
       "passed": true,
-      "seconds": 2.838
+      "seconds": 0.254
     },
     {
       "id": "E42",
       "passed": true,
-      "seconds": 1.981
+      "seconds": 0.256
     },
     {
       "id": "E43",
       "passed": true,
-      "seconds": 1.768
+      "seconds": 0.25
     },
     {
       "id": "E44",
       "passed": true,
-      "seconds": 1.926
+      "seconds": 0.244
     },
     {
       "id": "E45",
       "passed": true,
-      "seconds": 2.47
+      "seconds": 0.296
     },
     {
       "id": "E46",
       "passed": true,
-      "seconds": 2.025
+      "seconds": 0.284
     },
     {
       "id": "E47",
       "passed": true,
-      "seconds": 2.583
+      "seconds": 0.335
     },
     {
       "id": "E48",
       "passed": true,
-      "seconds": 1.892
+      "seconds": 0.282
     },
     {
       "id": "E49",
       "passed": true,
-      "seconds": 3.426
+      "seconds": 0.302
     },
     {
       "id": "E50",
       "passed": true,
-      "seconds": 2.239
+      "seconds": 0.265
     },
     {
       "id": "E51",
       "passed": true,
-      "seconds": 1.953
+      "seconds": 0.418
     },
     {
       "id": "E52",
       "passed": true,
-      "seconds": 0.817
+      "seconds": 0.127
     },
     {
       "id": "E53",
       "passed": true,
-      "seconds": 1.033
+      "seconds": 0.119
     },
     {
       "id": "E54",
       "passed": true,
-      "seconds": 0.839
+      "seconds": 0.12
+    },
+    {
+      "id": "E55",
+      "passed": true,
+      "seconds": 0.199
+    },
+    {
+      "id": "E56",
+      "passed": true,
+      "seconds": 0.258
+    },
+    {
+      "id": "E57",
+      "passed": true,
+      "seconds": 0.25
+    },
+    {
+      "id": "E58",
+      "passed": true,
+      "seconds": 0.241
+    },
+    {
+      "id": "E59",
+      "passed": true,
+      "seconds": 0.247
+    },
+    {
+      "id": "E60",
+      "passed": true,
+      "seconds": 0.25
+    },
+    {
+      "id": "E61",
+      "passed": true,
+      "seconds": 0.208
+    },
+    {
+      "id": "E62",
+      "passed": true,
+      "seconds": 0.47
+    },
+    {
+      "id": "E63",
+      "passed": true,
+      "seconds": 0.259
+    },
+    {
+      "id": "E64",
+      "passed": true,
+      "seconds": 0.199
     }
   ],
   "note": "Contract/scenario assertions, not real-model accuracy"

@@ -37,7 +37,12 @@ def build_graph(db, provider, settings, saver):
         async def node(state):
             async with db.sessions.begin() as session:
                 trace(session, state["execution_id"], name, "START")
-            result = await function(state)
+            try:
+                result = await function(state)
+            except Exception as exc:
+                async with db.sessions.begin() as session:
+                    trace(session, state["execution_id"], name, "ERROR", error=type(exc).__name__)
+                raise
             async with db.sessions.begin() as session:
                 trace(session, state["execution_id"], name, "END")
             return result

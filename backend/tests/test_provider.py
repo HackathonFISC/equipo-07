@@ -20,7 +20,6 @@ async def test_nvidia_structured_contracts_and_model(model):
             "flags": [],
         },
         {"match_confidence": "LOW", "matched_incident_id": None, "reasoning": "Sin candidatos"},
-        {"explanation": "Revisión requerida según los factores recibidos"},
     ]
 
     def handle(request):
@@ -50,69 +49,15 @@ async def test_nvidia_structured_contracts_and_model(model):
         provider = NvidiaLLMProvider(Settings(_env_file=None, nvidia_model=model), client)
         assert (await provider.extract_report("Sin agua")).kind == "OUTAGE"
         assert (await provider.evaluate_duplicate({}, [])).match_confidence == "LOW"
-        assert (await provider.explain_priority_proposal({}, {})).explanation
         assert not provider.is_simulated
     assert all(c["model"] == model for c in captured)
     assert all("response_format" not in c for c in captured)
     assert all("tools" not in c for c in captured)
 
 
-async def test_explanation_prompt_separates_points_from_hours(system):
-    # Regression: gpt-oss-20b explained 26 duration points as "26 horas" for a 24 h report.
-    from app.agents import Agents
-    from app.providers import MockLLMProvider
-    from tests.test_evaluations import submit
-
-    seen = {}
-
-    class Recorder(MockLLMProvider):
-        async def explain_priority_proposal(self, incident, priority):
-            seen.update(incident=incident, priority=priority)
-            return await super().explain_priority_proposal(incident, priority)
-
-    key, _ = await submit(system)
-    agents = Agents(system.db, Recorder(), system.settings)
-    state = {"execution_id": key}
-    for step in (agents.ingest, agents.verify, agents.coordinate):
-        state.update(await step(state))
-    assert seen["incident"]["hours_without_water"] == 24
-    assert seen["priority"]["factors"]["hours"] == [26, 26]
-
-    captured = []
-
-    def handle(request):
-        captured.append(json.loads(request.content))
-        return httpx.Response(
-            200,
-            json={
-                "id": "t",
-                "object": "chat.completion",
-                "created": 0,
-                "model": "m",
-                "choices": [
-                    {
-                        "index": 0,
-                        "finish_reason": "stop",
-                        "message": {"role": "assistant", "content": '{"explanation": "ok"}'},
-                    }
-                ],
-            },
-        )
-
-    async with AsyncOpenAI(
-        api_key="fake-test-key",
-        base_url="https://test.invalid/v1",
-        http_client=httpx.AsyncClient(transport=httpx.MockTransport(handle)),
-    ) as client:
-        provider = NvidiaLLMProvider(Settings(_env_file=None), client)
-        await provider.explain_priority_proposal(seen["incident"], seen["priority"])
-    system_prompt = captured[0]["messages"][0]["content"]
-    assert "no horas" in system_prompt and "hours_without_water" in system_prompt
-    sent = json.loads(captured[0]["messages"][1]["content"])
-    assert sent["incident"]["hours_without_water"] == 24
-
-
-@pytest.mark.parametrize("fault", ["malformed", "timeout", "http500"])
+@pytest.mark.parametrize(
+    "fault", ["malformed", "timeout", "http500", "truncated", "empty", "refusal"]
+)
 async def test_nvidia_errors_do_not_fallback_or_leak(fault):
     def handle(request):
         if fault == "timeout":
@@ -129,10 +74,17 @@ async def test_nvidia_errors_do_not_fallback_or_leak(fault):
                 "choices": [
                     {
                         "index": 0,
-                        "finish_reason": "stop",
+                        "finish_reason": "length" if fault == "truncated" else "stop",
                         "message": {
                             "role": "assistant",
-                            "content": '{"invented":"secret must not leak"}',
+                            "content": None
+                            if fault == "empty"
+                            else (
+                                '{"summary":"Sin agua","kind":"OUTAGE"}'
+                                if fault in ("truncated", "refusal")
+                                else '{"invented":"secret must not leak"}'
+                            ),
+                            "refusal": "secret must not leak" if fault == "refusal" else None,
                         },
                     }
                 ],
@@ -150,7 +102,8 @@ async def test_nvidia_errors_do_not_fallback_or_leak(fault):
         assert "secret" not in str(exc.value)
 
 
-async def test_nvidia_describe_image_sends_data_url_and_parses_fenced_json():
+@pytest.mark.parametrize("finish_reason", ["stop", "length"])
+async def test_nvidia_describe_image_sends_data_url_and_parses_fenced_json(finish_reason):
     captured = []
     body = '```json\n{"description": "Tubería rota con agua en la acera", "relevant": true}\n```'
 
@@ -166,7 +119,7 @@ async def test_nvidia_describe_image_sends_data_url_and_parses_fenced_json():
                 "choices": [
                     {
                         "index": 0,
-                        "finish_reason": "stop",
+                        "finish_reason": finish_reason,
                         "message": {"role": "assistant", "content": body},
                     }
                 ],
@@ -179,8 +132,12 @@ async def test_nvidia_describe_image_sends_data_url_and_parses_fenced_json():
         http_client=httpx.AsyncClient(transport=httpx.MockTransport(handle)),
     ) as client:
         provider = NvidiaLLMProvider(Settings(_env_file=None, nvidia_vision_model="v"), client)
-        result = await provider.describe_image(b"\xff\xd8\xff", "image/jpeg")
-    assert result.relevant is True and "Tubería" in result.description
+        if finish_reason == "stop":
+            result = await provider.describe_image(b"\xff\xd8\xff", "image/jpeg")
+            assert result.relevant is True and "Tubería" in result.description
+        else:
+            with pytest.raises(ProviderError, match="INCOMPLETE_RESPONSE"):
+                await provider.describe_image(b"\xff\xd8\xff", "image/jpeg")
     [request] = captured
     assert request["model"] == "v"
     image = request["messages"][0]["content"][1]["image_url"]["url"]

@@ -54,7 +54,12 @@ def trace(session, execution_id, agent, event, *, tool=None, category="technical
 
 
 async def submit_report(db, body: ReportInput, key: str, settings):
-    digest = hashlib.sha256(body.model_dump_json().encode()).hexdigest()
+    # Omit the new null field so keys accepted before interval support keep their hash.
+    digest = hashlib.sha256(
+        body.model_dump_json(
+            exclude={"duration_bucket"} if body.duration_bucket is None else set()
+        ).encode()
+    ).hexdigest()
     async with db.sessions.begin() as session:
         existing = await session.get(Report, key)
         if existing:
@@ -187,6 +192,7 @@ async def candidate_incidents(session, report, window_hours):
             select(Incident)
             .where(
                 Incident.community_id == report.community_id,
+                Incident.kind == report.normalized["kind"],
                 Incident.status.in_(["OPEN", "PRIORITIZED", "SCHEDULED"]),
                 Incident.last_activity >= now() - timedelta(hours=window_hours),
             )
@@ -195,7 +201,14 @@ async def candidate_incidents(session, report, window_hours):
         )
     ).all()
     return [
-        {"id": i.id, "community_id": i.community_id, "kind": i.kind, "summary": i.summary}
+        {
+            "id": i.id,
+            "community_id": i.community_id,
+            "kind": i.kind,
+            "summary": i.summary,
+            "created_at": i.created_at.isoformat(),
+            "last_activity": i.last_activity.isoformat(),
+        }
         for i in rows
     ]
 
@@ -239,7 +252,8 @@ async def apply_decision(db, execution_id, body: ReviewInput):
         )
         if body.decision != "REJECT":
             incident = await session.get(Incident, association.incident_id)
-            incident.status = "PRIORITIZED"
+            if incident.status != "SCHEDULED":
+                incident.status = "PRIORITIZED"
             incident.last_activity = now()
         review.applied_at = now()
         trace(
@@ -268,6 +282,7 @@ async def execution_detail(db, execution_id):
         proposal = await session.get(Proposal, execution_id)
         review = await session.get(Review, execution_id)
         association = await session.get(Association, execution.report_id)
+        report = await session.get(Report, execution.report_id)
         events = (
             await session.scalars(
                 select(Trace).where(Trace.execution_id == execution_id).order_by(Trace.id)
@@ -278,6 +293,7 @@ async def execution_detail(db, execution_id):
             "proposal": record_dict(proposal) if proposal else None,
             "review": record_dict(review) if review else None,
             "association": record_dict(association) if association else None,
+            "report": record_dict(report),
             "traces": [record_dict(e) for e in events],
             "evidence": await citizen_evidence(session, execution.report_id),
         }
@@ -487,7 +503,11 @@ async def incident_timeline(db, incident_id: str):
                         "source": "report",
                         "event": "REPORT_CREATED",
                         "summary": f"Reporte ciudadano recibido en {r.community_id}.",
-                        "detail": {"report_id": r.id, "hours_without_water": r.hours_without_water},
+                        "detail": {
+                            "report_id": r.id,
+                            "hours_without_water": r.hours_without_water,
+                            "duration_bucket": r.duration_bucket,
+                        },
                     }
                 )
 

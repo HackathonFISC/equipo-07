@@ -19,6 +19,9 @@ class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
+DurationBucket = Literal["LT_12H", "H12_24", "H24_48", "GE_48H"]
+
+
 class ExecutionReceipt(Contract):
     report_id: UUID
     thread_id: UUID
@@ -41,6 +44,13 @@ class ReportInput(Contract):
     hours_without_water: float | None = Field(
         default=None, ge=0, le=2160, allow_inf_nan=False, strict=True
     )
+    duration_bucket: DurationBucket | None = None
+
+    @model_validator(mode="after")
+    def duration(self) -> "ReportInput":
+        if self.hours_without_water is not None and self.duration_bucket is not None:
+            raise ValueError("Indica horas exactas o un intervalo, no ambos")
+        return self
 
     @field_validator("description")
     @classmethod
@@ -72,6 +82,7 @@ class NormalizedReportSchema(Contract):
     hours_without_water: float | None = Field(default=None, ge=0, le=2160)
     critical_institution: bool | None = None
     flags: list[str] = Field(default_factory=list, max_length=12)
+    duration_bucket: DurationBucket | None = None
 
 
 class DuplicateEvaluationSchema(Contract):
@@ -84,10 +95,6 @@ class DuplicateEvaluationSchema(Contract):
         if (self.match_confidence != "LOW") != (self.matched_incident_id is not None):
             raise ValueError("HIGH/MEDIUM requieren candidato; LOW requiere null")
         return self
-
-
-class CoordinationProposalSchema(Contract):
-    explanation: str = Field(min_length=1, max_length=1200)
 
 
 class ImageEvidenceSchema(Contract):
@@ -231,6 +238,17 @@ class PlanReviewInput(Contract):
     reason: str = Field(min_length=5, max_length=600)
 
 
+class PriorityInputs(Contract):
+    community_id: str
+    hours_without_water: float | None
+    duration_bucket: DurationBucket | None
+    duration_source: Literal["CITIZEN", "TEXT", "UNKNOWN", "CONFLICT"]
+    critical_institution: bool | None
+    population: int | None
+    vulnerability: float | None
+    is_synthetic: bool
+
+
 class PriorityResult(Contract):
     score_min: int = Field(ge=0, le=100)
     score_max: int = Field(ge=0, le=100)
@@ -239,6 +257,7 @@ class PriorityResult(Contract):
     flags: list[str]
     policy_version: str
     immediate_review: bool
+    inputs: PriorityInputs | None = None
 
 
 class NotificationOut(Contract):

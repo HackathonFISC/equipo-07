@@ -13,7 +13,7 @@ from app.worker import process_plan
 from tests.conftest import AUTH
 
 ALL_CASES = json.loads((Path(__file__).parents[2] / "evals/cases.json").read_text("utf-8"))
-CASES = [c for c in ALL_CASES if c.get("suite") not in ("planner", "robustness")]
+CASES = [c for c in ALL_CASES if c.get("suite") not in ("planner", "robustness", "integrity")]
 ROBUST_CASES = [c for c in ALL_CASES if c.get("suite") == "robustness"]
 PLAN_CASES = [c for c in ALL_CASES if c.get("suite") == "planner"]
 BASE = {
@@ -87,6 +87,10 @@ async def test_evaluation(system, case):
         },
     }
     body.update(changes.get(scenario, {}))
+    if scenario == "candidate_injection":
+        await submit(system)
+        await system.work()
+        body["description"] = "No llega el agua desde hace 24 horas"
     key, response = await submit(system, body)
     if scenario in ("unknown", "invalid_hours", "injection", "out_of_scope"):
         assert response.status_code == (404 if scenario == "unknown" else 422)
@@ -161,8 +165,9 @@ async def test_evaluation(system, case):
         same = result["proposal"]["incident_id"] == detail["proposal"]["incident_id"]
         assert same == (scenario not in ("different", "cross_sector"))
         if scenario in ("exact", "semantic"):
-            assert result["proposal"]["priority"] == priority
-        if scenario == "tentative":
+            for field in ("score_min", "score_max", "factors", "inputs"):
+                assert result["proposal"]["priority"][field] == priority[field]
+        if scenario in ("tentative", "semantic"):
             assert result["association"]["status"] == "PENDING_REVIEW"
             assert (await review(system, other)).status_code == 409
             r_p = result["proposal"]["priority"]

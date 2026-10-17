@@ -7,8 +7,8 @@ con estas métricas. No se ejecutó CI remoto.
 
 | Verificación | Resultado observado |
 |---|---|
-| Backend: `pytest -q -p no:cacheprovider --cov=app` | **162 passed**; cobertura de líneas **87 %** |
-| Evals: `python ../scripts/evaluate.py` | **54/54**; resultados en `evals/results.json` y `evals/results.xml` |
+| Backend: `pytest -q -p no:cacheprovider --cov=app` | **191 passed**; cobertura de líneas **87 %** (AG-41) |
+| Evals: `python ../scripts/evaluate.py` | **64/64**; resultados en `evals/results.json` y `evals/results.xml` |
 | Impacto: `python ../scripts/impact_report.py` | Mediana de la primera entrega crítica 143 min (AguaIA) frente a 292 min (volumen y llegada); cobertura crítica 100 % en las tres (`evals/impact.json`) |
 | Frontend: `npm test` (Vitest 5.0.5) | **11/11** (`api.test.ts` y `App.test.tsx`) |
 | Frontend: lint, typecheck y build | Aprobados |
@@ -17,7 +17,7 @@ con estas métricas. No se ejecutó CI remoto.
 | Alembic | `upgrade head` y `alembic check` limpios; una sola cabeza |
 | Datos: `python scripts/validate_datasets.py` | 20 ubicaciones y 4 cisternas válidas; `git diff data/` limpio |
 
-Las 54 evals son parte de las 162 pruebas backend, no pruebas adicionales. Los tiempos de ejecución
+Las 64 evals son parte de las 191 pruebas backend, no pruebas adicionales. Los tiempos de ejecución
 son observaciones de esta máquina, no objetivos de rendimiento. La cobertura no equivale a corrección.
 
 ## Evaluación por capas
@@ -57,8 +57,9 @@ desvíos ni averías, y un solo escenario no prueba la ventaja en general.
 
 ## Casos y grupos
 
-[cases.json](../evals/cases.json) contiene ID, escenario y descripción; cada ID se ejecuta en
-`backend/tests/test_evaluations.py`. Los grupos que calcula `scripts/evaluate.py` se solapan:
+[cases.json](../evals/cases.json) contiene ID, escenario y descripción; E01–54 se ejecutan en
+`backend/tests/test_evaluations.py` y E55–64 en `test_agent_integrity.py::test_integrity_evaluation`.
+Los grupos que calcula `scripts/evaluate.py` se solapan:
 
 - Consolidación: E05, E06, E07, E18, E20, E22 = **6/6**.
 - Guardrails: E03, E10, E11, E12, E16, E20, E21, E27, E28, E31 = **10/10**.
@@ -67,6 +68,16 @@ desvíos ni averías, y un solo escenario no prueba la ventaja en general.
 - Prioridad: E32–E40 = **9/9** (negaciones, criticidad del catálogo, duración en días, imprecisa o
   contradictoria, aprobación de intervalos).
 - Robustez: E41–E54 = **14/14**.
+- Integridad: E55–E64 = **10/10**, intervalos durables, 2630 habitantes frente a 8 puntos,
+  desconocidos y rango 17–67, límites textuales y extracción nula.
+
+AG-41 repitió backend/evals sobre el entorno creado con `uv sync --locked`: línea base
+163 pruebas/54 evals, final 191/64. Las 10 regresiones iniciales de integridad fallaron antes
+de corregir el código; también se reprodujo SCHEDULED → PRIORITIZED al aprobar un duplicado.
+Pruebas adicionales comprueban snapshot/replay tras cambiar catálogo, hash idempotente anterior,
+SQL filtrado antes del límite, flags falsificadas, respuesta truncada/refusal y migración con datos.
+No se repitieron frontend, medición independiente de impacto, llamadas NIM reales ni CI remoto;
+las filas históricas de esas verificaciones no son resultados de esta auditoría.
 
 Son cumplimiento de escenarios, no precision/recall de un modelo real. El motor de prioridad se
 verifica aparte con umbrales, empates, máximo, ausentes, política configurable y entradas inválidas.

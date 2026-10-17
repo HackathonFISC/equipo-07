@@ -44,6 +44,9 @@ def test_critical_evidence(text, expected):
         ("Llevamos dos semanas sin una gota", [336.0]),
         ("Calle 4 casa 2 llevamos 2 días sin agua", [48.0]),
         ("Consulta general sobre el suministro", []),
+        ("Sin agua 24 horas entre 2 y 3 casas", [24.0]),
+        ("Sin agua de dos a tres días", []),
+        ("Sin agua 12 horas o más", []),
     ],
 )
 def test_stated_hours(text, expected_hours):

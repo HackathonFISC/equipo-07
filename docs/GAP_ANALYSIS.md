@@ -1,5 +1,9 @@
 # Auditoría técnica y análisis de brechas (GAP Analysis)
 
+Actualización 2026-10-17: este documento conserva la auditoría inicial. La corrección posterior
+de explicaciones, intervalos y deduplicación está en IMPLEMENTATION.md (AG-41); Coordinación
+ya no usa `explain_priority_proposal`, y el mock no confirma HIGH solo por tipo/sector.
+
 Fecha: 2026-10-16 · Autor: Claude Code (modelo Claude Opus 5.5) a solicitud de Sebastián Feng ·
 Alcance: auditoría y planificación; **no se modificó código de aplicación**, no hubo operaciones Git
 de escritura, no se llamó a NVIDIA ni a GitHub. Revisión humana del equipo: pendiente.

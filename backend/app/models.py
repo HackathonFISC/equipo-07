@@ -47,6 +47,7 @@ class Report(Base):
     community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"))
     description: Mapped[str] = mapped_column(String(2000))
     hours_without_water: Mapped[float | None] = mapped_column(Float)
+    duration_bucket: Mapped[str | None] = mapped_column(String(8))
     payload_hash: Mapped[str] = mapped_column(String(64))
     normalized: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)

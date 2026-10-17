@@ -2,8 +2,16 @@
 
 Estado se refiere a esta implementación local, no a entrega oficial ni despliegue público.
 
+Auditoría LangGraph (2026-10-17): RF34 preserva duración por intervalo sin inventar horas;
+RF35 exige explicación determinista con instantánea de entradas y puntos separados;
+RNF10 exige regresiones de proveedor, replay, deduplicación y revisión sin alterar D1–D7.
+Evidencia y límites: `IMPLEMENTATION.md`, `REVIEW.md`, pruebas de integridad y evals.
+
 | ID | Prioridad | Criterio de aceptación | Estado | Evidencia / requisito oficial |
 |---|---|---|---|---|
+| RF34 | P0 | Intervalos ciudadanos durables sin convertirlos en horas exactas; null no significa cero; compatibilidad con claves existentes | Implementado en backend; adopción UI pendiente | duration_bucket, migración e7a4c2d9b610; E55–58, E60–63 |
+| RF35 | P0 | Explicaciones deterministas distinguen habitantes, horas, índices, puntos y desconocidos; instantánea reproducible por propuesta | Implementado para propuestas nuevas | priority.inputs, explain_priority; E59, E64, test_agent_integrity |
+| RNF10 | P0 | Proveedor inválido falla cerrado; replay, deduplicación y revisión conservan efectos/estado programado; sin aprobar automáticamente | Implementado | test_provider, test_resilience, test_agent_integrity; REVIEW.md |
 | RF01 | P0 | Validar, persistir y aceptar reporte con 202 sin ejecutar grafo | Implementado | API + test_process_e2e; herramienta real |
 | RF02 | P0 | Tres agentes intercambian contratos por estado LangGraph | Implementado | agents.py, graph.py; multiagente |
 | RF03 | P0 | Filtro sector/tiempo, HIGH definitivo, MEDIUM revisable, LOW nuevo | Implementado | E05–07, E18, E20, E22 |

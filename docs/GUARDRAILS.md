@@ -12,6 +12,10 @@
 | Revisión duplicada o dos coordinadores | CAS de estado, Review único, payload inmutable, aplicación idempotente | E17, competing_reviews |
 | Caída de proceso/replay | Cola transaccional, checkpoint independiente, OS lock, efectos idempotentes | resilience + process_e2e |
 | Error NIM o salida inválida | Timeout/reintentos acotados, error seguro, sin fallback a mock | E13 + provider tests |
+| Puntos narrados como horas, habitantes o porcentajes | Explicación determinista con instantánea; desconocidos explícitos, sin redacción LLM | E59, priority.inputs |
+| Intervalos presentados como duraciones exactas | duration_bucket durable; límites textuales imprecisos; campo exclusivo frente a horas | E55–58, E60–63 |
+| Respuesta truncada o rechazo con JSON válido | Exigir finish_reason stop sin refusal, además del esquema | provider tests (texto y visión) |
+| Aprobación de duplicado reabre incidente programado | Conservar SCHEDULED al aplicar la decisión | test_duplicate_approval_preserves_scheduled_incident |
 | XSS por texto | React renderiza texto; no usa dangerouslySetInnerHTML | Revisión de componentes |
 | Fuga de credenciales | .env ignorado, clave solo backend, token solo memoria, logs sin mensajes de proveedor | provider tests + frontend storage test |
 
