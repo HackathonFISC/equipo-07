@@ -1,5 +1,34 @@
 # Bitácora de uso de IA
 
+## Resumen para la evaluación
+
+**Herramientas de IA usadas** (detalle por fecha en las entradas de abajo):
+
+| Herramienta | Modelo | Para qué se usó |
+|---|---|---|
+| Codex | Basado en GPT-6 según el entorno; variante no verificada | Fundación: backend, worker, LangGraph, frontend inicial, pruebas, CI |
+| Antigravity Assistant | Gemini 3.8 Flash | Ejecución de fases F0–F6: priorización, ciclo funcional, datos, impacto, limpieza |
+| Claude Code | Claude Opus 5.5 | Auditoría y planificación, revisión y corrección de cada fase, planificador, Telegram, fotos, corrida real |
+| NVIDIA NIM (dentro del producto) | `openai/gpt-oss-20b` y un modelo de visión | Inferencia de los agentes en modo real; no escribió código |
+
+**Cómo se usó.** Una IA ejecutaba cada fase con un plan y criterios de aceptación; otra la
+revisaba contra el código y corregía. El equipo decidía qué se integraba y autorizaba cada commit,
+push y merge. Las aprobaciones de prioridad y plan que hicieron scripts en corridas de prueba
+(por ejemplo F7) están descritas como tales en su entrada; no cuentan como revisión humana.
+
+**Decisiones humanas observadas en las sesiones con IA:** elegir el reto y el alcance; aprobar o
+descartar cada plan de fase; autorizar cada push a `main`; revocar y reemplazar claves expuestas;
+dejar el tag `final-24h` para el final.
+
+**Qué se hizo a mano** (verificable en el historial de Git o en las sesiones):
+
+- Integrantes del equipo y número de reto en el README, editados desde GitHub (`52229e0`, `2f562c3`).
+- Resolución del primer merge conservando el README local (`bcd1e00`).
+- Revisión e integración del PR #2 de rediseño de la interfaz (`8c62406`).
+- Creación del bot de Telegram en BotFather y configuración de `.env` con las claves de NVIDIA y
+  Telegram; revocación y reemplazo de las claves que quedaron expuestas en un chat.
+- Elección del alcance de cada fase, de qué sugerencias de la IA se aceptaban y de cuándo subir.
+
 ## 2026-10-16 — Fundación y vertical slice
 
 - Herramienta: Codex en entorno local Windows; instrucciones del entorno lo identifican como

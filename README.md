@@ -208,7 +208,7 @@ Cifras de la última ejecución local (`evals/results.json`, `evals/impact.json`
 - **Impacto:** `scripts/impact_report.py` corre el mismo solver con tres órdenes sobre F2-01. La
   mediana de la primera entrega a las instituciones críticas baja de 292 min (por volumen y por
   llegada) a 143 min con AguaIA; la cobertura crítica es 100 % en las tres.
-- **Frontend:** 11 pruebas Vitest.
+- **Frontend:** 14 pruebas Vitest.
 
 ```powershell
 # Desde backend

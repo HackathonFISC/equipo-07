@@ -10,7 +10,7 @@ con estas métricas. No se ejecutó CI remoto.
 | Backend: `pytest -q -p no:cacheprovider --cov=app` | **173 passed**; cobertura de líneas **87 %** |
 | Evals: `python ../scripts/evaluate.py` | **54/54**; resultados en `evals/results.json` y `evals/results.xml` |
 | Impacto: `python ../scripts/impact_report.py` | Mediana de la primera entrega crítica 143 min (AguaIA) frente a 292 min (volumen y llegada); cobertura crítica 100 % en las tres (`evals/impact.json`) |
-| Frontend: `npm test` (Vitest 5.0.5) | **11/11** (`api.test.ts` y `App.test.tsx`) |
+| Frontend: `npm test` (Vitest 5.0.5) | **14/14** (`api.test.ts` y `App.test.tsx`) |
 | Frontend: lint, typecheck y build | Aprobados |
 | Backend: Ruff lint y formato | Aprobados en `app/`, `tests/` y `migrations/` |
 | Backend: mypy | Sin errores en `contracts.py`, `domain.py` y `config.py`; no se afirma tipado estricto de todo el backend |
