@@ -8,7 +8,22 @@ from app.models import Community
 
 
 async def seed(db):
-    values = json.loads((Path(__file__).parents[2] / "data/communities.json").read_text("utf-8"))
+    data = Path(__file__).parents[2] / "data"
+    values = json.loads((data / "communities.json").read_text("utf-8"))
+    # Official INEC 2023 corregimientos: the same catalog the citizen chatbot offers.
+    catalog = json.loads((data / "panama_oeste_corregimientos.json").read_text("utf-8"))
+    values += [
+        {
+            "id": corregimiento["id"],
+            "name": corregimiento["name"],
+            "district": district["name"],
+            "population": corregimiento["population_2023"],
+            "vulnerability": None,
+            "is_synthetic": False,
+        }
+        for district in catalog["districts"]
+        for corregimiento in district["corregimientos"]
+    ]
     async with db.sessions.begin() as session:
         for item in values:
             if not await session.get(Community, item["id"]):

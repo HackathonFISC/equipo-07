@@ -22,7 +22,9 @@ Estado se refiere a esta implementación local, no a entrega oficial ni desplieg
 | RNF07 | P0 | Colaboración GitHub Flow y contrato compartido | Implementado local | CONTRIBUTING, templates, BACKLOG; tableros remotos pendientes |
 | RF10 | P0 | Agente planificador: a partir de incidentes priorizados por un humano, flota y ubicaciones, un solver determinístico asigna cisternas, horarios y galones (capacidad, turnos, acceso vial, recarga en planta) y explica cada asignación y cada demanda no atendida | Implementado | planner.py + PlannerAgent + worker; test_planner y E23–E26; planificador VRP |
 | RF11 | P0 | El coordinador aprueba o rechaza el plan con razón; puede excluir cisternas no disponibles y regenerar; aprobar programa, no confirma entregas | Implementado | API protegida + PlanPanel; E27–E31 y prueba Vitest; HITL del plan |
-| FUT02 | P2 | WhatsApp, Telegram, audio, imagen, predicción | Pendiente | Interfaces futuras documentadas, sin integración ficticia |
+| RF12 | P1 | Recibir texto, fotos, audios/notas de voz y documentos por Telegram (polling) y WhatsApp Cloud API (webhook firmado); guardar de forma durable e idempotente; entregar a `submit_report` solo con sector y descripción explícitos; lo incompleto queda como borrador pendiente | Implementado local | `app/integrations`, test_integrations; Meta y Telegram reales no probados; MESSAGING |
+| RF13 | P1 | Chatbot guiado en Telegram y WhatsApp: consentimiento, distrito, corregimiento (catálogo INEC 2023 verificado), barriada opcional, tipo, descripción, duración normalizada, evidencias y confirmación con corrección por campo; solo tipos soportados llegan a `submit_report` | Implementado local | `chatbot.py`, test_integrations; sin prueba con credenciales reales; MESSAGING |
+| FUT02 | P2 | Transcripción de audio, interpretación de imagen, respuestas al ciudadano, predicción | Pendiente | Borradores PENDING listos para el agente multimodal |
 | ENT01 | P0 | Repositorio registrado, historial oficial, tag, video ≤3 min | Pendiente de equipo | DELIVERY_CHECKLIST |
 
 Para un requisito nuevo: asignar ID, describir aceptación, identificar módulos, acordar contrato,

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-17T01:28:27.051524+00:00",
+  "generated_at": "2026-10-17T03:50:15.072532+00:00",
   "mode": "mock-deterministic",
   "passed": 31,
   "total": 31,
@@ -27,157 +27,157 @@
     {
       "id": "E01",
       "passed": true,
-      "seconds": 1.118
+      "seconds": 0.214
     },
     {
       "id": "E02",
       "passed": true,
-      "seconds": 0.681
+      "seconds": 0.142
     },
     {
       "id": "E03",
       "passed": true,
-      "seconds": 0.397
+      "seconds": 0.116
     },
     {
       "id": "E04",
       "passed": true,
-      "seconds": 0.831
+      "seconds": 0.183
     },
     {
       "id": "E05",
       "passed": true,
-      "seconds": 1.101
+      "seconds": 0.202
     },
     {
       "id": "E06",
       "passed": true,
-      "seconds": 1.008
+      "seconds": 0.222
     },
     {
       "id": "E07",
       "passed": true,
-      "seconds": 1.012
+      "seconds": 0.213
     },
     {
       "id": "E08",
       "passed": true,
-      "seconds": 0.75
+      "seconds": 0.169
     },
     {
       "id": "E09",
       "passed": true,
-      "seconds": 0.776
+      "seconds": 0.188
     },
     {
       "id": "E10",
       "passed": true,
-      "seconds": 0.339
+      "seconds": 0.097
     },
     {
       "id": "E11",
       "passed": true,
-      "seconds": 0.433
+      "seconds": 0.094
     },
     {
       "id": "E12",
       "passed": true,
-      "seconds": 0.372
+      "seconds": 0.097
     },
     {
       "id": "E13",
       "passed": true,
-      "seconds": 0.897
+      "seconds": 0.198
     },
     {
       "id": "E14",
       "passed": true,
-      "seconds": 1.077
+      "seconds": 0.194
     },
     {
       "id": "E15",
       "passed": true,
-      "seconds": 1.031
+      "seconds": 0.212
     },
     {
       "id": "E16",
       "passed": true,
-      "seconds": 0.996
+      "seconds": 0.17
     },
     {
       "id": "E17",
       "passed": true,
-      "seconds": 1.485
+      "seconds": 0.241
     },
     {
       "id": "E18",
       "passed": true,
-      "seconds": 2.702
+      "seconds": 0.242
     },
     {
       "id": "E19",
       "passed": true,
-      "seconds": 1.287
+      "seconds": 0.202
     },
     {
       "id": "E20",
       "passed": true,
-      "seconds": 0.894
+      "seconds": 0.147
     },
     {
       "id": "E21",
       "passed": true,
-      "seconds": 0.679
+      "seconds": 0.139
     },
     {
       "id": "E22",
       "passed": true,
-      "seconds": 1.491
+      "seconds": 0.204
     },
     {
       "id": "E23",
       "passed": true,
-      "seconds": 1.374
+      "seconds": 0.204
     },
     {
       "id": "E24",
       "passed": true,
-      "seconds": 2.831
+      "seconds": 0.344
     },
     {
       "id": "E25",
       "passed": true,
-      "seconds": 2.698
+      "seconds": 0.259
     },
     {
       "id": "E26",
       "passed": true,
-      "seconds": 4.582
+      "seconds": 0.199
     },
     {
       "id": "E27",
       "passed": true,
-      "seconds": 2.575
+      "seconds": 0.172
     },
     {
       "id": "E28",
       "passed": true,
-      "seconds": 2.415
+      "seconds": 0.2
     },
     {
       "id": "E29",
       "passed": true,
-      "seconds": 1.349
+      "seconds": 0.208
     },
     {
       "id": "E30",
       "passed": true,
-      "seconds": 1.242
+      "seconds": 0.218
     },
     {
       "id": "E31",
       "passed": true,
-      "seconds": 1.428
+      "seconds": 0.207
     }
   ],
   "note": "Contract/scenario assertions, not real-model accuracy"

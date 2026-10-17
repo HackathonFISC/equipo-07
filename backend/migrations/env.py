@@ -2,6 +2,7 @@ import asyncio
 
 from alembic import context
 
+import app.integrations.models  # noqa: F401  (registra sus tablas en Base.metadata)
 from app.config import Settings
 from app.db import Database
 from app.models import Base

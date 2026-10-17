@@ -14,6 +14,8 @@ from app.worker import process_one
 
 TOKEN = "test-coordinator-token-12345"
 AUTH = {"X-Coordinator-Token": TOKEN}
+WHATSAPP_VERIFY = "test-verify-token"
+WHATSAPP_SECRET = "test-app-secret"
 
 
 @dataclass
@@ -36,6 +38,11 @@ async def system(tmp_path):
         database_url=f"sqlite+aiosqlite:///{tmp_path}/db.sqlite",
         checkpoint_path=str(tmp_path / "checkpoints.sqlite"),
         coordinator_token=TOKEN,
+        media_path=str(tmp_path / "media"),
+        whatsapp_verify_token=WHATSAPP_VERIFY,
+        whatsapp_app_secret=WHATSAPP_SECRET,
+        whatsapp_access_token="test-access-token",
+        whatsapp_phone_number_id="106540352242922",
     )
     db = Database(settings)
     async with db.engine.begin() as connection:
