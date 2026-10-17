@@ -201,7 +201,7 @@ Guion completo, recuperación y reinicio seguro de datos: [DEMO](docs/DEMO.md).
 
 Cifras de la última ejecución local (`evals/results.json`, `evals/impact.json`):
 
-- **Backend:** 162 pruebas pytest, cobertura de líneas 87 %.
+- **Backend:** 173 pruebas pytest, cobertura de líneas 87 %.
 - **Evals:** 54/54 escenarios de [cases.json](evals/cases.json), en seis grupos que se solapan:
   consolidación, guardrails, prioridad, decisión humana, planificador y robustez. Miden cumplimiento
   de escenarios con el mock, no la calidad de un modelo real.

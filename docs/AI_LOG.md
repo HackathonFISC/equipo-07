@@ -540,3 +540,20 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
 - Contraste calculado con la fórmula WCAG para cada par de tokens: texto ≥ 4,5:1, bordes de campos y
   rellenos gráficos ≥ 3:1. Verificado con `npm run lint`, `typecheck`, `test` (14/14) y `build`, y
   con capturas en claro y oscuro contra la API aislada en modo mock. Sin commits ni pushes.
+
+## 2026-10-17 — Revisión del backend: tres fallos confirmados
+
+- Herramienta: Claude Code, a pedido del usuario.
+- Duraciones: `stated_hours` no leía «24h» ni «y media/y medio». Un modelo real que respondía 24 o
+  1.5 chocaba con `UNGROUNDED_HOURS` y el reporte quedaba en ERROR. Ahora «24h» → 24,
+  «1 hora y media» → 1.5, «3 días y medio» → 84, «una semana y media» → 252. Pruebas en
+  `test_grounding.py` y `test_model_hours_from_short_forms_are_grounded`.
+- Código de error: el worker guardaba solo `ProviderError`, así que coordinación no sabía qué
+  guardrail detuvo el reporte. `error_code` persiste el código controlado (`UNGROUNDED_HOURS`,
+  `INVALID_DUPLICATE_CANDIDATE`, `APITimeoutError`…) y vuelve al nombre de clase ante texto libre.
+  E20/E21 lo comprueban.
+- Verificación sin candidatos: el modelo se consultaba aunque no hubiera incidentes compatibles
+  (una llamada NIM inútil por cada incidente nuevo). Ahora se crea el incidente por regla
+  determinística, visible en la traza (AG-03). E20 crea antes un candidato real para que el modelo
+  siga siendo consultado e invente un UUID.
+- Suite completa: **173 passed** (87 % cobertura), ruff limpio. README y EVALUATION actualizados.

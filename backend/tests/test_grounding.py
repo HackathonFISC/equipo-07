@@ -43,6 +43,15 @@ def test_critical_evidence(text, expected):
         ("Corte de 1 semana", [168.0]),
         ("Llevamos dos semanas sin una gota", [336.0]),
         ("Calle 4 casa 2 llevamos 2 días sin agua", [48.0]),
+        # Short forms and halves: before, «24h» gave nothing and «1 hora y media» gave 1,
+        # so a model answering 24 or 1.5 hit UNGROUNDED_HOURS and the report ended in ERROR.
+        ("Llevamos 24h sin agua", [24.0]),
+        ("Sin agua hace 24 h", [24.0]),
+        ("Hace 1 hora y media que no sale", [1.5]),
+        ("Van dos horas y media", [2.5]),
+        ("Llevamos 3 días y medio sin agua", [84.0]),
+        ("Un día y medio sin suministro", [36.0]),
+        ("Una semana y media sin agua", [252.0]),
         ("Consulta general sobre el suministro", []),
     ],
 )

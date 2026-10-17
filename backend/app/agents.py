@@ -70,7 +70,13 @@ class Agents:
             if plain(c["summary"]) == plain(normalized["summary"])
             and c["kind"] == normalized["kind"]
         ]
-        if len(exact) == 1:
+        if not candidates:
+            # Nothing compatible to match: a model call could only cost time or invent a UUID.
+            assessment = DuplicateEvaluationSchema(
+                match_confidence="LOW",
+                reasoning="Regla determinística: sin incidentes del mismo tipo en sector y ventana",
+            )
+        elif len(exact) == 1:
             assessment = DuplicateEvaluationSchema(
                 match_confidence="HIGH",
                 matched_incident_id=UUID(exact[0]["id"]),

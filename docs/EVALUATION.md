@@ -7,7 +7,7 @@ con estas métricas. No se ejecutó CI remoto.
 
 | Verificación | Resultado observado |
 |---|---|
-| Backend: `pytest -q -p no:cacheprovider --cov=app` | **162 passed**; cobertura de líneas **87 %** |
+| Backend: `pytest -q -p no:cacheprovider --cov=app` | **173 passed**; cobertura de líneas **87 %** |
 | Evals: `python ../scripts/evaluate.py` | **54/54**; resultados en `evals/results.json` y `evals/results.xml` |
 | Impacto: `python ../scripts/impact_report.py` | Mediana de la primera entrega crítica 143 min (AguaIA) frente a 292 min (volumen y llegada); cobertura crítica 100 % en las tres (`evals/impact.json`) |
 | Frontend: `npm test` (Vitest 5.0.5) | **11/11** (`api.test.ts` y `App.test.tsx`) |
@@ -17,7 +17,7 @@ con estas métricas. No se ejecutó CI remoto.
 | Alembic | `upgrade head` y `alembic check` limpios; una sola cabeza |
 | Datos: `python scripts/validate_datasets.py` | 20 ubicaciones y 4 cisternas válidas; `git diff data/` limpio |
 
-Las 54 evals son parte de las 162 pruebas backend, no pruebas adicionales. Los tiempos de ejecución
+Las 54 evals son parte de las 173 pruebas backend, no pruebas adicionales. Los tiempos de ejecución
 son observaciones de esta máquina, no objetivos de rendimiento. La cobertura no equivale a corrección.
 
 ## Evaluación por capas

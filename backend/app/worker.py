@@ -11,7 +11,7 @@ from app.db import Database, checkpoints
 from app.graph import build_graph
 from app.integrations.evidence import analyze_next_image
 from app.models import DistributionPlan, Execution, Notification, Review
-from app.providers import make_provider
+from app.providers import error_code, make_provider
 from app.services import log_event, plan_event, trace
 
 
@@ -93,7 +93,7 @@ async def process_one(db, graph, provider):
         log_event(execution_id=key, event="execution", status=status)
     except Exception as exc:
         # Job boundary: persist failure, keep the worker alive, never silently use a mock.
-        error = type(exc).__name__
+        error = error_code(exc)
         async with db.sessions.begin() as session:
             row = await session.get(Execution, key)
             row.status, row.error = "ERROR", error
@@ -120,7 +120,7 @@ async def process_plan(db, planner):
         status, error = "PROPOSED", None
     except Exception as exc:
         # Job boundary: a failed plan is visible to the coordinator, never replaced by a guess.
-        status, error = "ERROR", type(exc).__name__
+        status, error = "ERROR", error_code(exc)
     async with db.sessions.begin() as session:
         plan = await session.get(DistributionPlan, key)
         plan.status, plan.error = status, error

@@ -21,6 +21,15 @@ class ProviderError(RuntimeError):
     pass
 
 
+def error_code(exc: Exception) -> str:
+    """Controlled code to persist: a ProviderError carries one (UNGROUNDED_HOURS,
+    APITimeoutError…); anything else, or free text, falls back to the class name."""
+    code = str(exc)
+    if isinstance(exc, ProviderError) and code.replace("_", "").isalnum() and code.isascii():
+        return code
+    return type(exc).__name__
+
+
 class LLMProvider(Protocol):
     name: str
     is_simulated: bool
