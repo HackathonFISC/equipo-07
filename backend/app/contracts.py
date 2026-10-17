@@ -53,7 +53,10 @@ class ReportInput(Contract):
             text,
         ):
             raise ValueError("El reporte contiene instrucciones ajenas al servicio")
-        if not re.search(r"\b(agua|acueducto|tuberia|grifo|suministro)\b", text):
+        if not re.search(
+            r"\b(aguas?|acueductos?|tuberias?|tubos?|grifos?|plumas?|llaves?|fugas?|suministros?|presion(es)?|cisternas?|tanques?|potables?|hidrantes?|bombas?|valvulas?|cortes?|suspension(es)?|desabastecimientos?|filtracion(es)?|roturas?|goteos?|goteras?|chorros?)\b",
+            text,
+        ):
             raise ValueError("Describe un problema del servicio de agua")
         return " ".join(value.split())
 

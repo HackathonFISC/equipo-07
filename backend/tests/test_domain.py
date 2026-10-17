@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.contracts import PriorityPolicyConfig
+from app.contracts import PriorityPolicyConfig, ReportInput
 from app.domain import calculate_priority
 from tests.conftest import AUTH
 
@@ -44,6 +44,22 @@ def test_max_tie_and_custom_policy():
 def test_invalid_priority_data(args):
     with pytest.raises(ValueError):
         calculate_priority(*args)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Hay una fuga en la calle principal",
+        "Se rompio el tubo y no sale nada",
+        "Baja presion en las tuberias",
+        "No sale nada de la pluma",
+        "Corte de suministro en la barriada",
+        "Los tanques y cisternas estan secos",
+    ],
+)
+def test_report_input_accepts_water_terms(text):
+    report = ReportInput(community_id="arraijan-demo", description=text, hours_without_water=12)
+    assert report.description == text
 
 
 async def test_geo_and_fleet_endpoints(system):

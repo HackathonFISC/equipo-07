@@ -8,9 +8,35 @@ export async function api<T>(path: string, options: RequestInit = {}, token?: st
   })
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    throw new Error(typeof body.detail === 'string' ? body.detail :
-      response.status === 422 ? 'Revisa los campos: el reporte o la decisión no es válido.' :
+    let detailMsg = ''
+    if (typeof body.detail === 'string') {
+      detailMsg = body.detail
+    } else if (Array.isArray(body.detail) && body.detail.length > 0) {
+      detailMsg = body.detail
+        .map((item: unknown) => {
+          if (typeof item === 'string') return item
+          if (
+            item &&
+            typeof item === 'object' &&
+            'msg' in item &&
+            typeof (item as { msg: unknown }).msg === 'string'
+          ) {
+            const msg = (item as { msg: string }).msg.replace(/^Value error,\s*/i, '')
+            if (msg.includes('String should have at least')) {
+              return 'La descripción debe tener al menos 8 caracteres'
+            }
+            return msg
+          }
+          return ''
+        })
+        .filter(Boolean)
+        .join('. ')
+    }
+    throw new Error(
+      detailMsg ||
+      (response.status === 422 ? 'Revisa los campos: el reporte o la decisión no es válido.' :
         `El servicio respondió ${response.status}. Intenta de nuevo.`)
+    )
   }
   return response.json() as Promise<T>
 }

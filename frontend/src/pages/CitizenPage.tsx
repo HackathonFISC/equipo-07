@@ -40,11 +40,22 @@ const statusMessages: Record<Status, { tone: string; text: string }> = {
   ERROR: { tone: 'error', text: 'Tu reporte quedó guardado, pero hubo un problema al revisarlo. El equipo puede volver a intentarlo; no necesitas enviarlo otra vez.' },
 }
 
+function getUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 export function CitizenPage() {
   const [community, setCommunity] = useState('')
   const [description, setDescription] = useState('')
   const [hours, setHours] = useState('')
-  const [requestId, setRequestId] = useState(() => crypto.randomUUID())
+  const [requestId, setRequestId] = useState(() => getUUID())
   const [receipt, setReceipt] = useState<Receipt | null>(null)
   const [submittedBody, setSubmittedBody] = useState<string | null>(null)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -77,7 +88,7 @@ export function CitizenPage() {
 
   const startNewReport = (keepText: boolean) => {
     setReceipt(null)
-    setRequestId(crypto.randomUUID())
+    setRequestId(getUUID())
     setSubmittedBody(null)
     setCopyState('idle')
     if (!keepText) {
@@ -262,7 +273,7 @@ export function CitizenPage() {
                   className="secondary"
                   onClick={() => {
                     setSubmittedBody(null)
-                    setRequestId(crypto.randomUUID())
+                    setRequestId(getUUID())
                     submission.reset()
                   }}
                 >
