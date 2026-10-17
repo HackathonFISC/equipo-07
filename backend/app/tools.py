@@ -82,7 +82,10 @@ class AgentTools:
     async def candidates(self, key):
         async with self._db.sessions() as session:
             report = await session.get(Report, key)
-            return await candidate_incidents(session, report, self._window_hours)
+            candidates = await candidate_incidents(session, report, self._window_hours)
+            # consolidate() rejects a different kind, so the model must not be offered one:
+            # a HIGH match on it turned «presión en cero» into a repeatable ERROR.
+            return [c for c in candidates if c["kind"] == report.normalized["kind"]]
 
     async def consolidate(self, key, assessment: DuplicateEvaluationSchema):
         async with self._db.sessions.begin() as session:

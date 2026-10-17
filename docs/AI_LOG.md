@@ -490,3 +490,24 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
   - `docs/images/architecture.png` era una imagen generada por IA (JPEG en inglés con flujos falsos).
     Se reemplazó por la exportación real de `docs/images/architecture.mmd` con mermaid-cli 11.4.2.
   - Se retiraron RF38–RF40 de REQUIREMENTS: son tareas de limpieza, no requisitos funcionales.
+
+## 2026-10-17 — F7: instalación limpia y corrida real
+
+- Herramienta: Claude Code, a pedido del usuario.
+- Instalación limpia: clon nuevo de `main` (723c7df) siguiendo el README en PowerShell. `uv sync`,
+  migraciones, seed, `npm ci` (0 vulnerabilidades) y el escenario F2-01 en mock funcionaron sin
+  cambios; el puerto 8000 se cambió solo porque estaba ocupado. R0 en el clon: 162 pytest, 54/54
+  evals, Vitest 11/11 y build.
+- Botón Reintentar: un worker con `LLM_TIMEOUT_SECONDS=0.5` dejó un reporte en ERROR
+  (ProviderError, sin fallback); con el worker normal, el botón del expediente lo llevó a
+  WAITING_APPROVAL en el segundo intento con NVIDIA.
+- Corrida real F2-01 con `openai/gpt-oss-20b`: el reporte 4 («la presión cayó a cero») terminaba
+  siempre en ERROR. El modelo lo clasificaba LOW_PRESSURE y lo asociaba con HIGH al incidente
+  OUTAGE del mismo sector; la herramienta rechazaba el cambio de tipo (`INCOMPATIBLE_INCIDENT_TYPE`)
+  y cada reintento repetía la respuesta. `AgentTools.candidates` ahora solo ofrece al modelo
+  incidentes del mismo tipo (la validación de `consolidate` se mantiene). Prueba
+  `test_model_only_sees_candidates_of_the_same_kind`, que falla sin el cambio con el mismo error.
+- Repetición con NVIDIA en base nueva: 12/12 en revisión humana en 166 s, plan PROPOSED con mediana
+  crítica 143 min frente a 292 min (volumen y llegada), igual que `evals/impact.json`; aviso
+  SCHEDULED del hospital a las 08:23. CI remoto no verificado: requiere sesión de GitHub.
+

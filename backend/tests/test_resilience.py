@@ -154,6 +154,37 @@ async def test_tool_revalidates_sector_and_kind_before_write(system, changes):
     assert await agents.tools.association(other) is None
 
 
+async def test_model_only_sees_candidates_of_the_same_kind(system):
+    # Regression (real NIM, F2-01 #4): the model matched a LOW_PRESSURE report to an OUTAGE
+    # incident of the same sector, the tool rejected it and every retry ended in ERROR.
+    seen = []
+
+    class Eager(MockLLMProvider):
+        async def evaluate_duplicate(self, report, candidates):
+            seen.append([c["kind"] for c in candidates])
+            if not candidates:
+                return await super().evaluate_duplicate(report, candidates)
+            return DuplicateEvaluationSchema(
+                match_confidence="HIGH",
+                matched_incident_id=candidates[0]["id"],
+                reasoning="Mismo sector",
+            )
+
+    original, _ = await submit(system)
+    await system.work()
+    outage = (await details(system, original))["proposal"]["incident_id"]
+    other, _ = await submit(
+        system, {**BASE, "description": "La presión del agua cayó a cero desde hace 24 horas"}
+    )
+    agents = Agents(system.db, Eager(), system.settings)
+    state = {"execution_id": other}
+    state.update(await agents.ingest(state))
+    assert state["normalized"]["kind"] == "LOW_PRESSURE"
+    association = await agents.verify(state)
+    assert seen == [[]]
+    assert association["incident_id"] != outage
+
+
 async def test_recover_after_decision_commit_before_final_checkpoint(system):
     from app.contracts import ReviewInput
 
