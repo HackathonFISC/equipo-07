@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { api, polling } from '../api'
+import { api, polling, publicStatusPolling } from '../api'
 import { ErrorMessage, ProcessStepper, StatusBadge } from '../components'
-import type { Community, Receipt, Status } from '../types'
+import type { Community, PublicReportStatus, Receipt, Status } from '../types'
 
 // Cada opción cae dentro de un tramo de domain.py (<12, 12–24, 24–48, ≥48 h),
 // así la prioridad es la misma que si la persona escribiera las horas exactas.
@@ -15,18 +15,18 @@ const durationOptions = [
 ]
 
 const demoExamples = [
-  { community: 'arraijan-demo', hours: '36', label: 'Corte total en Arraiján',
-    description: 'Llevamos más de 36 horas sin agua en toda la barriada. Las casas altas no tienen ni una gota.' },
-  { community: 'chorrera-demo', hours: '18', label: 'Fuga en tubería en La Chorrera',
-    description: 'Fuga grande de agua potable por rotura de tubería principal en la calle central.' },
-  { community: 'arraijan-demo', hours: '36', label: 'Centro de salud sin agua',
-    description: 'Falta de agua afectando el centro de salud y la escuela primaria comunitaria.' },
-  { community: 'crit-hosp-nicolas-solano', hours: '18', label: 'Hospital Nicolás A. Solano',
+  { community: 'crit-hosp-nicolas-solano', hours: '24', label: 'Hospital Nicolás A. Solano',
     description: 'Emergencia por falta de agua potable en el Hospital Nicolás A. Solano; los tanques de reserva soterrados están por agotarse.' },
   { community: 'ref-loma-burunga', hours: '48', label: 'Loma de Burunga (parte alta)',
     description: 'Llevamos más de 48 horas sin agua en la Loma de Burunga, la presión no sube a las partes altas.' },
   { community: 'crit-esc-guillermo-andreve', hours: '36', label: 'Escuela Guillermo Andreve',
     description: 'Falta de agua en la Escuela Guillermo Andreve afectando el comedor y los servicios higiénicos.' },
+  { community: 'crit-cs-nuevo-chorrillo', hours: '24', label: 'Centro de Salud Nuevo Chorrillo',
+    description: 'El centro de salud de Nuevo Chorrillo está sin suministro de agua potable desde hace 24 horas.' },
+  { community: 'ref-rey-vista-alegre', hours: '24', label: 'Corte en Vista Alegre',
+    description: 'Llevamos más de 24 horas sin agua potable en Vista Alegre, no sale ni una gota de las plumas.' },
+  { community: 'ref-parque-feuillet', hours: '6', label: 'Fuga en Parque Feuillet',
+    description: 'Fuga grande de agua potable por rotura de tubería principal en la calle central cerca del parque.' },
 ]
 
 const statusMessages: Record<Status, { tone: string; text: string }> = {
@@ -57,6 +57,8 @@ export function CitizenPage() {
   const [hours, setHours] = useState('')
   const [requestId, setRequestId] = useState(() => getUUID())
   const [receipt, setReceipt] = useState<Receipt | null>(null)
+  const [lookupCode, setLookupCode] = useState('')
+  const [searchedId, setSearchedId] = useState<string | null>(null)
   const [submittedBody, setSubmittedBody] = useState<string | null>(null)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
 
@@ -67,7 +69,10 @@ export function CitizenPage() {
     mutationFn: (body: string) => api<Receipt>('/reports', {
       method: 'POST', headers: { 'Idempotency-Key': requestId }, body,
     }),
-    onSuccess: setReceipt,
+    onSuccess: r => {
+      setReceipt(r)
+      setSearchedId(r.report_id)
+    },
   })
 
   const execution = useQuery({
@@ -76,18 +81,39 @@ export function CitizenPage() {
     refetchInterval: query => polling(query.state.data?.status),
   })
 
-  const current = execution.data || receipt
+  const activeReportId = receipt?.report_id || searchedId
+
+  const publicStatus = useQuery({
+    queryKey: ['publicStatus', activeReportId],
+    enabled: !!activeReportId,
+    queryFn: () => api<PublicReportStatus>(`/reports/${activeReportId}/public-status`),
+    refetchInterval: query => publicStatusPolling(query.state.data),
+  })
+
+  const current = receipt
+    ? (execution.data || receipt)
+    : publicStatus.data
+    ? {
+        report_id: publicStatus.data.report_id,
+        thread_id: '',
+        status: publicStatus.data.status,
+        is_simulated: false,
+      }
+    : null
+
   const receiptHeading = useRef<HTMLHeadingElement>(null)
 
   // En móvil el botón de envío queda lejos del recibo: lo mostramos y anunciamos.
   useEffect(() => {
-    if (!receipt) return
+    if (!receipt && !searchedId) return
     receiptHeading.current?.focus()
     receiptHeading.current?.scrollIntoView?.({ block: 'center' })
-  }, [receipt])
+  }, [receipt, searchedId])
 
   const startNewReport = (keepText: boolean) => {
     setReceipt(null)
+    setSearchedId(null)
+    setLookupCode('')
     setRequestId(getUUID())
     setSubmittedBody(null)
     setCopyState('idle')
@@ -133,7 +159,9 @@ export function CitizenPage() {
         {current ? (
           <div aria-live="polite" className="stack submission-success">
             <div className="receipt-banner">
-              <h2 ref={receiptHeading} tabIndex={-1}>Recibimos tu reporte</h2>
+              <h2 ref={receiptHeading} tabIndex={-1}>
+                {receipt ? 'Recibimos tu reporte' : 'Estado de tu reporte'}
+              </h2>
               <StatusBadge status={current.status} audience="citizen" />
             </div>
 
@@ -142,6 +170,33 @@ export function CitizenPage() {
             </p>
 
             <ProcessStepper status={current.status} />
+
+            {publicStatus.data?.notice && (
+              <div
+                className={`callout ${
+                  publicStatus.data.notice.kind === 'SCHEDULED' ? 'success' : 'warning'
+                } arrival-notice-card`}
+              >
+                <div className="arrival-badge">
+                  {publicStatus.data.notice.kind === 'SCHEDULED'
+                    ? '🚚 Camión cisterna programado'
+                    : 'ℹ️ Información de tu reporte'}
+                </div>
+                {publicStatus.data.notice.arrival && (
+                  <div className="arrival-time-row">
+                    <span className="arrival-label">Hora estimada de llegada:</span>
+                    <strong className="arrival-clock">{publicStatus.data.notice.arrival}</strong>
+                  </div>
+                )}
+                <p className="arrival-text">{publicStatus.data.notice.text}</p>
+                {publicStatus.data.notice.kind === 'SCHEDULED' && (
+                  <small className="muted arrival-legend">
+                    Nota: La hora estimada corresponde al día de hoy según la programación aprobada por coordinación.
+                  </small>
+                )}
+              </div>
+            )}
+
 
             <div className="report-id-box">
               <span className="id-label">Código de tu reporte</span>
@@ -171,7 +226,8 @@ export function CitizenPage() {
             )}
           </div>
         ) : (
-          <form
+          <>
+            <form
             className="stack"
             onSubmit={event => {
               event.preventDefault()
@@ -282,7 +338,38 @@ export function CitizenPage() {
               </>
             )}
           </form>
-        )}
+
+          <div className="lookup-box">
+            <h3>¿Ya hiciste un reporte? Consulta con tu código</h3>
+            <p className="field-help">Introduce el código UUID que recibiste al enviar tu reporte.</p>
+            <form
+              className="lookup-form"
+              onSubmit={e => {
+                e.preventDefault()
+                if (lookupCode.trim()) {
+                  setSearchedId(lookupCode.trim())
+                }
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Ejemplo: 3a5e8f1b-4d2c-4e89-9a1f-8c7b6d5e4f3a"
+                value={lookupCode}
+                onChange={e => setLookupCode(e.target.value)}
+                required
+              />
+              <button type="submit" className="secondary">
+                Consultar
+              </button>
+            </form>
+            {publicStatus.isError && searchedId && (
+              <p className="status-msg error">
+                No encontramos ningún reporte con ese código. Revisa que esté bien escrito o crea un reporte nuevo.
+              </p>
+            )}
+          </div>
+        </>
+      )}
       </section>
 
       <aside className="intro" aria-labelledby="how-title">

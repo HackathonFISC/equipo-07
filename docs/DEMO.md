@@ -8,17 +8,18 @@ son acciones reales. No configurar una clave para ejecutar tests.
 
 | Tiempo | Acción | Evidencia que mostrar |
 |---|---|---|
-| 0:00–0:20 | Presentar crisis de coordinación y alcance local | No es chatbot; sectores sintéticos visibles |
-| 0:20–0:50 | Sector Arraiján; «Estamos sin agua desde hace 24 horas», horas 24 | POST guarda y muestra UUID; cola → revisión |
-| 0:50–1:10 | Repetir con «No llega el agua desde hace 24 horas» | Dos reportes, un incidente consolidado en mock |
-| 1:10–1:50 | Entrar en Coordinación con token local, abrir ejecución | Tres agentes, factores/rango 0–100, datos faltantes/sintéticos, trazas |
-| 1:50–2:20 | CORRECT, 70, razón «Revisado para la demostración del equipo» | RESUME_QUEUED → APPROVED; puntuación humana aparte |
-| 2:20–2:45 | Mostrar decisión persistida y auditoría | actor compartido, motivo, política, ninguna entrega confirmada |
-| 2:45–3:00 | Mostrar resultados de evals y pendientes | Mock no prueba calidad de NIM; rutas/canales futuros |
+| 0:00–0:25 | Presentar crisis de coordinación en Panamá Oeste y alcance local | No es chatbot; catálogo de referencia con coordenadas en La Chorrera y Arraiján (no son datos oficiales del IDAAN) |
+| 0:25–0:50 | Cargar escenario reproducible desde `backend/`: `uv run python ../scripts/seed_demo_scenario.py` o enviar reporte desde `crit-hosp-nicolas-solano` («Sin agua en hospital desde ayer») | Ingesta 202 con UUIDv5 idempotente; Agente 1 valida y detecta institución crítica; cola → revisión |
+| 0:50–1:20 | Abrir Coordinación con token local; revisar duplicados consolidados por Agente 2 | Agente 2 unifica reportes del mismo sector; Agente 3 calcula factores determinísticos 0–100 sin alucinación |
+| 1:20–1:50 | Aprobar prioridad con intervalo (D-03): fijar puntaje dentro del rango y razón obligatoria | RESUME_QUEUED → APPROVED; trazabilidad inmutable y bandera `CRITICIDAD_CATALOGO` |
+| 1:50–2:20 | Marcar `cisterna-hospital-01` como no disponible (el script no lo hace), generar el Plan de Cisternas (Agente 4, solver determinístico) y aprobarlo con razón | Rutas con paradas, galones y horarios explicados; incidentes pasan a `SCHEDULED` |
+| 2:20–2:45 | Agente 5 Comunicación: consultar reporte ciudadano con UUID en `http://localhost:5173/` | Tarjeta de aviso con hora estimada de llegada («08:15»), galones asignados y leyenda de programación del mismo día |
+| 2:45–3:00 | Mostrar línea de tiempo unificada del incidente (`GET /api/admin/incidents/{id}/timeline`) | Trazabilidad completa de punta a punta: reporte → deduplicación → prioridad → plan → notificación ciudadana |
+
 
 Alternativas: «Hospital sin agua desde hace 24 horas» activa revisión inmediata; descripción genérica
-«Consulta del agua disponible» termina NEEDS_INFORMATION. Aprobar acepta el límite inferior;
-rechazar conserva auditoría y no cierra automáticamente un incidente con otros reportes.
+«Consulta del agua disponible» termina NEEDS_INFORMATION. Si la propuesta tiene rango, Aprobar exige
+fijar un puntaje dentro del rango (D-03; la UI propone el punto medio); rechazar conserva auditoría y no cierra automáticamente un incidente con otros reportes.
 
 ## Verificar antes de grabar
 

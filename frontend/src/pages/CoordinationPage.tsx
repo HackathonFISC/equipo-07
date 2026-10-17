@@ -2,8 +2,61 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, polling } from '../api'
 import { ErrorMessage, FactorBar, KpiCard, PriorityGauge, StatusBadge } from '../components'
-import type { Detail, Execution, Incident, Review } from '../types'
+import type { Detail, Execution, Incident, IncidentTimelineEvent, Review } from '../types'
 import { PlanPanel } from './PlanPanel'
+
+function IncidentTimelineModal({ incidentId, token, onClose }: { incidentId: string; token: string; onClose: () => void }) {
+  const query = useQuery({
+    queryKey: ['admin', 'incidents', incidentId, 'timeline'],
+    queryFn: () => api<IncidentTimelineEvent[]>(`/admin/incidents/${incidentId}/timeline`, {}, token),
+  })
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="timeline-modal-title" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <span className="eyebrow">TRAZABILIDAD UNIFICADA DEL INCIDENTE</span>
+            <h2 id="timeline-modal-title">Línea de tiempo de ciclo de vida</h2>
+            <code>{incidentId}</code>
+          </div>
+          <button type="button" className="secondary close-btn" onClick={onClose}>
+            ✕ Cerrar
+          </button>
+        </div>
+
+        {query.isPending && <p role="status">Cargando línea de tiempo…</p>}
+        <ErrorMessage error={query.error} />
+
+        {query.data && query.data.length === 0 && (
+          <p className="muted">No hay eventos registrados para este incidente.</p>
+        )}
+
+        {query.data && (
+          <ol className="timeline-list">
+            {query.data.map((evt, idx) => (
+              <li key={idx} className={`timeline-entry source-${evt.source}`}>
+                <div className="timeline-meta">
+                  <span className={`source-badge badge-${evt.source}`}>{evt.source}</span>
+                  <span className="timeline-event-name">{evt.event}</span>
+                  <span className="timeline-time">{evt.timestamp} UTC</span>
+                </div>
+                <p className="timeline-summary">{evt.summary}</p>
+                {evt.detail && Object.keys(evt.detail).length > 0 && (
+                  <details className="timeline-details">
+                    <summary>Detalles del evento</summary>
+                    <pre>{JSON.stringify(evt.detail, null, 2)}</pre>
+                  </details>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </div>
+  )
+}
+
 
 
 function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
@@ -142,7 +195,7 @@ function ReviewPanel({ detail, token }: { detail: Detail; token: string }) {
   )
 }
 
-function ExecutionDetail({ id, token }: { id: string; token: string }) {
+function ExecutionDetail({ id, token, onViewTimeline }: { id: string; token: string; onViewTimeline?: (incidentId: string) => void }) {
   const client = useQueryClient()
   const query = useQuery({
     queryKey: ['admin', 'detail', id],
@@ -184,6 +237,16 @@ function ExecutionDetail({ id, token }: { id: string; token: string }) {
             <span className="provider-badge">
               {detail.is_simulated ? '⚙️ Modo Simulado' : '⚡ Proveedor NIM'} · {detail.provider}
             </span>
+            {proposal?.incident_id && (
+              <button
+                type="button"
+                className="text-btn"
+                onClick={() => onViewTimeline?.(proposal.incident_id)}
+                style={{ marginLeft: '6px' }}
+              >
+                🕒 Línea de tiempo
+              </button>
+            )}
           </div>
         </div>
         <StatusBadge status={detail.status} />
@@ -334,6 +397,7 @@ function ExecutionDetail({ id, token }: { id: string; token: string }) {
 
 export function CoordinationPage({ token }: { token: string }) {
   const [selected, setSelected] = useState<string | null>(null)
+  const [timelineIncidentId, setTimelineIncidentId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'waiting' | 'approved'>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(0)
@@ -521,8 +585,15 @@ export function CoordinationPage({ token }: { token: string }) {
                     <span className="incident-kind-badge">{i.kind}</span>
                   </div>
                   <p>{i.summary}</p>
-                  <div className="incident-meta">
+                  <div className="incident-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <small>{i.status} · ID: <code>{i.id.slice(0, 8)}</code></small>
+                    <button
+                      type="button"
+                      className="text-btn"
+                      onClick={() => setTimelineIncidentId(i.id)}
+                    >
+                      Línea de tiempo
+                    </button>
                   </div>
                 </div>
               ))}
@@ -532,7 +603,7 @@ export function CoordinationPage({ token }: { token: string }) {
 
         <section className="detail-pane">
           {selected ? (
-            <ExecutionDetail key={selected} id={selected} token={token} />
+            <ExecutionDetail key={selected} id={selected} token={token} onViewTimeline={setTimelineIncidentId} />
           ) : (
             <div className="card empty select-prompt">
               <div className="empty-content">
@@ -544,6 +615,14 @@ export function CoordinationPage({ token }: { token: string }) {
           )}
         </section>
       </div>
+
+      {timelineIncidentId && (
+        <IncidentTimelineModal
+          incidentId={timelineIncidentId}
+          token={token}
+          onClose={() => setTimelineIncidentId(null)}
+        />
+      )}
     </section>
   )
 }

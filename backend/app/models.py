@@ -1,7 +1,17 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -128,3 +138,19 @@ class DistributionPlan(Base):
     events: Mapped[list] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    plan_id: Mapped[str] = mapped_column(ForeignKey("distribution_plans.id"), index=True)
+    community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"), index=True)
+    incident_ids: Mapped[list] = mapped_column(JSON)
+    kind: Mapped[str] = mapped_column(String(24))
+    text: Mapped[str] = mapped_column(String(1000))
+    arrival: Mapped[str | None] = mapped_column(String(10))
+    status: Mapped[str] = mapped_column(String(16), default="READY")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    __table_args__ = (
+        UniqueConstraint("plan_id", "community_id", name="uq_notifications_plan_community"),
+    )

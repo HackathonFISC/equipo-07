@@ -5,11 +5,11 @@ from contextlib import contextmanager
 from langgraph.types import Command
 from sqlalchemy import select, update
 
-from app.agents import PlannerAgent
+from app.agents import CommunicationAgent, PlannerAgent
 from app.config import Settings
 from app.db import Database, checkpoints
 from app.graph import build_graph
-from app.models import DistributionPlan, Execution, Review
+from app.models import DistributionPlan, Execution, Notification, Review
 from app.providers import make_provider
 from app.services import log_event, plan_event, trace
 
@@ -128,6 +128,38 @@ async def process_plan(db, planner):
     return True
 
 
+async def process_notifications(db, communicator):
+    async with db.sessions.begin() as session:
+        # Planes aprobados sin notificaciones. Un plan sin paradas ni demandas no genera filas,
+        # así que el evento NOTIFICATIONS_GENERATED también lo marca como procesado.
+        candidates = await session.scalars(
+            select(DistributionPlan)
+            .where(
+                DistributionPlan.status == "APPROVED",
+                ~DistributionPlan.id.in_(select(Notification.plan_id)),
+            )
+            .order_by(DistributionPlan.created_at, DistributionPlan.id)
+        )
+        plan = next(
+            (
+                p
+                for p in candidates
+                if not any(e.get("event") == "NOTIFICATIONS_GENERATED" for e in p.events)
+            ),
+            None,
+        )
+        if plan is None:
+            return False
+        plan_id = plan.id
+    try:
+        await communicator.generate_notifications(plan_id)
+    except Exception as exc:
+        log_event(plan_id=plan_id, event="communication", status="ERROR", error=type(exc).__name__)
+        # Sin trabajo hecho: el bucle duerme antes de reintentar en lugar de girar en caliente.
+        return False
+    return True
+
+
 async def run():
     settings = Settings()
     db = Database(settings)
@@ -139,10 +171,13 @@ async def run():
             async with checkpoints(settings) as saver:
                 graph = build_graph(db, provider, settings, saver)
                 planner = PlannerAgent(db)
+                communicator = CommunicationAgent(db)
                 log_event(event="worker_started", provider=provider.name)
                 while True:
-                    if not await process_one(db, graph, provider) and not await process_plan(
-                        db, planner
+                    if (
+                        not await process_one(db, graph, provider)
+                        and not await process_plan(db, planner)
+                        and not await process_notifications(db, communicator)
                     ):
                         await asyncio.sleep(0.5)
     finally:

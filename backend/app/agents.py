@@ -12,7 +12,7 @@ from app.domain import calculate_priority, is_critical_location, resolve_critica
 from app.grounding import critical_evidence, extract_temporal_grounding
 from app.planner import plan_distribution
 from app.providers import ProviderError
-from app.tools import AgentTools, PlannerTools
+from app.tools import AgentTools, CommunicationTools, PlannerTools
 
 
 class Agents:
@@ -193,3 +193,80 @@ class PlannerAgent:
                 "Cisternas excluidas por el coordinador: " + ", ".join(sorted(unavailable)) + "."
             )
         return await self.tools.save_plan(plan_id, result)
+
+
+class CommunicationAgent:
+    """Deterministic communication dispatch; pure templates in plain language, no LLM."""
+
+    def __init__(self, db):
+        self.tools = CommunicationTools(db)
+
+    async def generate_notifications(self, plan_id: str) -> list[dict]:
+        context = await self.tools.plan_context(plan_id)
+        if not context or not context["plan"].get("result"):
+            return []
+
+        plan_result = context["plan"]["result"]
+        locations = context["locations"]
+
+        # 1. Agrupar paradas por comunidad para evitar colisiones con UniqueConstraint
+        community_stops: dict[str, list[dict]] = {}
+        for route in plan_result.get("routes", []):
+            for stop in route.get("stops", []):
+                community_stops.setdefault(stop["community_id"], []).append(stop)
+
+        notifications = []
+        served_community_ids = set()
+
+        for community_id, stops in sorted(community_stops.items()):
+            served_community_ids.add(community_id)
+            loc = locations.get(community_id)
+            name = loc["name"] if loc else stops[0]["name"]
+
+            # Hora más temprana y galones acumulados
+            earliest_arrival = min(s["arrival"] for s in stops)
+            total_gallons = sum(s["gallons"] for s in stops)
+            all_incident_ids = sorted({inc_id for s in stops for inc_id in s["incident_ids"]})
+
+            text = (
+                f"AguaIA informa: Se ha programado la entrega de agua por camión cisterna en tu "
+                f"comunidad ({name}). Primera entrega estimada: {earliest_arrival}. "
+                f"Volumen programado: {total_gallons:,} galones. "
+                f"Por favor mantén recipientes limpios listos."
+            )
+            notifications.append(
+                {
+                    "community_id": community_id,
+                    "incident_ids": all_incident_ids,
+                    "kind": "SCHEDULED",
+                    "text": text,
+                    "arrival": earliest_arrival,
+                }
+            )
+
+        # 2. Comunidades no atendidas (solo si NO tuvieron ninguna parada programada)
+        for item in plan_result.get("unserved", []):
+            comm_id = item["community_id"]
+            if comm_id in served_community_ids:
+                continue
+            served_community_ids.add(comm_id)
+            loc = locations.get(comm_id)
+            name = loc["name"] if loc else item["name"]
+            reason_detail = item.get("detail", "Demanda no factible en este turno de distribución.")
+
+            text = (
+                f"AguaIA informa: Tu reporte en {name} ha sido procesado. "
+                f"En esta ronda no fue posible programar cisterna: {reason_detail} "
+                f"Los equipos continúan trabajando para atender la contingencia."
+            )
+            notifications.append(
+                {
+                    "community_id": comm_id,
+                    "incident_ids": sorted(set(item["incident_ids"])),
+                    "kind": "UNSERVED",
+                    "text": text,
+                    "arrival": None,
+                }
+            )
+
+        return await self.tools.save_notifications(plan_id, notifications)

@@ -57,3 +57,25 @@ export interface FleetTruck {
   id: string; name: string; capacity_gallons: number; base_plant_id: string; status: string
   shift_start: string; shift_end: string; operational_role: string
 }
+
+export interface PublicReportNotice {
+  kind: 'SCHEDULED' | 'UNSERVED'
+  text: string
+  arrival?: string | null
+}
+
+export interface PublicReportStatus {
+  report_id: string
+  status: Status
+  incident_status: 'OPEN' | 'PRIORITIZED' | 'SCHEDULED' | 'CLOSED' | null
+  notice: PublicReportNotice | null
+}
+
+export interface IncidentTimelineEvent {
+  timestamp: string
+  source: 'report' | 'trace' | 'review' | 'plan' | 'notification'
+  event: string
+  summary: string
+  detail: Record<string, unknown>
+}
+

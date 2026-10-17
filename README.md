@@ -17,7 +17,7 @@ Los reportes dispersos de falta de agua dificultan coordinar la atención de com
 y La Chorrera. AguaIA consolida incidentes y propone prioridades explicables que debe revisar una
 persona. Es un centro de coordinación, no un chatbot ni un sistema de despacho automático.
 
-**Estado:** vertical slice local implementado. Mock offline por defecto, cuatro agentes,
+**Estado:** vertical slice local implementado. Mock offline por defecto, cinco agentes,
 persistencia real, dos aprobaciones humanas protegidas (prioridad y plan de cisternas) y
 trazabilidad. Catálogo de sectores de referencia; no son datos oficiales del IDAAN. Integraciones de
 mensajería, tráfico real y despliegue público quedan pendientes.
@@ -32,6 +32,10 @@ mensajería, tráfico real y despliegue público quedan pendientes.
    determinístico (sin LLM), asigna cisternas, horarios y galones respetando capacidad, acceso vial,
    turnos y recarga en planta. Explica cada parada y cada demanda no atendida; el coordinador
    aprueba o rechaza el plan y puede excluir cisternas no disponibles.
+5. **Comunicación:** tras la aprobación del plan por el coordinador, consolida y publica avisos
+   ciudadanos determinísticos por comunidad (`SCHEDULED` con la hora estimada de llegada más temprana
+   y galones totales, o `UNSERVED` con motivo), consultables de forma segura por código de reporte sin
+   filtrar trazas ni datos de auditoría.
 
 ```mermaid
 flowchart LR
@@ -47,7 +51,9 @@ flowchart LR
   D --> DB
   DB -->|Incidentes priorizados| P[Planificador + solver]
   P --> PR[Plan propuesto]
-  PR -->|Revisión con token| PA[Rutas programadas]
+  PR -->|Revisión con token| PA[Plan aprobado]
+  PA --> COM[Comunicación determinística]
+  COM --> NOT[(Notificaciones ciudadanas)]
 ```
 
 El 202 no ejecuta el grafo dentro de la petición: reporte y cola se confirman en una transacción.

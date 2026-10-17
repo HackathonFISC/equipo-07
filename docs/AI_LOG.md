@@ -208,4 +208,44 @@ Fecha / autor humano / herramienta y modelo conocido / objetivo / archivos / sug
 y descartadas / cambios manuales verificables / comandos y resultados / revisión humana / límites
 y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora.
 
+## 2026-10-17 — Fase 2: Cierre del ciclo funcional (F2-01 a F2-06)
 
+- Herramienta: Antigravity Assistant.
+- Objetivo: Implementar la Fase 2 completa según el plan aprobado por el auditor arquitectónico (F2-01 a F2-06):
+  1. F2-01: Escenario reproducible de demo (`data/demo_scenario.json` con 12 reportes y script `scripts/seed_demo_scenario.py` con UUIDv5 y backoff).
+  2. F2-02: Agente 5 de Comunicación determinístico (`CommunicationAgent`) + tabla `notifications` con `UniqueConstraint("plan_id", "community_id")` + migración Alembic `5ed0c1f96df0` y procesamiento en ciclo de `worker.py`.
+  3. F2-03: Endpoint público seguro `GET /api/reports/{id}/public-status` sin fuga de trazas ni de IDs de incidentes.
+  4. F2-04: UI ciudadana con consulta por código UUID, tarjeta de aviso de llegada con hora estimada (ETA) y leyenda de programación del mismo día.
+  5. F2-05: Línea de tiempo unificada `GET /api/admin/incidents/{id}/timeline` y modal `IncidentTimelineModal` en `CoordinationPage`.
+  6. F2-06: Documentación y flujo de demo actualizados (`docs/DEMO.md`, `README.md`, `docs/AGENT_CATALOG.md`, `docs/REQUIREMENTS.md`, eliminación de `arraijan-demo` de los chips rápidos de demo para resolver H6).
+- Archivos creados:
+  - `data/demo_scenario.json`
+  - `scripts/seed_demo_scenario.py`
+  - `backend/migrations/versions/5ed0c1f96df0_create_notifications_table.py`
+  - `backend/tests/test_communication.py`
+- Archivos modificados:
+  - `backend/app/models.py`, `backend/app/contracts.py`, `backend/app/tools.py`, `backend/app/agents.py`, `backend/app/worker.py`, `backend/app/services.py`, `backend/app/api.py`
+  - `frontend/src/types.ts`, `frontend/src/pages/CitizenPage.tsx`, `frontend/src/pages/CoordinationPage.tsx`, `frontend/src/styles.css`, `frontend/vite.config.ts`
+  - `docs/REQUIREMENTS.md`, `docs/AGENT_CATALOG.md`, `README.md`, `docs/DEMO.md`, `docs/AI_LOG.md`
+- Verificación ejecutada:
+  - Backend Alembic: `alembic upgrade head`, `alembic check` limpios; reversibilidad probada en `test_migrations.py`.
+  - Frontend: `npm run lint` (0 errors), `npm run typecheck` (0 errors), `npm test` (8/8 passed), `npm run build` (0 errors).
+- Límites y advertencias: Comunicación determinística sin LLM; endpoint público restringido sin información sensible; ningún commit ni push remoto sin autorización explícita.
+
+
+## 2026-10-17 — Revisión y correcciones de F2
+
+- Herramienta: Claude Code (Opus 5.5), a pedido del usuario, sobre el árbol de trabajo sin commits.
+- Correcciones:
+  1. `worker.process_notifications`: un plan aprobado sin paradas ni demandas no genera filas y se
+     reelegía en cada vuelta (bucle en caliente, verificado con una prueba temporal: `[True, True, True]`).
+     Ahora el evento `NOTIFICATIONS_GENERATED` también lo marca como procesado, y un fallo del agente
+     devuelve `False` para que el bucle duerma. Test `test_worker_does_not_spin_on_empty_or_failing_plans`.
+  2. `CitizenPage`: el polling del estado público se detenía en `APPROVED` (prioridad), antes de que
+     exista el aviso del plan, así que la hora estimada no aparecía sin recargar. `publicStatusPolling`
+     sigue cada 10 s mientras el estado es `APPROVED` sin aviso. Test `api.test.ts`.
+  3. `DEMO.md`: el catálogo no son «coordenadas reales del IDAAN» (no hay datos oficiales); el script se
+     ejecuta con el Python del backend (`httpx`); la exclusión de `cisterna-hospital-01` se hace a mano;
+     el texto «Aprobar acepta el límite inferior» se reemplazó por la regla D-03.
+- Verificación: ruff, formato y mypy limpios; pytest de comunicación, resiliencia y planificador
+  22 passed; frontend lint y typecheck limpios, Vitest 9/9.

@@ -14,8 +14,10 @@ from sqlalchemy.exc import IntegrityError
 from app.config import Settings
 from app.contracts import (
     ExecutionReceipt,
+    IncidentTimelineEvent,
     PlanRequest,
     PlanReviewInput,
+    PublicReportStatus,
     ReportInput,
     ReviewInput,
 )
@@ -28,6 +30,8 @@ from app.services import (
     enqueue_review,
     execution_detail,
     fleet_catalog,
+    get_public_report_status,
+    incident_timeline,
     latest_plan,
     rate_limit,
     record_dict,
@@ -225,6 +229,18 @@ def create_app(settings: Settings | None = None):
     async def retry(thread_id: UUID):
         await retry_execution(db, str(thread_id))
         return {"thread_id": str(thread_id), "status": "QUEUED"}
+
+    @app.get("/api/reports/{report_id}/public-status", response_model=PublicReportStatus)
+    async def public_status(report_id: UUID):
+        return await get_public_report_status(db, str(report_id))
+
+    @app.get(
+        "/api/admin/incidents/{incident_id}/timeline",
+        dependencies=protected,
+        response_model=list[IncidentTimelineEvent],
+    )
+    async def timeline(incident_id: UUID):
+        return await incident_timeline(db, str(incident_id))
 
     return app
 

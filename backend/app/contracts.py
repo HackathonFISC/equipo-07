@@ -1,5 +1,6 @@
 import re
 import unicodedata
+from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
@@ -226,3 +227,45 @@ class PriorityResult(Contract):
     flags: list[str]
     policy_version: str
     immediate_review: bool
+
+
+class NotificationOut(Contract):
+    id: str
+    plan_id: str
+    community_id: str
+    incident_ids: list[str]
+    kind: Literal["SCHEDULED", "UNSERVED"]
+    text: str
+    arrival: str | None = None
+    status: Literal["READY", "SENT", "FAILED"]
+    created_at: datetime
+
+
+class PublicReportNotice(Contract):
+    kind: Literal["SCHEDULED", "UNSERVED"]
+    text: str
+    arrival: str | None = None
+
+
+class PublicReportStatus(Contract):
+    report_id: UUID
+    status: Literal[
+        "QUEUED",
+        "RUNNING",
+        "WAITING_APPROVAL",
+        "RESUME_QUEUED",
+        "APPROVED",
+        "REJECTED",
+        "ERROR",
+        "NEEDS_INFORMATION",
+    ]
+    incident_status: Literal["OPEN", "PRIORITIZED", "SCHEDULED", "CLOSED"] | None = None
+    notice: PublicReportNotice | None = None
+
+
+class IncidentTimelineEvent(Contract):
+    timestamp: datetime
+    source: Literal["report", "trace", "review", "plan", "notification"]
+    event: str
+    summary: str
+    detail: dict = Field(default_factory=dict)

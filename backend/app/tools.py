@@ -9,7 +9,16 @@ from app.contracts import (
     PriorityResult,
 )
 from app.domain import is_critical_location
-from app.models import Association, Community, DistributionPlan, Incident, Proposal, Report, now
+from app.models import (
+    Association,
+    Community,
+    DistributionPlan,
+    Incident,
+    Notification,
+    Proposal,
+    Report,
+    now,
+)
 from app.providers import ProviderError
 from app.services import (
     candidate_incidents,
@@ -205,3 +214,59 @@ class PlannerTools:
                     demand_gallons=result.demand_gallons,
                 )
             return plan.result
+
+
+class CommunicationTools:
+    def __init__(self, db):
+        self._db = db
+
+    async def plan_context(self, plan_id: str):
+        async with self._db.sessions() as session:
+            plan = await session.get(DistributionPlan, plan_id)
+            if not plan:
+                return None
+            return {
+                "plan": record_dict(plan),
+                "locations": location_catalog(),
+            }
+
+    async def save_notifications(self, plan_id: str, notifications: list[dict]):
+        async with self._db.sessions.begin() as session:
+            plan = await session.get(DistributionPlan, plan_id)
+            if not plan:
+                return []
+            saved = []
+            for item in notifications:
+                existing = await session.scalar(
+                    select(Notification).where(
+                        Notification.plan_id == plan_id,
+                        Notification.community_id == item["community_id"],
+                    )
+                )
+                if existing is None:
+                    row = Notification(
+                        plan_id=plan_id,
+                        community_id=item["community_id"],
+                        incident_ids=item["incident_ids"],
+                        kind=item["kind"],
+                        text=item["text"],
+                        arrival=item.get("arrival"),
+                        status="READY",
+                    )
+                    session.add(row)
+                    saved.append(row)
+                else:
+                    saved.append(existing)
+            await session.flush()
+            if not any(
+                e.get("agent") == "communication" and e.get("event") == "NOTIFICATIONS_GENERATED"
+                for e in plan.events
+            ):
+                plan_event(
+                    plan,
+                    "communication",
+                    "NOTIFICATIONS_GENERATED",
+                    tool="save_notifications",
+                    count=len(saved),
+                )
+            return [record_dict(r) for r in saved]

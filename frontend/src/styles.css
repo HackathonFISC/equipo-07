@@ -738,3 +738,124 @@ pre { overflow-x: auto; white-space: pre-wrap; background: #f8fafc; border: 1px 
   nav { justify-content: center; }
   .footer-inner { flex-direction: column; text-align: center; }
 }
+
+/* Phase 2: Citizen ETA Notice & Lookup */
+.arrival-notice-card {
+  border-left: 4px solid #10b981;
+  background: #ecfdf5;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+.arrival-badge {
+  font-weight: 700;
+  color: #065f46;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.arrival-time-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 8px 0;
+}
+.arrival-label { font-size: 14px; color: #047857; }
+.arrival-clock {
+  font-size: 26px;
+  font-family: var(--font-mono);
+  color: #065f46;
+  font-weight: 800;
+}
+.arrival-text { font-size: 14px; color: #064e3b; margin: 4px 0 8px; }
+.arrival-legend { display: block; font-size: 11.5px; color: #059669; }
+
+.lookup-box {
+  background: white;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 24px;
+}
+.lookup-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.lookup-form input { flex: 1; }
+
+/* Phase 2: Incident Timeline Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+.close-btn { font-size: 13px; padding: 6px 12px; }
+.timeline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.timeline-entry {
+  border-left: 3px solid var(--border-strong);
+  padding-left: 14px;
+  position: relative;
+}
+.timeline-entry.source-report { border-left-color: #3b82f6; }
+.timeline-entry.source-trace { border-left-color: #6366f1; }
+.timeline-entry.source-review { border-left-color: #f59e0b; }
+.timeline-entry.source-plan { border-left-color: #10b981; }
+.timeline-entry.source-notification { border-left-color: #06b6d4; }
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.source-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.badge-report { background: #dbeafe; color: #1e40af; }
+.badge-trace { background: #e0e7ff; color: #3730a3; }
+.badge-review { background: #fef3c7; color: #92400e; }
+.badge-plan { background: #d1fae5; color: #065f46; }
+.badge-notification { background: #cffafe; color: #155e75; }
+
+.timeline-event-name { font-weight: 700; font-size: 13.5px; }
+.timeline-time { margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+.timeline-summary { font-size: 13.5px; margin: 4px 0; color: #334155; }
+.timeline-details { font-size: 12px; margin-top: 4px; }
+.timeline-details pre { background: #f1f5f9; padding: 8px; border-radius: 6px; font-size: 11px; overflow-x: auto; }
+.text-btn { background: none; border: none; color: var(--color-primary-accent); padding: 0; font-size: 12px; cursor: pointer; text-decoration: underline; }
+

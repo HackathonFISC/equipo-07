@@ -1,7 +1,7 @@
 import hashlib
 import json
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from sqlalchemy import delete, select, update
@@ -14,6 +14,7 @@ from app.models import (
     DistributionPlan,
     Execution,
     Incident,
+    Notification,
     Proposal,
     RateLimit,
     Report,
@@ -390,3 +391,176 @@ async def latest_plan(db):
             .limit(1)
         )
         return record_dict(plan) if plan else None
+
+
+async def get_public_report_status(db, report_id: str):
+    async with db.sessions() as session:
+        report = await session.get(Report, report_id)
+        if not report:
+            raise Missing("Reporte no encontrado")
+        execution = await session.scalar(select(Execution).where(Execution.report_id == report_id))
+        if not execution:
+            raise Missing("Ejecución no encontrada")
+
+        association = await session.get(Association, report_id)
+        incident_status = None
+        notice = None
+
+        if association:
+            incident = await session.get(Incident, association.incident_id)
+            if incident:
+                incident_status = incident.status
+                # Vincular aviso únicamente si el incidente formó parte de un plan aprobado
+                latest_approved = await session.scalar(
+                    select(DistributionPlan)
+                    .where(DistributionPlan.status == "APPROVED")
+                    .order_by(DistributionPlan.created_at.desc())
+                    .limit(1)
+                )
+                if latest_approved:
+                    notif = await session.scalar(
+                        select(Notification).where(
+                            Notification.plan_id == latest_approved.id,
+                            Notification.community_id == report.community_id,
+                        )
+                    )
+                    if notif and incident.id in (notif.incident_ids or []):
+                        notice = {
+                            "kind": notif.kind,
+                            "text": notif.text,
+                            "arrival": notif.arrival,
+                        }
+
+        return {
+            "report_id": report.id,
+            "status": execution.status,
+            "incident_status": incident_status,
+            "notice": notice,
+        }
+
+
+async def incident_timeline(db, incident_id: str):
+    async with db.sessions() as session:
+        incident = await session.get(Incident, incident_id)
+        if not incident:
+            raise Missing("Incidente no encontrado")
+
+        events = []
+
+        # 1. Reportes asociados
+        associations = (
+            await session.scalars(select(Association).where(Association.incident_id == incident_id))
+        ).all()
+        report_ids = [a.report_id for a in associations]
+
+        if report_ids:
+            reports = (await session.scalars(select(Report).where(Report.id.in_(report_ids)))).all()
+            for r in reports:
+                events.append(
+                    {
+                        "timestamp": r.created_at,
+                        "source": "report",
+                        "event": "REPORT_CREATED",
+                        "summary": f"Reporte ciudadano recibido en {r.community_id}.",
+                        "detail": {"report_id": r.id, "hours_without_water": r.hours_without_water},
+                    }
+                )
+
+            # 2. Trazas de ejecuciones
+            executions = (
+                await session.scalars(select(Execution).where(Execution.report_id.in_(report_ids)))
+            ).all()
+            exec_ids = [e.id for e in executions]
+            if exec_ids:
+                traces = (
+                    await session.scalars(
+                        select(Trace)
+                        .where(Trace.execution_id.in_(exec_ids))
+                        .order_by(Trace.created_at)
+                    )
+                ).all()
+                for t in traces:
+                    events.append(
+                        {
+                            "timestamp": t.created_at,
+                            "source": "trace",
+                            "event": t.event,
+                            "summary": f"Agente {t.agent}: {t.event}",
+                            "detail": {"category": t.category, "tool": t.tool, **t.detail},
+                        }
+                    )
+
+                # 3. Revisiones humanas
+                reviews = (
+                    await session.scalars(
+                        select(Review).where(
+                            Review.execution_id.in_(exec_ids), Review.applied_at.is_not(None)
+                        )
+                    )
+                ).all()
+                for rev in reviews:
+                    events.append(
+                        {
+                            "timestamp": rev.applied_at or rev.created_at,
+                            "source": "review",
+                            "event": "DECISION_APPLIED",
+                            "summary": (
+                                f"Decisión humana {rev.payload.get('decision')} por {rev.actor}."
+                            ),
+                            "detail": rev.payload,
+                        }
+                    )
+
+        # 4. Eventos de planes de distribución
+        plans = (
+            await session.scalars(
+                select(DistributionPlan).order_by(DistributionPlan.created_at.desc()).limit(20)
+            )
+        ).all()
+        for p in plans:
+            res = p.result or {}
+            in_routes = any(
+                incident_id in s.get("incident_ids", [])
+                for r in res.get("routes", [])
+                for s in r.get("stops", [])
+            )
+            in_unserved = any(
+                incident_id in u.get("incident_ids", []) for u in res.get("unserved", [])
+            )
+            if in_routes or in_unserved:
+                for pe in p.events:
+                    pe_time = (
+                        datetime.fromisoformat(pe["at"])
+                        if isinstance(pe.get("at"), str)
+                        else p.updated_at
+                    )
+                    events.append(
+                        {
+                            "timestamp": pe_time,
+                            "source": "plan",
+                            "event": pe.get("event", "PLAN_EVENT"),
+                            "summary": f"Planificador ({pe.get('agent')}): {pe.get('event')}",
+                            "detail": {"plan_id": p.id, **pe.get("detail", {})},
+                        }
+                    )
+
+        # 5. Notificaciones vinculadas
+        notifications = (
+            await session.scalars(
+                select(Notification).order_by(Notification.created_at.desc()).limit(50)
+            )
+        ).all()
+        for n in notifications:
+            if incident_id in (n.incident_ids or []):
+                events.append(
+                    {
+                        "timestamp": n.created_at,
+                        "source": "notification",
+                        "event": f"NOTICE_{n.kind}",
+                        "summary": f"Aviso {n.kind} generado para la comunidad.",
+                        "detail": {"notification_id": n.id, "arrival": n.arrival, "text": n.text},
+                    }
+                )
+
+        events.sort(key=lambda x: x["timestamp"])
+        return events

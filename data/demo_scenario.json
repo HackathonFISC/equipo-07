@@ -1,0 +1,83 @@
+{
+  "scenario_version": "1.0.0",
+  "description": "Escenario reproducible oficial de demostración para Panamá Oeste (12 reportes)",
+  "reports": [
+    {
+      "index": 1,
+      "community_id": "ref-rey-vista-alegre",
+      "description": "Llevamos más de 24 horas sin agua potable en Vista Alegre, no sale ni una gota de las plumas.",
+      "hours_without_water": 24
+    },
+    {
+      "index": 2,
+      "community_id": "ref-rey-vista-alegre",
+      "description": "Corte total de agua en el sector de Vista Alegre cerca del Rey desde hace 24 horas.",
+      "hours_without_water": 24
+    },
+    {
+      "index": 3,
+      "community_id": "ref-rey-vista-alegre",
+      "description": "Sin suministro de agua potable en las casas de Vista Alegre, llevamos un día completo sin servicio.",
+      "hours_without_water": 24
+    },
+    {
+      "index": 4,
+      "community_id": "ref-rey-vista-alegre",
+      "description": "La presión del agua cayó a cero en Vista Alegre desde ayer, solicitamos atención de cisterna.",
+      "hours_without_water": 24
+    },
+    {
+      "index": 5,
+      "community_id": "ref-rey-vista-alegre",
+      "description": "Problema grave de desabastecimiento de agua en Vista Alegre por más de 24 horas consecutivas.",
+      "hours_without_water": 24
+    },
+    {
+      "index": 6,
+      "community_id": "crit-hosp-nicolas-solano",
+      "description": "Emergencia por falta de agua potable en el Hospital Nicolás A. Solano; los tanques de reserva soterrados están por agotarse.",
+      "hours_without_water": 24
+    },
+    {
+      "index": 7,
+      "community_id": "ref-loma-burunga",
+      "description": "Llevamos más de 48 horas sin agua en la Loma de Burunga, la presión no sube a las partes altas.",
+      "hours_without_water": 48
+    },
+    {
+      "index": 8,
+      "community_id": "ref-parque-feuillet",
+      "description": "Fuga grande de agua potable por rotura de tubería principal en la calle central cerca del parque.",
+      "hours_without_water": 6
+    },
+    {
+      "index": 9,
+      "community_id": "sector-sin-censo",
+      "description": "No tenemos agua en el sector demostrativo sin censo desde hace 36 horas.",
+      "hours_without_water": 36
+    },
+    {
+      "index": 10,
+      "community_id": "crit-esc-guillermo-andreve",
+      "description": "Falta de agua en la Escuela Guillermo Andreve afectando el comedor y los servicios higiénicos.",
+      "hours_without_water": 36
+    },
+    {
+      "index": 11,
+      "community_id": "crit-cs-nuevo-chorrillo",
+      "description": "El centro de salud de Nuevo Chorrillo está sin suministro de agua potable desde hace 24 horas.",
+      "hours_without_water": 24
+    },
+    {
+      "index": 12,
+      "community_id": "ref-feria-chorrera",
+      "description": "Sin agua en la barriada cercana a los terrenos de la feria desde hace 18 horas.",
+      "hours_without_water": 18
+    }
+  ],
+  "planner_config": {
+    "unavailable_trucks": [
+      "cisterna-hospital-01"
+    ]
+  }
+}

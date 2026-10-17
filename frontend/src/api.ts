@@ -1,4 +1,4 @@
-import type { Status } from './types'
+import type { PublicReportStatus, Status } from './types'
 
 export async function api<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -44,6 +44,13 @@ export async function api<T>(path: string, options: RequestInit = {}, token?: st
 export function polling(status?: Status): number | false {
   if (!status || ['QUEUED', 'RUNNING', 'RESUME_QUEUED'].includes(status)) return 2000
   return status === 'WAITING_APPROVAL' ? 5000 : false
+}
+
+// APPROVED is terminal for the analysis, not for the citizen: the arrival notice comes later,
+// once a coordinator approves a tanker plan. Keep polling until it arrives.
+export function publicStatusPolling(data?: PublicReportStatus): number | false {
+  if (data?.status === 'APPROVED' && !data.notice) return 10000
+  return polling(data?.status)
 }
 
 export const statusLabels: Record<Status, string> = {
