@@ -1,0 +1,350 @@
+{
+  "description": "Distritos y corregimientos de la provincia de Panamá Oeste.",
+  "source": "Instituto Nacional de Estadística y Censo (INEC), Censos Nacionales 2023. Cuadro 3: Viviendas particulares ocupadas y población de la provincia de Panamá Oeste con algunas características importantes, según distrito, corregimiento y lugar poblado.",
+  "source_url": "https://www.inec.gob.pa/archivos/P0705547520240202082406Panam%C3%A1%20Oeste.pdf",
+  "cross_check_url": "https://www.inec.gob.pa/archivos/P053342420231213140530Cuadro%2003.pdf",
+  "retrieved": "2026-10-16",
+  "verification": "La suma de la población de los corregimientos de cada distrito coincide con el total distrital del Cuadro 3 nacional (población por provincia y distrito, Censos 2000, 2010 y 2023).",
+  "notes": [
+    "Los id son identificadores internos estables de AguaIA, no códigos oficiales del INEC.",
+    "El INEC marca con (P) las filas de Juan Demóstenes Arosemena y Vista Alegre; aquí se omite la marca en el nombre.",
+    "population_2023 es la población total censada; no incluye vulnerabilidad ni coordenadas."
+  ],
+  "districts": [
+    {
+      "id": "arraijan",
+      "name": "Arraiján",
+      "population_2023": 299079,
+      "corregimientos": [
+        {
+          "id": "corr-arraijan-arraijan-cabecera",
+          "name": "Arraiján (cabecera)",
+          "population_2023": 44327
+        },
+        {
+          "id": "corr-arraijan-juan-demostenes-arosemena",
+          "name": "Juan Demóstenes Arosemena",
+          "population_2023": 66474
+        },
+        {
+          "id": "corr-arraijan-nuevo-emperador",
+          "name": "Nuevo Emperador",
+          "population_2023": 10414
+        },
+        {
+          "id": "corr-arraijan-santa-clara",
+          "name": "Santa Clara",
+          "population_2023": 2630
+        },
+        {
+          "id": "corr-arraijan-veracruz",
+          "name": "Veracruz",
+          "population_2023": 24486
+        },
+        {
+          "id": "corr-arraijan-vista-alegre",
+          "name": "Vista Alegre",
+          "population_2023": 21417
+        },
+        {
+          "id": "corr-arraijan-burunga",
+          "name": "Burunga",
+          "population_2023": 51167
+        },
+        {
+          "id": "corr-arraijan-cerro-silvestre",
+          "name": "Cerro Silvestre",
+          "population_2023": 31567
+        },
+        {
+          "id": "corr-arraijan-vacamonte",
+          "name": "Vacamonte",
+          "population_2023": 46597
+        }
+      ]
+    },
+    {
+      "id": "capira",
+      "name": "Capira",
+      "population_2023": 45629,
+      "corregimientos": [
+        {
+          "id": "corr-capira-capira-cabecera",
+          "name": "Capira (cabecera)",
+          "population_2023": 5819
+        },
+        {
+          "id": "corr-capira-caimito",
+          "name": "Caimito",
+          "population_2023": 2084
+        },
+        {
+          "id": "corr-capira-campana",
+          "name": "Campana",
+          "population_2023": 2268
+        },
+        {
+          "id": "corr-capira-cermeno",
+          "name": "Cermeño",
+          "population_2023": 2274
+        },
+        {
+          "id": "corr-capira-ciri-de-los-sotos",
+          "name": "Cirí de Los Sotos",
+          "population_2023": 2313
+        },
+        {
+          "id": "corr-capira-ciri-grande",
+          "name": "Cirí Grande",
+          "population_2023": 4593
+        },
+        {
+          "id": "corr-capira-el-cacao",
+          "name": "El Cacao",
+          "population_2023": 5639
+        },
+        {
+          "id": "corr-capira-la-trinidad",
+          "name": "La Trinidad",
+          "population_2023": 2991
+        },
+        {
+          "id": "corr-capira-las-ollas-arriba",
+          "name": "Las Ollas Arriba",
+          "population_2023": 1550
+        },
+        {
+          "id": "corr-capira-lidice",
+          "name": "Lídice",
+          "population_2023": 6315
+        },
+        {
+          "id": "corr-capira-villa-carmen",
+          "name": "Villa Carmen",
+          "population_2023": 1697
+        },
+        {
+          "id": "corr-capira-villa-rosario",
+          "name": "Villa Rosario",
+          "population_2023": 5920
+        },
+        {
+          "id": "corr-capira-santa-rosa",
+          "name": "Santa Rosa",
+          "population_2023": 2166
+        }
+      ]
+    },
+    {
+      "id": "chame",
+      "name": "Chame",
+      "population_2023": 28535,
+      "corregimientos": [
+        {
+          "id": "corr-chame-chame-cabecera",
+          "name": "Chame (cabecera)",
+          "population_2023": 2544
+        },
+        {
+          "id": "corr-chame-bejuco",
+          "name": "Bejuco",
+          "population_2023": 6242
+        },
+        {
+          "id": "corr-chame-buenos-aires",
+          "name": "Buenos Aires",
+          "population_2023": 2288
+        },
+        {
+          "id": "corr-chame-cabuya",
+          "name": "Cabuya",
+          "population_2023": 2078
+        },
+        {
+          "id": "corr-chame-chica",
+          "name": "Chicá",
+          "population_2023": 882
+        },
+        {
+          "id": "corr-chame-el-libano",
+          "name": "El Líbano",
+          "population_2023": 299
+        },
+        {
+          "id": "corr-chame-las-lajas",
+          "name": "Las Lajas",
+          "population_2023": 3893
+        },
+        {
+          "id": "corr-chame-nueva-gorgona",
+          "name": "Nueva Gorgona",
+          "population_2023": 4945
+        },
+        {
+          "id": "corr-chame-punta-chame",
+          "name": "Punta Chame",
+          "population_2023": 477
+        },
+        {
+          "id": "corr-chame-sajalices",
+          "name": "Sajalices",
+          "population_2023": 3004
+        },
+        {
+          "id": "corr-chame-sora",
+          "name": "Sorá",
+          "population_2023": 1883
+        }
+      ]
+    },
+    {
+      "id": "la-chorrera",
+      "name": "La Chorrera",
+      "population_2023": 258221,
+      "corregimientos": [
+        {
+          "id": "corr-la-chorrera-barrio-balboa",
+          "name": "Barrio Balboa",
+          "population_2023": 26165
+        },
+        {
+          "id": "corr-la-chorrera-barrio-colon",
+          "name": "Barrio Colón",
+          "population_2023": 39273
+        },
+        {
+          "id": "corr-la-chorrera-amador",
+          "name": "Amador",
+          "population_2023": 3337
+        },
+        {
+          "id": "corr-la-chorrera-arosemena",
+          "name": "Arosemena",
+          "population_2023": 586
+        },
+        {
+          "id": "corr-la-chorrera-el-arado",
+          "name": "El Arado",
+          "population_2023": 6242
+        },
+        {
+          "id": "corr-la-chorrera-el-coco",
+          "name": "El Coco",
+          "population_2023": 22807
+        },
+        {
+          "id": "corr-la-chorrera-feuillet",
+          "name": "Feuillet",
+          "population_2023": 4094
+        },
+        {
+          "id": "corr-la-chorrera-guadalupe",
+          "name": "Guadalupe",
+          "population_2023": 38724
+        },
+        {
+          "id": "corr-la-chorrera-herrera",
+          "name": "Herrera",
+          "population_2023": 23424
+        },
+        {
+          "id": "corr-la-chorrera-hurtado",
+          "name": "Hurtado",
+          "population_2023": 1599
+        },
+        {
+          "id": "corr-la-chorrera-iturralde",
+          "name": "Iturralde",
+          "population_2023": 1516
+        },
+        {
+          "id": "corr-la-chorrera-la-represa",
+          "name": "La Represa",
+          "population_2023": 936
+        },
+        {
+          "id": "corr-la-chorrera-los-diaz",
+          "name": "Los Díaz",
+          "population_2023": 1750
+        },
+        {
+          "id": "corr-la-chorrera-mendoza",
+          "name": "Mendoza",
+          "population_2023": 1517
+        },
+        {
+          "id": "corr-la-chorrera-obaldia",
+          "name": "Obaldía",
+          "population_2023": 767
+        },
+        {
+          "id": "corr-la-chorrera-playa-leona",
+          "name": "Playa Leona",
+          "population_2023": 36116
+        },
+        {
+          "id": "corr-la-chorrera-puerto-caimito",
+          "name": "Puerto Caimito",
+          "population_2023": 46923
+        },
+        {
+          "id": "corr-la-chorrera-santa-rita",
+          "name": "Santa Rita",
+          "population_2023": 2445
+        }
+      ]
+    },
+    {
+      "id": "san-carlos",
+      "name": "San Carlos",
+      "population_2023": 22201,
+      "corregimientos": [
+        {
+          "id": "corr-san-carlos-san-carlos-cabecera",
+          "name": "San Carlos (cabecera)",
+          "population_2023": 3980
+        },
+        {
+          "id": "corr-san-carlos-el-espino",
+          "name": "El Espino",
+          "population_2023": 2032
+        },
+        {
+          "id": "corr-san-carlos-el-higo",
+          "name": "El Higo",
+          "population_2023": 3373
+        },
+        {
+          "id": "corr-san-carlos-guayabito",
+          "name": "Guayabito",
+          "population_2023": 605
+        },
+        {
+          "id": "corr-san-carlos-la-ermita",
+          "name": "La Ermita",
+          "population_2023": 1820
+        },
+        {
+          "id": "corr-san-carlos-la-laguna",
+          "name": "La Laguna",
+          "population_2023": 1359
+        },
+        {
+          "id": "corr-san-carlos-las-uvas",
+          "name": "Las Uvas",
+          "population_2023": 1942
+        },
+        {
+          "id": "corr-san-carlos-los-llanitos",
+          "name": "Los Llanitos",
+          "population_2023": 3791
+        },
+        {
+          "id": "corr-san-carlos-san-jose",
+          "name": "San José",
+          "population_2023": 3299
+        }
+      ]
+    }
+  ]
+}

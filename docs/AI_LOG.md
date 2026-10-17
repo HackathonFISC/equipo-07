@@ -227,6 +227,40 @@ Evidencia y límites: NVIDIA_SMOKE. No se verificó la facturación de las llama
 - R0 tras integrar F2: ruff, formato y mypy limpios; `alembic upgrade head` + `check` limpios; pytest
   **127 passed**, cobertura 86 %; `evaluate.py` 40/40; `validate_datasets.py` rc=0 sin diff en
   `data/`; frontend `npm ci`, lint, typecheck, Vitest 9/9 y build OK.
+## Recepción por Telegram y WhatsApp — 2026-10-16
+
+- Herramienta: Claude Code (Opus 5.5).
+- Objetivo: que mensajes de Telegram y WhatsApp entren a AguaIA sin tocar agentes, planificador
+  ni interfaz de coordinación.
+- Archivos: `backend/app/integrations/` (nuevo: `inbox`, `telegram`, `whatsapp`, `models`),
+  migración `c5a1d7e3f9b2_inbound_messaging.py`, `api.py` (routers, límite de cuerpo del webhook),
+  `config.py`, `migrations/env.py`, `tests/conftest.py`, `tests/test_integrations.py`,
+  `pyproject.toml`/`uv.lock` (httpx pasa a dependencia de ejecución), `docs/MESSAGING.md`.
+- Diseño: adaptador común con idempotencia por (canal, ID externo); borrador por conversación cuyo
+  ID es el Idempotency-Key de `submit_report`; adjuntos descargados solo por ID del proveedor.
+- Comandos: ruff y mypy limpios; `pytest` 81/81; humo con uvicorn real y evento firmado local.
+- Límites: sin credenciales reales de Meta ni Telegram; descarga de media dentro del webhook;
+  sin reintento automático de adjuntos fallidos ni comando de borrado.
+
+## Chatbot conversacional de WhatsApp y Telegram — 2026-10-16
+
+- Herramienta: Claude Code (Opus 5.5).
+- Objetivo: guiar al ciudadano paso a paso (consentimiento → distrito → corregimiento → barriada →
+  tipo → descripción → duración → evidencias → confirmación) reutilizando la recepción existente.
+- Archivos: `app/integrations/chatbot.py` (nuevo, máquina de estados pura), `inbox.py` (el flujo
+  conversacional sustituye la detección de sector por texto libre), `whatsapp.py` y `telegram.py`
+  (botones, listas y respuestas), migración `d2b6f8a4c1e7` (`inbound_drafts.fields`), `seed.py`,
+  `config.py`, `data/panama_oeste_corregimientos.json`, tests y `docs/MESSAGING.md`.
+- Catálogo: INEC Censos 2023, Cuadro 3 de Panamá Oeste (60 corregimientos). Se verificó que las
+  sumas por distrito coinciden con el Cuadro 3 nacional; IDs internos, no códigos oficiales.
+- Comandos: ruff, ruff format y mypy limpios; `pytest` 86/86; `scripts/evaluate.py` 31/31;
+  prueba manual con uvicorn real, migración desde la revisión anterior y eventos firmados locales.
+- Verificación posterior: el código enviado era un prefijo de 8 caracteres y se cambió por el
+  `report_id` completo (igual que el formulario web); un reintento tras un fallo de `submit_report`
+  completa el envío y manda el código; se probaron desde la guía los comandos de PowerShell.
+  El cambio de contrato para el tipo declarado está documentado en MESSAGING, no implementado.
+- Límites: sin credenciales reales de Meta ni Telegram; el tipo elegido viaja en el texto (el mock
+  clasifica por palabras clave); «Otro problema» queda pendiente; sin comando de borrado.
 
 ## Plantilla para nuevas entradas
 
@@ -336,3 +370,25 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
 - R0: ruff, formato y mypy limpios; `alembic upgrade head` + `check` limpios; pytest **143 passed**,
   cobertura 86 %; `evaluate.py` **54/54** (robustness 14/14); `validate_datasets.py` rc=0 sin diff en
   `data/`; frontend lint, typecheck, Vitest 9/9 y build OK.
+
+## 2026-10-17 — Integración de Telegram (rama `ag45-whatsapp-telegram`)
+
+- Herramienta: Claude Code (Opus 5.5), a pedido del usuario, en `feat-telegram-integracion`
+  (worktree aparte). El código de mensajería es del compañero; aquí solo se integró y se ajustó.
+- Fusión con `main` (F0–F4): conflictos en `seed.py` (upsert de F3-02 + corregimientos del INEC),
+  `AI_LOG.md`, `REQUIREMENTS.md` (se conservan ambos lados) y `evals/results.*` (se regeneran).
+  La migración `c5a1d7e3f9b2` ahora sigue a `5ed0c1f96df0` (F2): una sola cabeza de Alembic.
+- Ajustes:
+  1. Paso «Barriada o referencia»: ofrece los puntos de referencia vernáculos del distrito (con
+     coordenadas). Sin esto, todo reporte del bot quedaba `SIN_UBICACION` y nunca recibía cisterna.
+     No se ofrecen instituciones, para no heredar criticidad.
+  2. Máximo 5 reportes nuevos por conversación y hora (el límite por IP no aplica al bot).
+  3. `deliver_notices`: el aviso del plan aprobado (Agente de Comunicación) se envía por Telegram al
+     ciudadano del reporte, una vez; el receptor consulta cada ≤10 s.
+  4. WhatsApp se conserva apagado (sin credenciales Meta responde 403); documentado en MESSAGING.md.
+- Tests nuevos: referencia enrutable, límite por conversación y aviso de punta a punta por Telegram.
+- No verificado: envío real a la API de Telegram (requiere `TELEGRAM_BOT_TOKEN`); las cifras de
+  población por corregimiento (F07) las debe abrir el equipo.
+- R0: ruff, formato y mypy limpios; `alembic upgrade head` + `check` limpios con una sola cabeza;
+  pytest **157 passed**, cobertura 87 %; `evaluate.py` 54/54; `validate_datasets.py` rc=0 sin diff en
+  `data/`; `impact.json` sin cambios; frontend `npm ci`, lint, typecheck, Vitest 9/9 y build OK.

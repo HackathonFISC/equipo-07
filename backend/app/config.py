@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = Field(default=30, gt=0, le=60)
     dedup_window_hours: int = Field(default=72, ge=48, le=168)
     rate_limit_per_minute: int = Field(default=30, ge=1)
+    telegram_bot_token: SecretStr = SecretStr("")
+    whatsapp_verify_token: SecretStr = SecretStr("")
+    whatsapp_app_secret: SecretStr = SecretStr("")
+    whatsapp_access_token: SecretStr = SecretStr("")
+    whatsapp_phone_number_id: str = Field(default="", pattern=r"^\d*$")
+    whatsapp_graph_version: str = Field(default="v23.0", pattern=r"^v\d+\.\d+$")
+    media_path: str = "../data/runtime/media"
+    media_max_bytes: int = Field(default=10 * 1024 * 1024, gt=0, le=20 * 1024 * 1024)
 
     def prepare_paths(self) -> None:
         if self.database_url.startswith("sqlite+aiosqlite:///"):

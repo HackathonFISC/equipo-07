@@ -80,4 +80,5 @@ async def test_geo_and_fleet_endpoints(system):
     comm_res = await system.client.get("/api/communities")
     assert comm_res.status_code == 200
     communities = comm_res.json()
-    assert len(communities) == 23
+    # 23 demo/reference entries + 60 INEC 2023 corregimientos.
+    assert len(communities) == 83

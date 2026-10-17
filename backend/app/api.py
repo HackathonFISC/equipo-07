@@ -22,6 +22,7 @@ from app.contracts import (
     ReviewInput,
 )
 from app.db import Database
+from app.integrations import inbox, whatsapp
 from app.models import Community, DistributionPlan, Execution, Incident
 from app.services import (
     Conflict,
@@ -53,6 +54,7 @@ def create_app(settings: Settings | None = None):
 
     app = FastAPI(title="AguaIA", version="0.1.0", lifespan=lifespan)
     app.state.db = db
+    app.state.settings = settings
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -63,11 +65,13 @@ def create_app(settings: Settings | None = None):
     @app.middleware("http")
     async def body_limit(request: Request, call_next):
         if request.method == "POST":
+            # Meta documents webhook payloads up to 3 MB; everything else keeps 8 KiB.
+            limit = 3 * 1024 * 1024 if request.url.path == whatsapp.PATH else 8192
             size = 0
             chunks = []
             async for chunk in request.stream():
                 size += len(chunk)
-                if size > 8192:
+                if size > limit:
                     return JSONResponse({"detail": "Cuerpo demasiado grande"}, status_code=413)
                 chunks.append(chunk)
             request._body = b"".join(chunks)
@@ -96,6 +100,8 @@ def create_app(settings: Settings | None = None):
             raise HTTPException(401, "Token de coordinación inválido")
 
     protected = [Depends(coordinator)]
+    app.include_router(whatsapp.router)
+    app.include_router(inbox.admin, dependencies=protected)
 
     def receipt(execution):
         return {

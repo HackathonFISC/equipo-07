@@ -3,7 +3,7 @@ import json
 from sqlalchemy import func, select
 
 from app.models import Community, Report
-from app.seed import COMMUNITIES, seed
+from app.seed import COMMUNITIES, corregimiento_rows, seed
 from tests.test_evaluations import submit
 
 
@@ -23,5 +23,7 @@ async def test_seed_updates_existing_rows_and_keeps_reports(system, tmp_path):
         row = await session.get(Community, "arraijan-demo")
         assert (row.population, row.vulnerability) == (1234, 0.25)
         assert await session.get(Community, "nueva-comunidad") is not None
-        assert await session.scalar(select(func.count()).select_from(Community)) == len(values)
+        assert await session.scalar(select(func.count()).select_from(Community)) == len(
+            values
+        ) + len(corregimiento_rows())
         assert (await session.get(Report, key)).community_id == "arraijan-demo"

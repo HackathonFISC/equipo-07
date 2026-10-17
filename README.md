@@ -63,7 +63,7 @@ rechazada; **no confirma distribución de agua**.
 
 Arquitectura aprobada: [D1–D7](docs/ARCHITECTURE.md). Detalle implementado y límites:
 [IMPLEMENTATION](docs/IMPLEMENTATION.md), [cola durable](docs/adr/001-durable-worker.md),
-[catálogo de agentes](docs/AGENT_CATALOG.md).
+[catálogo de agentes](docs/AGENT_CATALOG.md), [Telegram y WhatsApp](docs/MESSAGING.md).
 
 ## Tecnologías y fuentes de datos
 
