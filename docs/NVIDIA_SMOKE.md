@@ -36,3 +36,24 @@ arquitectura; los sectores y sus cifras siguen siendo sintéticos. No hay despac
 No se ejecutaron las 22 evals contra el modelo real ni se verificó facturación. No se afirma que
 DeepSeek/Kimi estén validados; GPT-OSS-20B se seleccionó explícitamente por configuración, sin fallback
 automático. No se cambiaron dependencias, grafo, contratos públicos ni reglas de prioridad.
+
+## Comprobación con clave nueva — 2026-10-17
+
+Clave leída del `.env` de la raíz, sin imprimirla. Timeout de 30 s por intento con 2 reintentos del
+cliente (≈92 s en total). Textos: 3 reportes de `data/demo_scenario.json` (corte, hospital, fuga).
+
+| Modelo | `extract_report` (3 textos) | Resultado |
+|---|---|---|
+| `openai/gpt-oss-20b` | 3.8 s, 7.3 s, 3.8 s | Contrato válido; tipo, horas y criticidad correctos |
+| `nvidia/nemotron-3-super-120b-a12b` | 14.0 s, 7.4 s, 6.5 s | Contrato válido; alternativa más lenta |
+| `deepseek-ai/deepseek-v4.1-flash` | 3 × ≈92 s | APITimeoutError |
+| `google/gemma-4-31b-it` | ≈92 s, 60 s, ≈92 s | Timeout y una salida inválida |
+| `nvidia/nemotron-3.5-lightning-30b-a3b`, `z-ai/glm-5.3-flash` | 3 × ≈92 s | APITimeoutError |
+| `openai/gpt-oss-120b`, `meta/llama-3.3-70b-instruct`, `mistralai/mistral-large-2-instruct` | < 0.5 s | No disponibles en esta cuenta (APIStatusError / NotFoundError) |
+
+Con `gpt-oss-20b`: `evaluate_duplicate` 8.5 s y 6.2 s (coincidencia correcta), y
+`explain_priority_proposal` 2.3 s ×2. **Defecto:** la explicación dijo «26 horas» para un reporte de
+24 h: confunde los 26 puntos del factor de duración con horas. Se corrige en F4.
+
+Decisión D-04: modo real con `openai/gpt-oss-20b` y timeout de 30 s (`.env.example`, `config.py`,
+README). Un reporte completo tarda unos 15–20 s en las tres llamadas.

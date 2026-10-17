@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     llm_provider: Literal["mock", "nvidia"] = "mock"
     nvidia_api_key: SecretStr = SecretStr("")
-    nvidia_model: str = "deepseek-ai/deepseek-v4.1-flash"
+    nvidia_model: str = "openai/gpt-oss-20b"
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
-    llm_timeout_seconds: float = Field(default=10, gt=0, le=60)
+    llm_timeout_seconds: float = Field(default=30, gt=0, le=60)
     dedup_window_hours: int = Field(default=72, ge=48, le=168)
     rate_limit_per_minute: int = Field(default=30, ge=1)
 

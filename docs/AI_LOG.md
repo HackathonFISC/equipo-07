@@ -275,3 +275,46 @@ y tareas pendientes. Nunca pegar claves ni reportes personales en esta bitácora
      el texto «Aprobar acepta el límite inferior» se reemplazó por la regla D-03.
 - Verificación: ruff, formato y mypy limpios; pytest de comunicación, resiliencia y planificador
   22 passed; frontend lint y typecheck limpios, Vitest 9/9.
+
+## 2026-10-17 — Fase 3 (F3-04): Procedencia de datos y gobernanza (DATA_SOURCES.md)
+
+- Herramienta: Antigravity Assistant.
+- Objetivo: Documentar rigurosamente la procedencia de los datos en `docs/DATA_SOURCES.md`, clasificar cada campo en VERIFICADO, ESTIMADO o SUPUESTO, armonizar la sección «Tecnologías y fuentes de datos» en `README.md` y registrar el requisito RF32.
+- URLs consultadas y verificadas en vivo (todas abiertas y leídas en la sesión):
+  1. `https://es.wikipedia.org/wiki/Distrito_de_Arraij%C3%A1n` (Población oficial del Censo 2023 del INEC: 299 079 habitantes).
+  2. `https://es.wikipedia.org/wiki/Distrito_de_La_Chorrera` (Población oficial del Censo 2023 del INEC: 258 221 habitantes).
+  3. `https://www.telemetro.com/nacionales/el-idaan-informa-que-la-planta-laguna-alta-suspendera-operaciones-n5987878` (Comunicado del IDAAN del 09/06/2024 de suspensión en Potabilizadora de Laguna Alta de 12 h afectando comunidades del catálogo: Nuevo Chorrillo, Burunga, Vista Alegre, Cerro Silvestre, etc.).
+  4. `https://www.panamaamerica.com.pa/provincias/evaluan-la-situacion-de-la-policlinica-de-arraijan-1245515` (Existencia y rol de la Policlínica «Dr. Blas Daniel Gómez Chetro» de la CSS en Arraiján, atención a ~300 mil habitantes y derivación de pacientes al Hospital Regional Nicolás A. Solano).
+  5. `https://www.panamaamerica.com.pa/provincias/inauguran-hoy-el-nicolas-solano-45241` (Inauguración y capacidad de 250 camas del Hospital Regional Nicolás A. Solano construido por el MINSA para Panamá Oeste).
+  6. `https://www.panamaamerica.com.pa/provincias/rio-caimito-en-la-chorrera-sufre-desastre-ambiental-1260989` (Estación de captación de agua cruda de la Planta Jaime Díaz Quintero en El Trapichito sobre el río Caimito).
+- Lo que no se encontró / límites de consulta:
+  - El portal oficial de la Caja de Seguro Social (`css.gob.pa`) bloquea peticiones automatizadas con HTTP 403 Forbidden; no se citó directamente para respetar la regla de verificación en vivo, empleando la cobertura de prensa de Panamá América sobre la visita oficial de la CSS.
+  - No se obtuvieron fichas técnicas de la flota de cisternas del IDAAN con desagregación de caudal de bombeo (GPM) o capacidades específicas por matrícula, por lo que toda la flota fue etiquetada como SUPUESTO de demostración.
+  - No se cuenta con datos de telemetría o consumo diario en galones por centro público del IDAAN; fueron etiquetados como SUPUESTO.
+- Archivos creados:
+  - `docs/DATA_SOURCES.md`
+- Archivos modificados:
+  - `README.md` (sección «Tecnologías y fuentes de datos» actualizada con coordenadas de referencia de tipo ESTIMADO y enlace a DATA_SOURCES.md).
+  - `docs/REQUIREMENTS.md` (registro de la fila RF32 como Implementado).
+  - `docs/AI_LOG.md` (esta entrada).
+- Comandos ejecutados y resultados:
+  - `python scripts/validate_datasets.py`: validación de esquemas, bounding box geográfico, flota e integridad VRP cumplidos al 100%.
+  - `git diff data/`: limpio (sin alteraciones a los datasets JSON ni GeoJSON).
+
+## 2026-10-17 — Revisión de F3-04 y modelo NVIDIA
+
+- Herramienta: Claude Code (Opus 5.5), a pedido del usuario, sin commits.
+- `DATA_SOURCES.md`: se quitaron afirmaciones sin fuente del borrador:
+  1. F01 y F02 son Wikipedia (secundaria); el Cuadro 10 del INEC queda como fuente primaria pendiente
+     de abrir.
+  2. Se eliminaron del pitch los 653,665 habitantes de la provincia, el 85.2 % y el «segundo
+     distrito del país», que no estaban en la tabla de fuentes.
+  3. Se eliminó la justificación inventada del 350 del hospital («ocupación ampliada»).
+  4. `is_synthetic: false` y `category` pasan a PARCIAL: solo 4 lugares tienen fuente de existencia.
+  5. F06 ya no atribuye la información al IDAAN ni a la Asamblea Nacional, y se quitó «suspensiones
+     por crecidas y turbiedad». La tortuosidad pasa a SUPUESTO y la sección de límites nombra las
+     métricas reales de `impact.json`.
+- Verificado en el navegador: F01 (299 079, Censo 2023) y F03 (comunicado del IDAAN del 10 de junio
+  de 2024). F02, F04, F05 y F06 quedan para que una persona del equipo los abra.
+- NVIDIA: prueba de 8 modelos en `NVIDIA_SMOKE.md`; `openai/gpt-oss-20b` con 30 s pasa a ser el valor
+  por defecto en `.env.example`, `config.py` y README.

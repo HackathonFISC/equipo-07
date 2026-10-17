@@ -71,10 +71,12 @@ Python 3.13, FastAPI, Pydantic 2, SQLAlchemy 2.0 async, Alembic, aiosqlite, Lang
 AsyncSqliteSaver. React, TypeScript, Vite, Tailwind y TanStack Query. pytest/cov, Ruff, mypy,
 Vitest y GitHub Actions. Versiones resueltas en `backend/uv.lock` y `frontend/package-lock.json`.
 
-`data/communities.json` es un catálogo reproducible de **sectores demostrativos**, con población y
-vulnerabilidad ficticias. Solo los nombres de los distritos aportan contexto; no hay coordenadas
-inventadas ni fuentes demográficas oficiales. Los reportes son datos declarados, no verificados
-externamente. Los pesos son criterios de demostración, no una política oficial.
+El repositorio incluye un catálogo de sectores demostrativos e instituciones de Panamá Oeste. Las
+instituciones de salud y plantas existen en la realidad, pero sus poblaciones y demandas son supuestos
+de prueba. El catálogo incorpora coordenadas de referencia clasificadas como **estimadas** (tipo ESTIMADO,
+no catastro oficial del IDAAN) para posicionamiento y ruteo aproximado. Los pesos del puntaje y las
+especificaciones de flota son criterios de demostración. Procedencia completa, fuentes verificadas y
+límites en [DATA_SOURCES](docs/DATA_SOURCES.md).
 
 ## Instalación y ejecución
 
@@ -124,7 +126,7 @@ En Linux usa `cp -n .env.example .env`, `cd` y `npm` en los mismos pasos.
 | `CHECKPOINT_PATH` | Archivo separado de checkpoints; mantener estable entre reinicios |
 | `CORS_ORIGINS` | Lista JSON explícita de orígenes permitidos |
 | `NVIDIA_API_KEY`, `NVIDIA_MODEL`, `NVIDIA_BASE_URL` | Solo para NIM; nunca poner la clave en frontend |
-| `LLM_TIMEOUT_SECONDS` | 10 s por intento; cliente con máximo dos reintentos de transporte |
+| `LLM_TIMEOUT_SECONDS` | 30 s por intento; cliente con máximo dos reintentos de transporte |
 | `DEDUP_WINDOW_HOURS` | 72 h por defecto, configurable 48–168 |
 | `RATE_LIMIT_PER_MINUTE` | 30 reportes por IP/minuto, persistido en DB |
 
@@ -132,8 +134,8 @@ Credencial **pública solo para localhost** incluida en `.env.example`:
 `demo-local-change-me-aguaia`. Introducirla en Coordinación. Sustituirla antes de exponer el servicio;
 no es una identidad individual ni un secreto de producción. `.env` está excluido de Git.
 
-Modo NIM: configurar `LLM_PROVIDER=nvidia`, clave y modelo
-`deepseek-ai/deepseek-v4.1-flash` o `moonshotai/kimi-k3`, y reiniciar API y worker.
+Modo NIM: configurar `LLM_PROVIDER=nvidia`, la clave y el modelo verificado
+`openai/gpt-oss-20b` (valor de `.env.example`), y reiniciar API y worker.
 El adaptador se prueba offline con transporte simulado. También se verificó una ejecución real con
 `NVIDIA_MODEL=openai/gpt-oss-20b` hasta la revisión humana, usando NVIDIA NIM y timeout de 30 s.
 DeepSeek agotó los timeouts y Kimi K2.6 devolvió 404 en esta cuenta: ver [prueba real](docs/NVIDIA_SMOKE.md).
